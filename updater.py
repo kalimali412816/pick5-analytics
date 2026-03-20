@@ -56,7 +56,7 @@ OFFICIAL = {
     "GA": "https://www.galottery.com/en-us/results/drawgame/quickdraw.html?game=CASH5",
     "GE": "https://www.lotto.de/plus5",
     "MD": "https://www.mdlottery.com/games/pick-5/",
-    "OH": "https://www.ohiolottery.com/winning-numbers",
+    "OH": "https://www.ohiolottery.com/getattachment/234f1602-b580-46b5-b212-a2d884420b65/numbers2026.pdf",
     "PA": "https://www.palottery.pa.gov/Draw-Games/PICK-5.aspx",
     "VA": "https://www.valottery.com/data/draw-games/pick5",
     "LA": "https://louisianalottery.com/draw-games/pick-5/",
@@ -161,7 +161,39 @@ def src_official(state, draw, date):
     url = OFFICIAL.get(state)
     if not url: return None
     log(f"    [official/{state}]   {url[:60]}")
-    return parse_5digit(fetch(url), date)
+    html = fetch(url)
+    if not html: return None
+    # Ohio uses a PDF that returns plain text with format:
+    # "TUE - MID  3/19/2026  911  1477  91049"
+    # "TUE - EVE  3/19/2026  212  6246  98448"
+    # Columns: Pick3, Pick4, Pick5 (in that order after date)
+    if state == "OH":
+        return parse_ohio_pdf(html, draw, date)
+    return parse_5digit(html, date)
+ 
+def parse_ohio_pdf(text, draw, date):
+    """
+    Parse Ohio's annual numbers PDF (plain text).
+    Format per line: 'DAY - MID/EVE  M/D/YYYY  pick3  pick4  pick5 ...'
+    We want the Pick5 column (3rd number after the date).
+    """
+    date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
+    draw_label = "MID" if draw == "midday" else "EVE"
+    # Date appears as M/D/YYYY or MM/DD/YYYY
+    date_fmts = [date_obj.strftime("%-m/%-d/%Y"), date_obj.strftime("%m/%d/%Y")]
+    for fmt in date_fmts:
+        # Find line containing both the draw label and this date
+        for line in text.split('\n'):
+            if fmt in line and draw_label in line:
+                # Extract all number sequences from the line after the date
+                # Numbers in order: Pick3 (3 digits), Pick4 (4 digits), Pick5 (5 digits)
+                after_date = line[line.find(fmt)+len(fmt):]
+                nums = re.findall(r'\b(\d{3,6})\b', after_date)
+                # Pick5 is the 5-digit number
+                for n in nums:
+                    if len(n) == 5:
+                        return n.zfill(5)
+    return None
  
 def src_lusa(state, draw, date):
     urls = LUSA.get(state)
