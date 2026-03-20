@@ -1,0 +1,122 @@
+name: Pick5 Auto-Updater
+ 
+on:
+  schedule:
+    # All times in UTC. Currently EDT (UTC-4). Add 1 hr Nov-Mar for EST.
+    #
+    # Run 1  — 12:35 PM ET = 16:35 UTC  — OH GA MD midday
+    - cron: '35 16 * * *'
+    # Run 2  — 1:40 PM ET  = 17:40 UTC  — FL PA GE midday
+    - cron: '40 17 * * *'
+    # Run 3  — 2:10 PM ET  = 18:10 UTC  — DC DE VA midday
+    - cron: '10 18 * * *'
+    # Run 4  — 3:30 PM ET  = 19:30 UTC  — ALL midday sweep
+    - cron: '30 19 * * *'
+    # Run 5  — 7:05 PM ET  = 23:05 UTC  — GA PA evening
+    - cron: '5 23 * * *'
+    # Run 6  — 7:40 PM ET  = 23:40 UTC  — OH evening
+    - cron: '40 23 * * *'
+    # Run 7  — 7:50 PM ET  = 23:50 UTC  — MD evening
+    - cron: '50 23 * * *'
+    # Run 8  — 8:05 PM ET  = 00:05 UTC  — DE DC GE evening
+    - cron: '5 0 * * *'
+    # Run 9  — 10:00 PM ET = 02:00 UTC  — FL evening
+    - cron: '0 2 * * *'
+    # Run 10 — 11:10 PM ET = 03:10 UTC  — LA VA evening
+    - cron: '10 3 * * *'
+    # Run 11 — 4:00 AM ET  = 08:00 UTC  — daily catch-all
+    - cron: '0 8 * * *'
+ 
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      states:
+        description: 'States to update (e.g. OH GA MD or ALL)'
+        required: true
+        default: 'ALL'
+      draw:
+        description: 'Draw type: midday, evening, or auto'
+        required: true
+        default: 'auto'
+      date:
+        description: 'Date override YYYY-MM-DD (leave blank for today)'
+        required: false
+        default: ''
+ 
+jobs:
+  update:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+ 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+ 
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+ 
+      - name: Determine run parameters
+        id: params
+        run: |
+          # Figure out which states and draw based on current UTC time
+          # (matches the cron schedule above)
+          HOUR=$(date -u +%H)
+          MIN=$(date -u +%M)
+          TIME=$((10#$HOUR * 60 + 10#$MIN))
+ 
+          # Manual trigger overrides
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            STATES="${{ github.event.inputs.states }}"
+            DRAW="${{ github.event.inputs.draw }}"
+            DATE_ARG="${{ github.event.inputs.date }}"
+            if [ -n "$DATE_ARG" ]; then
+              DATE_FLAG="--date $DATE_ARG"
+            else
+              DATE_FLAG=""
+            fi
+          else
+            # Auto-detect from schedule time
+            if   [ $TIME -ge 995  ] && [ $TIME -lt 1010 ]; then STATES="OH GA MD"; DRAW="midday"
+            elif [ $TIME -ge 1060 ] && [ $TIME -lt 1075 ]; then STATES="FL PA GE"; DRAW="midday"
+            elif [ $TIME -ge 1090 ] && [ $TIME -lt 1105 ]; then STATES="DC DE VA"; DRAW="midday"
+            elif [ $TIME -ge 1170 ] && [ $TIME -lt 1185 ]; then STATES="ALL";      DRAW="midday"
+            elif [ $TIME -ge 1385 ] && [ $TIME -lt 1400 ]; then STATES="GA PA";    DRAW="evening"
+            elif [ $TIME -ge 1420 ] && [ $TIME -lt 1435 ]; then STATES="OH";       DRAW="evening"
+            elif [ $TIME -ge 1430 ] && [ $TIME -lt 1445 ]; then STATES="MD";       DRAW="evening"
+            elif [ $TIME -ge 5    ] && [ $TIME -lt 20   ]; then STATES="DE DC GE"; DRAW="evening"
+            elif [ $TIME -ge 120  ] && [ $TIME -lt 135  ]; then STATES="FL";       DRAW="evening"
+            elif [ $TIME -ge 190  ] && [ $TIME -lt 205  ]; then STATES="LA VA";    DRAW="evening"
+            elif [ $TIME -ge 475  ] && [ $TIME -lt 490  ]; then STATES="ALL";      DRAW="auto"
+            else STATES="ALL"; DRAW="auto"
+            fi
+            DATE_FLAG=""
+          fi
+ 
+          echo "states=$STATES" >> $GITHUB_OUTPUT
+          echo "draw=$DRAW"     >> $GITHUB_OUTPUT
+          echo "date_flag=$DATE_FLAG" >> $GITHUB_OUTPUT
+ 
+      - name: Run updater
+        env:
+          GITHUB_TOKEN_PUSH: ${{ secrets.PAT_TOKEN }}
+        run: |
+          python updater.py \
+            --states ${{ steps.params.outputs.states }} \
+            --draw ${{ steps.params.outputs.draw }} \
+            ${{ steps.params.outputs.date_flag }} \
+            --skip-existing
+ 
+      - name: Push updated index.html
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name  "Pick5 Bot"
+          git add index.html
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "Auto-update $(date -u '+%Y-%m-%d %H:%M UTC')" && git push
+ 
