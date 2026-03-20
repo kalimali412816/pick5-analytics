@@ -83,13 +83,13 @@ jobs:
           else
             # Auto-detect from schedule time
             if   [ $TIME -ge 995  ] && [ $TIME -lt 1010 ]; then STATES="OH GA MD"; DRAW="midday"
-            elif [ $TIME -ge 1060 ] && [ $TIME -lt 1075 ]; then STATES="FL PA GE"; DRAW="midday"
+            elif [ $TIME -ge 1060 ] && [ $TIME -lt 1075 ]; then STATES="FL PA GE"; DRAW="auto"
             elif [ $TIME -ge 1090 ] && [ $TIME -lt 1105 ]; then STATES="DC DE VA"; DRAW="midday"
             elif [ $TIME -ge 1170 ] && [ $TIME -lt 1185 ]; then STATES="ALL";      DRAW="midday"
             elif [ $TIME -ge 1385 ] && [ $TIME -lt 1400 ]; then STATES="GA PA";    DRAW="evening"
             elif [ $TIME -ge 1420 ] && [ $TIME -lt 1435 ]; then STATES="OH";       DRAW="evening"
             elif [ $TIME -ge 1430 ] && [ $TIME -lt 1445 ]; then STATES="MD";       DRAW="evening"
-            elif [ $TIME -ge 5    ] && [ $TIME -lt 20   ]; then STATES="DE DC GE"; DRAW="evening"
+            elif [ $TIME -ge 5    ] && [ $TIME -lt 20   ]; then STATES="DE DC";    DRAW="evening"
             elif [ $TIME -ge 120  ] && [ $TIME -lt 135  ]; then STATES="FL";       DRAW="evening"
             elif [ $TIME -ge 190  ] && [ $TIME -lt 205  ]; then STATES="LA VA";    DRAW="evening"
             elif [ $TIME -ge 475  ] && [ $TIME -lt 490  ]; then STATES="ALL";      DRAW="auto"
@@ -106,11 +106,16 @@ jobs:
         env:
           GITHUB_TOKEN_PUSH: ${{ secrets.PAT_TOKEN }}
         run: |
+          # Only use --skip-existing for scheduled runs, not manual
+          SKIP_FLAG=""
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            SKIP_FLAG="--skip-existing"
+          fi
           python updater.py \
             --states ${{ steps.params.outputs.states }} \
             --draw ${{ steps.params.outputs.draw }} \
             ${{ steps.params.outputs.date_flag }} \
-            --skip-existing
+            $SKIP_FLAG
  
       - name: Push updated index.html
         run: |
