@@ -2,11 +2,10 @@ name: Pick5 Auto-Updater
  
 on:
   schedule:
-    # All times in UTC. Currently EDT (UTC-4). Add 1 hr Nov-Mar for EST.
-    #
+    # All times UTC. Currently EDT (UTC-4). Add 1 hr Nov-Mar for EST.
     # Run 1  — 12:35 PM ET = 16:35 UTC  — OH GA MD midday
     - cron: '35 16 * * *'
-    # Run 2  — 1:40 PM ET  = 17:40 UTC  — FL PA GE midday
+    # Run 2  — 1:40 PM ET  = 17:40 UTC  — FL PA GE midday/auto
     - cron: '40 17 * * *'
     # Run 3  — 2:10 PM ET  = 18:10 UTC  — DC DE VA midday
     - cron: '10 18 * * *'
@@ -18,7 +17,7 @@ on:
     - cron: '40 23 * * *'
     # Run 7  — 7:50 PM ET  = 23:50 UTC  — MD evening
     - cron: '50 23 * * *'
-    # Run 8  — 8:05 PM ET  = 00:05 UTC  — DE DC GE evening
+    # Run 8  — 8:05 PM ET  = 00:05 UTC  — DE DC evening
     - cron: '5 0 * * *'
     # Run 9  — 10:00 PM ET = 02:00 UTC  — FL evening
     - cron: '0 2 * * *'
@@ -27,19 +26,18 @@ on:
     # Run 11 — 4:00 AM ET  = 08:00 UTC  — daily catch-all
     - cron: '0 8 * * *'
  
-  # Allow manual trigger from GitHub Actions tab
   workflow_dispatch:
     inputs:
       states:
-        description: 'States to update (e.g. OH GA MD or ALL)'
+        description: 'States (e.g. OH GA MD or ALL)'
         required: true
         default: 'ALL'
       draw:
-        description: 'Draw type: midday, evening, or auto'
+        description: 'Draw: midday, evening, or auto'
         required: true
         default: 'auto'
       date:
-        description: 'Date override YYYY-MM-DD (leave blank for today)'
+        description: 'Date YYYY-MM-DD (blank = today ET)'
         required: false
         default: ''
  
@@ -58,30 +56,26 @@ jobs:
         with:
           python-version: '3.11'
  
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4
+      - name: Install Python dependencies
+        run: pip install playwright
+ 
+      - name: Install Chromium browser
+        run: playwright install chromium --with-deps
  
       - name: Determine run parameters
         id: params
         run: |
-          # Figure out which states and draw based on current UTC time
-          # (matches the cron schedule above)
           HOUR=$(date -u +%H)
           MIN=$(date -u +%M)
           TIME=$((10#$HOUR * 60 + 10#$MIN))
  
-          # Manual trigger overrides
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             STATES="${{ github.event.inputs.states }}"
             DRAW="${{ github.event.inputs.draw }}"
             DATE_ARG="${{ github.event.inputs.date }}"
-            if [ -n "$DATE_ARG" ]; then
-              DATE_FLAG="--date $DATE_ARG"
-            else
-              DATE_FLAG=""
-            fi
+            if [ -n "$DATE_ARG" ]; then DATE_FLAG="--date $DATE_ARG"; else DATE_FLAG=""; fi
+            SKIP_FLAG=""
           else
-            # Auto-detect from schedule time
             if   [ $TIME -ge 995  ] && [ $TIME -lt 1010 ]; then STATES="OH GA MD"; DRAW="midday"
             elif [ $TIME -ge 1060 ] && [ $TIME -lt 1075 ]; then STATES="FL PA GE"; DRAW="auto"
             elif [ $TIME -ge 1090 ] && [ $TIME -lt 1105 ]; then STATES="DC DE VA"; DRAW="midday"
@@ -96,32 +90,27 @@ jobs:
             else STATES="ALL"; DRAW="auto"
             fi
             DATE_FLAG=""
-          fi
- 
-          echo "states=$STATES" >> $GITHUB_OUTPUT
-          echo "draw=$DRAW"     >> $GITHUB_OUTPUT
-          echo "date_flag=$DATE_FLAG" >> $GITHUB_OUTPUT
- 
-      - name: Run updater
-        env:
-          GITHUB_TOKEN_PUSH: ${{ secrets.PAT_TOKEN }}
-        run: |
-          # Only use --skip-existing for scheduled runs, not manual
-          SKIP_FLAG=""
-          if [ "${{ github.event_name }}" = "schedule" ]; then
             SKIP_FLAG="--skip-existing"
           fi
+ 
+          echo "states=$STATES"       >> $GITHUB_OUTPUT
+          echo "draw=$DRAW"           >> $GITHUB_OUTPUT
+          echo "date_flag=$DATE_FLAG" >> $GITHUB_OUTPUT
+          echo "skip_flag=$SKIP_FLAG" >> $GITHUB_OUTPUT
+ 
+      - name: Run updater
+        run: |
           python updater.py \
             --states ${{ steps.params.outputs.states }} \
             --draw ${{ steps.params.outputs.draw }} \
             ${{ steps.params.outputs.date_flag }} \
-            $SKIP_FLAG
+            ${{ steps.params.outputs.skip_flag }}
  
-      - name: Push updated index.html
+      - name: Commit and push updated index.html
         run: |
           git config user.email "actions@github.com"
           git config user.name  "Pick5 Bot"
           git add index.html
-          git diff --cached --quiet && echo "No changes to commit" || \
-            git commit -m "Auto-update $(date -u '+%Y-%m-%d %H:%M UTC')" && git push
+          git diff --cached --quiet && echo "Nothing to commit" || \
+            (git commit -m "Auto-update $(date -u '+%Y-%m-%d %H:%M UTC')" && git push)
  
