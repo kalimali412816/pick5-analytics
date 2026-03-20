@@ -50,16 +50,16 @@ DRAW_TIMES = {
 }
  
 OFFICIAL = {
-    "DC": "https://dclottery.com/winning-numbers",
-    "DE": "https://www.delottery.com/Drawing-Games/Play-5",
-    "FL": "https://www.flalottery.com/pick5",
-    "GA": "https://www.galottery.com/en-us/results/drawgame/quickdraw.html?game=CASH5",
-    "GE": "https://www.lotto.de/plus5",
-    "MD": "https://www.mdlottery.com/games/pick-5/",
-    "OH": "https://www.ohiolottery.com/getattachment/234f1602-b580-46b5-b212-a2d884420b65/numbers2026.pdf",
-    "PA": "https://www.palottery.pa.gov/Draw-Games/PICK-5.aspx",
-    "VA": "https://www.valottery.com/data/draw-games/pick5",
-    "LA": "https://louisianalottery.com/draw-games/pick-5/",
+    "DC": "https://lotterycoast.com/lottery-results/washington-dc/pick5/",
+    "DE": "https://lotterycoast.com/lottery-results/delaware/play5/",
+    "FL": "https://lotterycoast.com/lottery-results/florida/pick5/",
+    "GA": "https://lotterycoast.com/lottery-results/georgia/cash5/",
+    "GE": "https://www.lotto.de/plus5",   # no lotterycoast for Germany
+    "MD": "https://lotterycoast.com/lottery-results/maryland/pick5/",
+    "OH": "https://lotterycoast.com/lottery-results/ohio/pick5/",
+    "PA": "https://lotterycoast.com/lottery-results/pennsylvania/pick5/",
+    "VA": "https://lotterycoast.com/lottery-results/virginia/pick5/",
+    "LA": "https://lotterycoast.com/lottery-results/louisiana/pick5/",
 }
  
 LUSA = {
@@ -167,32 +167,40 @@ def src_official(state, draw, date):
     # "TUE - MID  3/19/2026  911  1477  91049"
     # "TUE - EVE  3/19/2026  212  6246  98448"
     # Columns: Pick3, Pick4, Pick5 (in that order after date)
-    if state == "OH":
-        return parse_ohio_pdf(html, draw, date)
+    if state != "GE" and "lotterycoast" in url:
+        return parse_lotterycoast(html, draw, date)
     return parse_5digit(html, date)
  
 def parse_ohio_pdf(text, draw, date):
-    """
-    Parse Ohio's annual numbers PDF (plain text).
-    Format per line: 'DAY - MID/EVE  M/D/YYYY  pick3  pick4  pick5 ...'
-    We want the Pick5 column (3rd number after the date).
-    """
+    """Parse Ohio's annual numbers PDF (plain text).
+    Format: 'DAY - MID/EVE  M/D/YYYY  pick3  pick4  pick5 ...'"""
     date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
     draw_label = "MID" if draw == "midday" else "EVE"
-    # Date appears as M/D/YYYY or MM/DD/YYYY
-    date_fmts = [date_obj.strftime("%-m/%-d/%Y"), date_obj.strftime("%m/%d/%Y")]
-    for fmt in date_fmts:
-        # Find line containing both the draw label and this date
+    for fmt in [date_obj.strftime("%-m/%-d/%Y"), date_obj.strftime("%m/%d/%Y")]:
         for line in text.split('\n'):
             if fmt in line and draw_label in line:
-                # Extract all number sequences from the line after the date
-                # Numbers in order: Pick3 (3 digits), Pick4 (4 digits), Pick5 (5 digits)
                 after_date = line[line.find(fmt)+len(fmt):]
                 nums = re.findall(r'\b(\d{3,6})\b', after_date)
-                # Pick5 is the 5-digit number
                 for n in nums:
                     if len(n) == 5:
                         return n.zfill(5)
+    return None
+ 
+def parse_lotterycoast(html, draw, date):
+    """Parse lotterycoast.com page.
+    Format: 'Sun Icon Midday · 6 2 1 2 6' or 'Moon Icon Evening · 9 2 7 3 1'"""
+    date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
+    draw_label = "Midday" if draw == "midday" else "Evening"
+    for fmt in [date_obj.strftime("%A, %B %-d, %Y"), date_obj.strftime("%B %-d, %Y")]:
+        idx = html.find(fmt)
+        if idx == -1: continue
+        window = html[idx:idx+600]
+        label_idx = window.find(draw_label)
+        if label_idx == -1: continue
+        sub = window[label_idx:label_idx+120]
+        digits = re.findall(r'\b(\d)\b', sub)
+        if len(digits) >= 5:
+            return ''.join(digits[:5]).zfill(5)
     return None
  
 def src_lusa(state, draw, date):
