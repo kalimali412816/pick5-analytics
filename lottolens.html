@@ -1066,6 +1066,40 @@ tr:hover td{background:var(--b0);}
     </div>
   </div>
 
+  <!-- MULTI-NUMBER DATE SEARCH -->
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><h3>📋 Multi-Number Date Search</h3></div>
+    <div style="padding:14px;">
+      <p style="font-size:.78rem;color:var(--g5);margin-bottom:10px;">
+        Enter multiple 5-digit numbers (space, comma, or newline separated). Filter by Year, Month, and/or Day — supports lists and ranges (e.g. <code>2024,2025</code> · <code>3,4-6,12</code>) — to find every historical draw matching your numbers and date criteria.
+      </p>
+      <textarea id="msInput" rows="4" placeholder="e.g. 12345 67890 11111 99999"
+        style="width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid var(--g3);border-radius:8px;font-family:'DM Mono',monospace;font-size:.88rem;outline:none;resize:vertical;background:var(--g1);color:var(--g9);transition:border .2s;"
+        onfocus="this.style.borderColor='var(--b5)'"
+        onblur="this.style.borderColor='var(--g3)'"></textarea>
+
+      <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+        <input type="text" id="msYearF" placeholder="Years e.g. 2023,2024-2026"
+          style="width:200px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;background:var(--g1);"
+          title="Filter by year — comma separated or ranges e.g. 2023,2024-2026">
+        <input type="text" id="msMonthF" placeholder="Months e.g. 3,4-6,12"
+          style="width:170px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;background:var(--g1);"
+          title="Filter by month — comma separated or ranges e.g. 3,4-6,12">
+        <input type="text" id="msDayF" placeholder="Days e.g. 1,3-7,28"
+          style="width:160px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;background:var(--g1);"
+          title="Filter by day — comma separated or ranges e.g. 1,3-7,28">
+        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--g7);font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="msNormalized" style="width:15px;height:15px;cursor:pointer;accent-color:var(--b5);">
+          Match by normalized value
+        </label>
+        <button class="btn btn-p" onclick="runMultiSearch()">Search</button>
+        <button class="btn btn-s" onclick="document.getElementById('msInput').value='';document.getElementById('msYearF').value='';document.getElementById('msMonthF').value='';document.getElementById('msDayF').value='';document.getElementById('msNormalized').checked=false;document.getElementById('msResults').innerHTML='';" style="padding:7px 14px;">✕ Clear</button>
+      </div>
+
+      <div id="msResults" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
     <!-- PATTERN SEARCH -->
   <div class="card" style="margin-top:14px;">
     <div class="ch"><h3>🔎 Pattern Search</h3></div>
@@ -2956,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=3"></script>
+<script src="lottolens-data.js?v=6"></script>
 <script>
 
 // ================================================================
@@ -16380,6 +16414,165 @@ function _sgRebuildCopyBtns(){
 
 
 // ── End Duplicate Checker ───────────────────────────────────────
+
+// ── Multi-Number Date Search ────────────────────────────────────
+// Parse comma/space-separated list with ranges (e.g. "1,3-7,28") into Set of ints.
+// `min` and `max` clamp valid values; returns null if input is empty or has no valid values.
+function _msParseRanges(raw, min, max){
+  if(!raw || !raw.trim()) return null;
+  const s = new Set();
+  raw.split(/[,\s]+/).forEach(part=>{
+    const t = part.trim();
+    if(!t) return;
+    const r = t.match(/^(\d+)\s*-\s*(\d+)$/);
+    if(r){
+      let a = +r[1], b = +r[2];
+      if(a > b) [a,b] = [b,a];
+      for(let i=a; i<=b; i++) if(i>=min && i<=max) s.add(i);
+    } else {
+      const n = parseInt(t, 10);
+      if(!isNaN(n) && n>=min && n<=max) s.add(n);
+    }
+  });
+  return s.size ? s : null;
+}
+
+function runMultiSearch(){
+  const raw = document.getElementById('msInput').value;
+  const container = document.getElementById('msResults');
+  if(!raw.trim()){container.innerHTML='<div style="color:var(--g5);font-size:.8rem;">Enter at least one 5-digit number above.</div>';return;}
+
+  // Parse input numbers
+  const tokens = raw.split(/[\s,|;]+/).map(t=>t.replace(/\D/g,'')).filter(t=>t.length>0);
+  if(!tokens.length){container.innerHTML='<div style="color:var(--g5);font-size:.8rem;">No valid numbers found.</div>';return;}
+
+  const useNorm = document.getElementById('msNormalized').checked;
+
+  // Parse multi-value date filters (year/month/day)
+  const yearRaw = document.getElementById('msYearF').value;
+  const monthRaw = document.getElementById('msMonthF').value;
+  const dayRaw = document.getElementById('msDayF').value;
+  // Year range: 1900-2099 should easily cover this app's data
+  const yearSet = _msParseRanges(yearRaw, 1900, 2099);
+  const monthSet = _msParseRanges(monthRaw, 1, 12);
+  const daySet = _msParseRanges(dayRaw, 1, 31);
+
+  // Build input list (preserve order, dedupe by search key)
+  const seen = new Set();
+  const inputs = [];
+  tokens.forEach(t=>{
+    const n = t.padStart(5,'0').slice(-5);
+    const key = useNorm ? srt(n) : n;
+    if(seen.has(key)) return;
+    seen.add(key);
+    inputs.push({raw:n, key, hits:[]});
+  });
+
+  // Build a lookup map: search key -> input
+  const keyToInput = new Map();
+  inputs.forEach(inp => keyToInput.set(inp.key, inp));
+
+  // Filter ALL by date filters first (cheap), then check number match
+  for(const r of ALL){
+    if(yearSet && !yearSet.has(+r.dk.slice(0,4))) continue;
+    if(monthSet && !monthSet.has(+r.dk.slice(5,7))) continue;
+    if(daySet && !daySet.has(r.day)) continue;
+    const rowKey = useNorm ? r.sorted : r.number;
+    const inp = keyToInput.get(rowKey);
+    if(inp) inp.hits.push(r);
+  }
+
+  // Sort each input's hits newest-first
+  inputs.forEach(inp => inp.hits.sort((a,b)=>b.dk.localeCompare(a.dk)));
+
+  const totalMatches = inputs.reduce((s,i)=>s+i.hits.length, 0);
+
+  // Build human-readable filter summary
+  const _moNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const filterParts = [];
+  if(yearSet) filterParts.push('Year' + (yearSet.size>1?'s':'') + ' ' + [...yearSet].sort((a,b)=>a-b).join(','));
+  if(monthSet) filterParts.push('Month' + (monthSet.size>1?'s':'') + ' ' + [...monthSet].sort((a,b)=>a-b).map(m=>_moNames[m-1]).join(','));
+  if(daySet) filterParts.push('Day' + (daySet.size>1?'s':'') + ' ' + [...daySet].sort((a,b)=>a-b).join(','));
+  const filterStr = filterParts.length ? filterParts.join(' · ') : 'No date filter';
+  const matchModeStr = useNorm ? 'Normalized' : 'Exact';
+
+  // Stash unique result numbers for the Copy button (deduped, preserves chronological order from newest)
+  const allRows = [];
+  inputs.forEach(inp => inp.hits.forEach(r => allRows.push({row:r, input:inp})));
+  allRows.sort((a,b)=>b.row.dk.localeCompare(a.row.dk) || a.row.state.localeCompare(b.row.state));
+
+  const uniqueResultNums = [...new Set(allRows.map(x=>x.row.number))];
+  window._msResultNums = uniqueResultNums;
+
+  let html = '';
+
+  // ── Summary block (Option D — info-dense grid) ──
+  html += '<div style="background:var(--g1);border-radius:8px;padding:10px 14px;margin-bottom:12px;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">';
+  html += '<div style="font-size:.82rem;flex:1;min-width:240px;">';
+  html += '<strong>' + inputs.length + ' number' + (inputs.length===1?'':'s') + ' searched</strong> · ';
+  html += '<span style="color:var(--g6);">Match: ' + matchModeStr + '</span> · ';
+  html += '<span style="color:var(--g6);">Filters: ' + filterStr + '</span> · ';
+  html += '<strong>' + totalMatches + ' match' + (totalMatches===1?'':'es') + '</strong>';
+  html += '</div>';
+  if(uniqueResultNums.length > 0){
+    html += '<button onclick="_copyToClipboard(window._msResultNums.join(\' \'),this)" style="background:var(--g7);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;font-weight:600;white-space:nowrap;">📋 Copy All (' + uniqueResultNums.length + ')</button>';
+  }
+  html += '</div>';
+
+  // Per-number grid
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin-top:8px;">';
+  inputs.forEach(inp=>{
+    const hits = inp.hits.length;
+    const op = hits === 0 ? 'opacity:.5;' : '';
+    const label = hits === 1 ? '1 hit' : hits + ' hits';
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 9px;background:var(--g0,white);border:1px solid var(--g2);border-radius:6px;font-size:.78rem;' + op + '">';
+    html += '<span style="font-family:\'DM Mono\',monospace;font-weight:700;">' + inp.raw + '</span>';
+    html += '<span style="color:var(--g6);">' + label + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  if(totalMatches === 0){
+    html += '<div style="padding:14px;text-align:center;background:var(--g1);border-radius:8px;color:var(--g6);font-size:.82rem;">No matches found for the given filters.</div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  // ── Flat results table (newest first) ──
+  html += '<div style="overflow-x:auto;border:1px solid var(--g2);border-radius:8px;">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:.82rem;">';
+  html += '<thead><tr style="background:var(--g1);">';
+  html += '<th style="text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;color:var(--g5);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--g2);">Date</th>';
+  html += '<th style="text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;color:var(--g5);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--g2);">State</th>';
+  html += '<th style="text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;color:var(--g5);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--g2);">Draw</th>';
+  html += '<th style="text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;color:var(--g5);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--g2);">Number</th>';
+  if(useNorm){
+    html += '<th style="text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;color:var(--g5);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--g2);">Matched Input</th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  allRows.forEach(({row, input})=>{
+    const drawPill = row.draw === 'midday'
+      ? '<span style="display:inline-block;padding:2px 7px;border-radius:999px;font-size:.64rem;font-weight:700;background:#FAEEDA;color:#854F0B;">MID' + (row.drawNote||'') + '</span>'
+      : '<span style="display:inline-block;padding:2px 7px;border-radius:999px;font-size:.64rem;font-weight:700;background:#EEEDFE;color:#3C3489;">EVE</span>';
+    html += '<tr style="border-bottom:1px solid var(--g2);">';
+    html += '<td style="padding:7px 10px;">' + row.dateStr + '</td>';
+    html += '<td style="padding:7px 10px;font-size:.74rem;color:var(--g6);font-weight:700;">' + row.state + '</td>';
+    html += '<td style="padding:7px 10px;">' + drawPill + '</td>';
+    html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;font-weight:700;">' + row.number + '</td>';
+    if(useNorm){
+      html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;color:var(--g6);">' + input.raw + '</td>';
+    }
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  container.innerHTML = html;
+}
+// ── End Multi-Number Date Search ────────────────────────────────
 
 
 // ── Floating Notepad ───────────────────────────────────────────
