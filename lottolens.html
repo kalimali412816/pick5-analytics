@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=8"></script>
+<script src="lottolens-data.js?v=10"></script>
 <script>
 
 // ================================================================
@@ -14732,7 +14732,14 @@ function _buildDashboard(el){
   const yearDraws=ALL.filter(r=>r.ym.startsWith(curYear));
   const yearFreq={};
   yearDraws.forEach(r=>{yearFreq[r.sorted]=(yearFreq[r.sorted]||0)+1;});
-  const topThisYear=Object.entries(yearFreq).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  // Top 12 — include all tied entries at the cutoff (won't arbitrarily cut a tie)
+  const _sortedYearFreq=Object.entries(yearFreq).sort((a,b)=>b[1]-a[1]);
+  let topThisYear=[];
+  if(_sortedYearFreq.length){
+    const _cutoffIdx=Math.min(11,_sortedYearFreq.length-1);
+    const _cutoffCount=_sortedYearFreq[_cutoffIdx][1];
+    topThisYear=_sortedYearFreq.filter(e=>e[1]>=_cutoffCount);
+  }
 
   html+=_dashSection('📅 Most Drawn This Year','Normalized values with the most appearances in '+curYear,function(){
     if(!topThisYear.length)return '<div class="es">No data.</div>';
@@ -14765,7 +14772,7 @@ function _buildDashboard(el){
   const bdSortedArr=Object.entries(bdYearFreq).sort((a,b)=>b[1]-a[1]);
   let bdTopList=[];
   if(bdSortedArr.length){
-    const cutoffIdx=Math.min(9,bdSortedArr.length-1);
+    const cutoffIdx=Math.min(11,bdSortedArr.length-1);
     const cutoffCount=bdSortedArr[cutoffIdx][1];
     bdTopList=bdSortedArr.filter(e=>e[1]>=cutoffCount);
   }
