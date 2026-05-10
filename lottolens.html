@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=6"></script>
+<script src="lottolens-data.js?v=8"></script>
 <script>
 
 // ================================================================
@@ -6193,7 +6193,19 @@ function showNumModal(sp,useFiltered=false){
   const byState={};matches.forEach(r=>{if(!byState[r.state])byState[r.state]=[];byState[r.state].push(r);});
   const numOccs={};matches.forEach(r=>{if(!numOccs[r.number])numOccs[r.number]=[];numOccs[r.number].push(`${r.state}-${r.dk}`);});
   const exactRepeats=new Set(Object.entries(numOccs).filter(([n,o])=>new Set(o).size>=2).map(([n])=>n));
+  const _drawnUnique=Object.keys(numOccs);
+  const _drawnRepeats=[...exactRepeats];
+  window._nmDrawnUnique=_drawnUnique;
+  window._nmDrawnRepeats=_drawnRepeats;
   let h=_anagramCopySection(sp,scopeSrc,'_nm');
+  // Add two extra Copy buttons (drawn-unique / drawn-repeats) inline below the anagram section
+  if(_drawnUnique.length || _drawnRepeats.length){
+    h=h.replace('</div></div>',
+      (_drawnUnique.length?'<button onclick="_copyToClipboard(window._nmDrawnUnique.join(\' \'),this)" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;font-weight:600;">📋 Copy Drawn Unique ('+_drawnUnique.length+')</button>':'')+
+      (_drawnRepeats.length?'<button onclick="_copyToClipboard(window._nmDrawnRepeats.join(\' \'),this)" style="background:#9333ea;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;font-weight:600;">⚡ Copy Drawn Repeats ('+_drawnRepeats.length+')</button>':'')+
+      '</div></div>'
+    );
+  }
   h+=`<div style="margin-bottom:8px;"><button onclick="_addToWatchlist('${sp}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:4px 11px;font-size:.75rem;cursor:pointer;font-weight:600;">👁 + Watch</button></div>`;
   h+=`<div style="margin-bottom:12px;padding:9px 12px;background:var(--b0);border-radius:7px;font-size:.8rem">
     <strong>Normal Value:</strong> <span style="font-family:'DM Mono',monospace">${sp}</span> &nbsp;|&nbsp;
