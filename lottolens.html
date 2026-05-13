@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=13"></script>
+<script src="lottolens-data.js?v=15"></script>
 <script>
 
 // ================================================================
@@ -14448,10 +14448,10 @@ function _buildBirthdayWidget(){
   if(bdHits.length){
     h+=`<div style="font-weight:700;font-size:.78rem;color:#7c3aed;margin-bottom:8px;margin-top:14px;">🎂 Birthday Draws — ${winLabels[bdWin]}</div>`;
     h+=`<div style="border:1px solid var(--g2);border-radius:10px;overflow:hidden;max-height:400px;overflow-y:auto;">`;
-    bdHits.slice(0,50).forEach((r,i)=>{
+    bdHits.slice(0,250).forEach((r,i)=>{
       const p=r.dk.split('-');
       const fmt=_isBirthday(r.number);
-      const isLast=i===Math.min(bdHits.length,50)-1;
+      const isLast=i===Math.min(bdHits.length,250)-1;
       const _bdBorder=isLast?'':'border-bottom:1px solid var(--g1);';
       const xCnt=(_allBySorted.get(r.sorted)||[]).length;
       const xDelta=Math.abs(r.sum-xCnt);
