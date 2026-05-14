@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=16"></script>
+<script src="lottolens-data.js?v=18"></script>
 <script>
 
 // ================================================================
@@ -13521,7 +13521,7 @@ function _buildSeqWidget(){
         const dayDraws=(fullByDk[dk]||[]).filter(r=>r.number.includes(seq));
         const isStreak=streakDays.has(dk);
         h+=`<div style="margin-bottom:5px;padding:4px 6px;border-radius:5px;background:${isStreak?'rgba(245,197,24,.12)':'transparent'};border:${isStreak?'1px solid #f5c518':'1px solid transparent'};">`;
-        h+=`<div style="font-size:.65rem;font-weight:700;color:${isStreak?'#b45309':'var(--g5)'};margin-bottom:2px;">${mn[+mo-1]} ${+d}${isStreak?' 🔥':''}</div>`;
+        h+=`<div style="font-size:.65rem;font-weight:700;color:${isStreak?'#b45309':'var(--g5)'};margin-bottom:2px;">${mn[+mo-1]} ${+d}, ${y}${isStreak?' 🔥':''}</div>`;
         h+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
         dayDraws.forEach(r=>{
           const idx=r.number.indexOf(seq);
