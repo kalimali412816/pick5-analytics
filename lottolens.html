@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=32"></script>
+<script src="lottolens-data.js?v=33"></script>
 <script>
 
 // ================================================================
@@ -5121,9 +5121,11 @@ function _buildConsecStreakWidget(inline){
     return (a.daysSince??9999)-(b.daysSince??9999);
   });
 
-  // ── Hot historical months for current calendar month ────────────
-  const curMonthNum=todayDate.getMonth()+1;
-  const curMonthPad=String(curMonthNum).padStart(2,'0');
+  // ── Hot historical months — respects global month filter ────────
+  // Use the filtered month (from FILT) if a month filter is active, else today's month
+  const _filtMonths=[...new Set([..._filtDks].map(dk=>dk.slice(5,7)))];
+  const curMonthPad=_filtMonths.length===1?_filtMonths[0]:String(todayDate.getMonth()+1).padStart(2,'0');
+  const curMonthNum=+curMonthPad;
   const hotYmCount={};
   const hotYmStateMap={};
   const stateTopYm={};
