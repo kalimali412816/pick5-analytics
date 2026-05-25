@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=33"></script>
+<script src="lottolens-data.js?v=35"></script>
 <script>
 
 // ================================================================
@@ -17589,6 +17589,64 @@ function _renderPalindromes(){
   let h='';
   const isFiltered=palStates.size>0||palMonths.size>0||palDraw!=='ALL';
 
+  // ── 2026 YTD State Banner ──────────────────────────────────────
+  const curYearStr=new Date().getFullYear().toString();
+  const palins2026=ALL.filter(r=>isPalin(r.number)&&r.ym.startsWith(curYearStr));
+  const stateOrder=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE'];
+  const stateNames={GA:'Georgia',FL:'Florida',DE:'Delaware',MD:'Maryland',LA:'Louisiana',OH:'Ohio',PA:'Pennsylvania',VA:'Virginia',DC:'D.C.',GE:'Germany'};
+  const ytdByState={};
+  stateOrder.forEach(sc=>{
+    const hits=palins2026.filter(r=>r.state===sc);
+    if(!hits.length){ytdByState[sc]={count:0,lastDate:null,lastNum:null,avgGap:null};return;}
+    hits.sort((a,b)=>b.dk.localeCompare(a.dk));
+    const totalDraws=ALL.filter(r=>r.state===sc&&r.ym.startsWith(curYearStr)).length;
+    const rate=totalDraws?(hits.length/totalDraws*100).toFixed(1):0;
+    // Avg gap in days between palindromes
+    let avgGap=null;
+    if(hits.length>=2){
+      const dks=[...new Set(hits.map(r=>r.dk))].sort().reverse();
+      const gaps=[];
+      for(let i=0;i<dks.length-1;i++){
+        const g=Math.round((new Date(dks[i])-new Date(dks[i+1]))/864e5);
+        if(g>0) gaps.push(g);
+      }
+      if(gaps.length) avgGap=Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
+    }
+    ytdByState[sc]={count:hits.length,lastDate:hits[0].dateStr,lastNum:hits[0].number,rate,avgGap};
+  });
+  const bannerStates=stateOrder.filter(sc=>ytdByState[sc].count>0).sort((a,b)=>ytdByState[b].count-ytdByState[a].count);
+  h+=`<div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:12px;padding:14px 16px;margin-bottom:16px;">`;
+  h+=`<div style="font-size:.7rem;font-weight:800;color:#7dd3fc;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">📅 ${curYearStr} Palindrome YTD — By State</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  bannerStates.forEach((sc,rank)=>{
+    const d=ytdByState[sc];
+    const isTop=rank===0;
+    const cardBg=isTop?'rgba(255,255,255,.18)':'rgba(255,255,255,.09)';
+    const border=isTop?'1.5px solid #7dd3fc':'1px solid rgba(255,255,255,.15)';
+    h+=`<div style="background:${cardBg};border:${border};border-radius:9px;padding:8px 12px;min-width:90px;">`;
+    h+=`<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">`;
+    h+=`<span style="font-size:.68rem;font-weight:800;color:#fff;">${sc}</span>`;
+    if(isTop) h+=`<span style="font-size:.55rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.2);border-radius:3px;padding:0 4px;">🏆</span>`;
+    h+=`</div>`;
+    h+=`<div style="font-family:'DM Mono',monospace;font-size:1.15rem;font-weight:800;color:${isTop?'#7dd3fc':'#e2e8f0'};line-height:1;">${d.count}x</div>`;
+    h+=`<div style="font-size:.58rem;color:#94a3b8;margin-top:2px;">${d.rate}% rate</div>`;
+    h+=`<div style="font-size:.58rem;color:#94a3b8;">${d.avgGap?'~'+d.avgGap+'d gap':'—'}</div>`;
+    h+=`<div style="font-size:.58rem;color:#64748b;margin-top:2px;">${d.lastDate}</div>`;
+    h+=`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:#475569;">${d.lastNum}</div>`;
+    h+=`</div>`;
+  });
+  // Add zero states
+  const zeroStates=stateOrder.filter(sc=>ytdByState[sc].count===0);
+  zeroStates.forEach(sc=>{
+    h+=`<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:8px 12px;min-width:90px;opacity:.5;">`;
+    h+=`<div style="font-size:.68rem;font-weight:800;color:#94a3b8;">${sc}</div>`;
+    h+=`<div style="font-family:'DM Mono',monospace;font-size:1.15rem;font-weight:800;color:#475569;line-height:1;">0x</div>`;
+    h+=`<div style="font-size:.58rem;color:#475569;">—</div>`;
+    h+=`</div>`;
+  });
+  h+=`</div></div>`;
+  // ── End 2026 YTD State Banner ──────────────────────────────────
+
   // Scope indicator
   h+=`<div style="font-size:.72rem;font-weight:700;color:${isFiltered?'#be123c':'#065f46'};background:${isFiltered?'#fff1f2':'#f0fdf4'};border:1.5px solid ${isFiltered?'#fda4af':'#86efac'};border-radius:7px;padding:5px 12px;margin-bottom:14px;display:inline-block;">`;
   h+=`${isFiltered?'🔍 Filtered':'🌐 Default'}: ${scopeLabel}</div>`;
@@ -17667,8 +17725,16 @@ function _renderPalindromes(){
 
 function _showPalinDayModal(day){
   const isPalin=n=>n===n.split('').reverse().join('');
-  const isFiltered=FILT.length<ALL.length;
-  const src=isFiltered?FILT:ALL.filter(r=>r.ym.startsWith('2026'));
+  // Use same src as the heatmap: ALL filtered by palindrome-tab's own filters (not global FILT)
+  const palStates=_msfState['palS']||new Set();
+  const palMonths=_msfState['palM']||new Set();
+  const palDraw=document.getElementById('palDrF')?.value||'ALL';
+  const src=ALL.filter(r=>{
+    if(palStates.size>0&&!palStates.has(r.state))return false;
+    if(palMonths.size>0&&!palMonths.has(r.ym))return false;
+    if(palDraw!=='ALL'&&r.draw!==palDraw)return false;
+    return true;
+  });
   const hits=src.filter(r=>r.day===day&&isPalin(r.number));
   const seen=new Set();
   const deduped=hits.filter(r=>{const k=`${r.number}|${r.state}|${r.ym}`;if(seen.has(k))return false;seen.add(k);return true;});
