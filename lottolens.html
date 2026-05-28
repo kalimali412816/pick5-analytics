@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=40"></script>
+<script src="lottolens-data.js?v=41"></script>
 <script>
 
 // ================================================================
@@ -15262,12 +15262,16 @@ function tabWatchRender(){
     const delta=Math.abs(sumVal-cnt);
     const expDelta=Math.abs(sumVal-(cnt+1));
     const hitThisMonth=monthCnt>0;
-    const bg=hitThisMonth?'#fef3c7':'var(--g1)';
-    const border=hitThisMonth?'2px solid var(--ac)':'1.5px solid var(--g3)';
+    const newHitsForThis=ALL.filter(r=>r.sorted===sp&&lastVisitDk&&r.dk>lastVisitDk&&r.dk<=latestDk);
+    const hasNewHit=newHitsForThis.length>0;
+    const todayAnagramHits=ALL.filter(r=>r.dk===latestDk&&r.sorted===sp);
+    const bg=hasNewHit?'#dcfce7':hitThisMonth?'#fef3c7':'var(--g1)';
+    const border=hasNewHit?'2px solid #16a34a':hitThisMonth?'2px solid var(--ac)':'1.5px solid var(--g3)';
     h+='<div style="background:'+bg+';border:'+border+';border-radius:11px;padding:12px 14px;position:relative;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
       +'<span style="font-family:\'DM Mono\',monospace;font-weight:700;font-size:1rem;color:var(--b7);cursor:pointer;" onclick="showNumModal(\''+sp+'\')">'+sp+'</span>'
-      +(hitThisMonth?'<span style="font-size:.65rem;background:var(--ac);color:#fff;border-radius:6px;padding:1px 7px;font-weight:700;">🔥 Hit '+curMonthLabel+'!</span>':'')
+      +(hasNewHit?'<span style="font-size:.65rem;background:#16a34a;color:#fff;border-radius:6px;padding:1px 7px;font-weight:700;">🆕 New hit!</span>'
+        :hitThisMonth?'<span style="font-size:.65rem;background:var(--ac);color:#fff;border-radius:6px;padding:1px 7px;font-weight:700;">🔥 Hit '+curMonthLabel+'!</span>':'')
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;">'
       +'<div style="background:#fff;border-radius:6px;padding:5px 7px;text-align:center;"><div style="font-size:.6rem;color:var(--g5);">Sum</div><div style="font-weight:700;color:var(--g9);font-size:.82rem;">'+sumVal+'</div></div>'
@@ -15278,6 +15282,17 @@ function tabWatchRender(){
       +'<div style="background:#fff;border-radius:6px;padding:5px 7px;text-align:center;"><div style="font-size:.6rem;color:var(--g5);">EΔ</div><div style="font-weight:700;color:var(--pur);font-size:.82rem;">'+expDelta+'</div></div>'
       +'</div>'
       +'<div style="font-size:.68rem;color:var(--g5);margin-bottom:8px;">Last: '+lastDate+'</div>'
+      +(hasNewHit?'<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:7px;padding:7px 10px;margin-bottom:8px;">'
+        +'<div style="font-size:.65rem;font-weight:700;color:#065f46;margin-bottom:4px;">🆕 Hit since last visit</div>'
+        +newHitsForThis.slice(0,3).map(r=>'<div style="font-size:.68rem;color:#065f46;font-family:\'DM Mono\',monospace;">'
+          +r.number+' '+r.state+'/'+r.draw.slice(0,3)+' · '+r.dateStr+'</div>').join('')
+        +(newHitsForThis.length>3?'<div style="font-size:.62rem;color:#065f46;">+'+(newHitsForThis.length-3)+' more</div>':'')
+        +'</div>':'')
+      +(todayAnagramHits.length?'<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:7px;padding:7px 10px;margin-bottom:8px;">'
+        +'<div style="font-size:.65rem;font-weight:700;color:#1e40af;margin-bottom:4px;">📍 Drawn today (anagram)</div>'
+        +todayAnagramHits.map(r=>'<div style="font-size:.68rem;color:#1e40af;font-family:\'DM Mono\',monospace;">'
+          +r.number+' '+r.state+'/'+r.draw.slice(0,3)+'</div>').join('')
+        +'</div>':'')
       +'<button onclick="tabWatchRemove(\''+sp+'\');npWatchRender();" style="width:100%;background:var(--g1);color:var(--red);border:1px solid var(--red);border-radius:6px;padding:4px;font-size:.72rem;cursor:pointer;font-weight:600;">✕ Remove</button>'
       +'</div>';
   });
