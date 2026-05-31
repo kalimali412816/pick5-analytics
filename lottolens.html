@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=48"></script>
+<script src="lottolens-data.js?v=49"></script>
 <script>
 
 // ================================================================
@@ -19622,7 +19622,7 @@ function _renderPosSearch(){
   }
   const top2=topNWithTies(counts2,3);
   const top3=topNWithTies(counts3,3);
-  const top4=topNWithTies(counts4,3);
+  const top4=topNWithTies(counts4,10);
 
   function renderPattern(key){
     // key: "01|34" -> render 5 boxes with digits at positions
