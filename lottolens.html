@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=49"></script>
+<script src="lottolens-data.js?v=51"></script>
 <script>
 
 // ================================================================
@@ -19651,8 +19651,78 @@ function _renderPosSearch(){
   }
   window._psApplyPattern=applyPattern;
 
+  // Build a Set of all numbers ever drawn in scope (for "hasn't come" checks)
+  const scopeNumSet=new Set(scopeRows.map(r=>r.number));
+
+  function haventComeFor4(key){
+    const [posStr,digStr]=key.split('|');
+    const posArr=posStr.split('').map(Number);
+    const missingPos=[0,1,2,3,4].find(p=>!posArr.includes(p));
+    const knownDigits=digStr.split('');
+    // Check if all 4 known digits are unique
+    const knownCounts={};
+    knownDigits.forEach(d=>knownCounts[d]=(knownCounts[d]||0)+1);
+    const allSinglesIn4=Object.values(knownCounts).every(c=>c===1);
+
+    function buildNum(x){
+      const arr=Array(5);
+      posArr.forEach((p,i)=>arr[p]=knownDigits[i]);
+      arr[missingPos]=String(x);
+      return arr.join('');
+    }
+
+    const results=[];
+    const order={Qu:0,Quads:1,TD:2,Triples:3,DD:4,Doubles:5,Singles:6};
+
+    if(allSinglesIn4){
+      // Check if ANY of the 4 known digits has already created a double in a matched draw
+      // If even one has, suppress ALL doubles from the hasn't-come list
+      const anyDigitDoubled=knownDigits.some(d=>
+        scopeRows.some(r=>{
+          for(let i=0;i<posArr.length;i++){if(r.number[posArr[i]]!==knownDigits[i])return false;}
+          return r.number.split('').filter(ch=>ch===d).length>=2;
+        })
+      );
+      if(!anyDigitDoubled){
+        // All 4 digits are still clean — show each as a double candidate if not yet drawn
+        knownDigits.forEach(d=>{
+          const num=buildNum(d);
+          if(!scopeNumSet.has(num)){
+            const pat=_getRepeatKey(num);
+            results.push({number:num,type:pat});
+          }
+        });
+      }
+      // For any other digit 0-9 (not in known), only include if it makes DD/T/TD/Q/Qu
+      for(let x=0;x<=9;x++){
+        const xs=String(x);
+        if(knownDigits.includes(xs)) continue;
+        const num=buildNum(xs);
+        const pat=_getRepeatKey(num);
+        if((pat==='DD'||pat==='Triples'||pat==='TD'||pat==='Quads'||pat==='Qu')&&!scopeNumSet.has(num)){
+          results.push({number:num,type:pat});
+        }
+      }
+    } else {
+      // 4 known digits already have a repeat — only DD/T/TD/Q/Qu completions
+      for(let x=0;x<=9;x++){
+        const num=buildNum(String(x));
+        const pat=_getRepeatKey(num);
+        if((pat==='DD'||pat==='Triples'||pat==='TD'||pat==='Quads'||pat==='Qu')&&!scopeNumSet.has(num)){
+          results.push({number:num,type:pat});
+        }
+      }
+    }
+    results.sort((a,b)=>(order[a.type]||9)-(order[b.type]||9));
+    return results;
+  }
+
   function renderTopSection(label,items,emoji){
     if(!items.length) return '';
+    const is4=(label==='4-Digit Positions');
+    const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
+    const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
+    const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
     let s=`<div style="margin-bottom:10px;">`;
     s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">${emoji} Top ${label}</div>`;
     s+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
@@ -19664,12 +19734,29 @@ function _renderPosSearch(){
     items.forEach(([key,cnt],i)=>{
       const rk=ranks[i];
       const rkColors=['#fbbf24','#cbd5e1','#d97706'];
-      s+=`<div onclick="_psApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:#fff;border:1px solid var(--g2);cursor:pointer;">`;
+      s+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
+      s+=`<div onclick="_psApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
       s+=`<div style="font-size:.78rem;font-weight:800;color:${rkColors[Math.min(rk-1,2)]};min-width:22px;">#${rk}</div>`;
       s+=`<div style="display:flex;align-items:center;">${renderPattern(key)}</div>`;
       s+=`<div style="flex:1;"></div>`;
       s+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
       s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
+      s+=`</div>`;
+      if(is4){
+        const hc=haventComeFor4(key);
+        if(hc.length){
+          s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
+          s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
+          s+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
+          hc.forEach(({number,type})=>{
+            const tc=typeColor[type]||'#374151';
+            const bg=typeBg[type]||'#f3f4f6';
+            const lbl=typeLabel[type]||type;
+            s+=`<span onclick="event.stopPropagation();_psApplyPattern('01234|${number}')" title="${type}" style="font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;padding:2px 6px;border-radius:4px;background:${bg};color:${tc};border:1px solid ${tc}44;cursor:pointer;">${number}<span style="font-size:.55rem;margin-left:2px;opacity:.7;">${lbl}</span></span>`;
+          });
+          s+=`</div></div>`;
+        }
+      }
       s+=`</div>`;
     });
     s+=`</div></div>`;
