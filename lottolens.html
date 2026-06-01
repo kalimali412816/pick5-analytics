@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=53"></script>
+<script src="lottolens-data.js?v=55"></script>
 <script>
 
 // ================================================================
@@ -19624,6 +19624,17 @@ function _renderPosSearch(){
   const top3=topNWithTies(counts3,3);
   const top4=topNWithTies(counts4,10);
 
+  // Track new combos via localStorage — NEW = wasn't in the list last render
+  const _LS_PREV='ll_combo_prev_list';
+  let _prevCombos=new Set();
+  try{ _prevCombos=new Set(JSON.parse(localStorage.getItem(_LS_PREV)||'[]')); }catch(e){}
+  // Current full combo keys across all lists
+  const _curCombos=[...top2,...top3,...top4].map(([k])=>k);
+  // A combo is NEW if it's in the current list but wasn't in the previous render's list
+  function _isNewCombo(key){ return !_prevCombos.has(key); }
+  // Save current list as the new "previous" for next render
+  try{ localStorage.setItem(_LS_PREV,JSON.stringify(_curCombos)); }catch(e){}
+
   function renderPattern(key){
     // key: "01|34" -> render 5 boxes with digits at positions
     const [posStr,digStr]=key.split('|');
@@ -19735,9 +19746,11 @@ function _renderPosSearch(){
       const rk=ranks[i];
       const rkColors=['#fbbf24','#cbd5e1','#d97706'];
       s+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
+      const isNew=_isNewCombo(key);
       s+=`<div onclick="_psApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
       s+=`<div style="font-size:.78rem;font-weight:800;color:${rkColors[Math.min(rk-1,2)]};min-width:22px;">#${rk}</div>`;
       s+=`<div style="display:flex;align-items:center;">${renderPattern(key)}</div>`;
+      if(isNew) s+=`<span title="New combo — appeared within last 3 days" style="font-size:.58rem;font-weight:800;padding:1px 5px;border-radius:4px;background:#dcfce7;color:#15803d;border:1px solid #86efac;letter-spacing:.2px;">NEW</span>`;
       s+=`<div style="flex:1;"></div>`;
       s+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
       s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
