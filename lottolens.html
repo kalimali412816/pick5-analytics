@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=51"></script>
+<script src="lottolens-data.js?v=52"></script>
 <script>
 
 // ================================================================
@@ -20123,6 +20123,37 @@ function _renderPosSearch(){
   });
   if(matches.length>500) h+=`<div style="font-size:.7rem;color:var(--g5);text-align:center;padding:8px;">…+${matches.length-500} more matches (use Copy to get all distinct numbers)</div>`;
   h+=`</div>`;
+
+  // ===== HASN'T COME — shown at bottom when loaded from a top 4-digit position click =====
+  // Compute for the current pattern if it's exactly a 4-position pattern
+  const filledPositions=pat.map((d,i)=>d!==null?i:-1).filter(i=>i>=0);
+  if(filledPositions.length===4){
+    const posStr=filledPositions.join('');
+    const digStr=filledPositions.map(i=>pat[i]).join('');
+    const hcKey=posStr+'|'+digStr;
+    const hcItems=haventComeFor4(hcKey);
+    if(hcItems.length){
+      const hcNums=hcItems.map(x=>x.number).join(' ');
+      window._psHCNums=hcNums;
+      const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
+      const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
+      const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
+      h+=`<div style="margin-top:16px;padding:12px 14px;border:1.5px solid #c4b5fd;border-radius:10px;background:linear-gradient(180deg,#faf5ff,#fff);">`;
+      h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">`;
+      h+=`<div style="font-size:.74rem;font-weight:700;color:#5b21b6;">🚫 Hasn't Come Yet — this 4-digit position</div>`;
+      h+=`<button onclick="event.stopPropagation();_copyToClipboard(window._psHCNums,this)" style="background:#7c3aed;color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:.66rem;cursor:pointer;font-weight:600;">📋 Copy ${hcItems.length}</button>`;
+      h+=`</div>`;
+      h+=`<div style="font-size:.62rem;color:var(--g5);margin-bottom:8px;">Numbers using these 4 positions that haven't been drawn yet · click any to load</div>`;
+      h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;">`;
+      hcItems.forEach(({number,type})=>{
+        const tc=typeColor[type]||'#374151';
+        const bg=typeBg[type]||'#f3f4f6';
+        const lbl=typeLabel[type]||type;
+        h+=`<span onclick="event.stopPropagation();_psApplyPattern('01234|${number}')" title="${type}" style="font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;padding:3px 8px;border-radius:5px;background:${bg};color:${tc};border:1px solid ${tc}44;cursor:pointer;">${number} <span style="font-size:.6rem;opacity:.75;">${lbl}</span></span>`;
+      });
+      h+=`</div></div>`;
+    }
+  }
 
   container.innerHTML=h;
 }
