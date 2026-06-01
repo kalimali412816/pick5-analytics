@@ -2990,7 +2990,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=52"></script>
+<script src="lottolens-data.js?v=53"></script>
 <script>
 
 // ================================================================
@@ -19724,7 +19724,7 @@ function _renderPosSearch(){
     const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
     const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
     let s=`<div style="margin-bottom:10px;">`;
-    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">${emoji} Top ${label}</div>`;
+    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">${emoji} Top ${label}: <span style="color:var(--ac1);font-weight:800;">${items.length} combo${items.length!==1?'s':''}</span></div>`;
     s+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
     const ranks=[];
     for(let i=0;i<items.length;i++){
