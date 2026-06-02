@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=62"></script>
+<script src="lottolens-data.js?v=63"></script>
 <script>
 
 // ================================================================
@@ -19612,13 +19612,16 @@ function _renderPosToday(){
   }
   const filledCount=pat.filter(d=>d!==null).length;
 
-  // Get today's date key YYYY-MM-DD
+  // Get today's date key YYYY-MM-DD and current year
   const now=new Date();
   const todayKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const curYear=String(now.getFullYear());
 
-  // Scope: only today's draws
-  let scopeRows=ALL.filter(r=>r.dk===todayKey);
+  // Scope: current year draws (for hit counts), today flagged
+  let scopeRows=ALL.filter(r=>r.dk.startsWith(curYear));
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
+  const todayRows=scopeRows.filter(r=>r.dk===todayKey);
+  const todayNums=new Set(todayRows.map(r=>r.number));
 
   const POS=[0,1,2,3,4];
   function combos(arr,k){
@@ -19632,10 +19635,18 @@ function _renderPosToday(){
   }
   const pos2=combos(POS,2),pos3=combos(POS,3),pos4=combos(POS,4);
   const counts2={},counts3={},counts4={};
+  // Count from full year scope
   scopeRows.forEach(r=>{
     pos2.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');counts2[k]=(counts2[k]||0)+1;});
     pos3.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');counts3[k]=(counts3[k]||0)+1;});
     pos4.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');counts4[k]=(counts4[k]||0)+1;});
+  });
+  // Build today-only keys to filter top lists to only combos that appeared today
+  const todayCounts2={},todayCounts3={},todayCounts4={};
+  todayRows.forEach(r=>{
+    pos2.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');todayCounts2[k]=1;});
+    pos3.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');todayCounts3[k]=1;});
+    pos4.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');todayCounts4[k]=1;});
   });
 
   function topNWithTies(obj,n){
@@ -19644,9 +19655,10 @@ function _renderPosToday(){
     const cutoff=arr[n-1][1];
     return arr.filter(([,c])=>c>=cutoff);
   }
-  const top2=topNWithTies(counts2,3);
-  const top3=topNWithTies(counts3,3);
-  const top4=topNWithTies(counts4,10);
+  // Only show combos that appeared in today's draws, with year-to-date hit counts
+  const top2=Object.entries(counts2).filter(([k])=>todayCounts2[k]).sort((a,b)=>b[1]-a[1]);
+  const top3=Object.entries(counts3).filter(([k])=>todayCounts3[k]).sort((a,b)=>b[1]-a[1]);
+  const top4=Object.entries(counts4).filter(([k])=>todayCounts4[k]).sort((a,b)=>b[1]-a[1]);
 
   const scopeNumSet=new Set(scopeRows.map(r=>r.number));
 
@@ -19708,16 +19720,14 @@ function _renderPosToday(){
 
   function renderPattern_pt(key){
     const [posStr,digStr]=key.split('|');
-    const posArr=posStr.split('').map(Number);
-    let h='<div style="display:flex;gap:4px;">';
+    const posSet=new Set(posStr.split('').map(Number));
+    let out='';
     for(let i=0;i<5;i++){
-      const idx=posArr.indexOf(i);
-      const filled=idx>=0;
-      const digit=filled?digStr[idx]:'·';
-      h+=`<div style="width:26px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-family:'DM Mono',monospace;font-size:.85rem;font-weight:800;${filled?'background:var(--ac1);color:#fff;':'background:var(--g1);color:var(--g4);'}">${digit}</div>`;
+      const isFilled=posSet.has(i);
+      const ch=isFilled?digStr[posStr.indexOf(String(i))]:'·';
+      out+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;border:1.5px solid ${isFilled?'#c4b5fd':'var(--g2)'};background:${isFilled?'#ede9fe':'#fff'};color:${isFilled?'#5b21b6':'var(--g4)'};font-family:'DM Mono',monospace;font-weight:${isFilled?'800':'400'};font-size:.85rem;border-radius:5px;margin-right:2px;">${ch}</span>`;
     }
-    h+='</div>';
-    return h;
+    return out;
   }
 
   function renderTopSection_pt(label,items,emoji){
@@ -19773,7 +19783,7 @@ function _renderPosToday(){
   topH+=`</div>`;
 
   // Date badge
-  const dateLabel=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">📅 Showing draws for <strong>${todayKey}</strong> · ${scopeRows.length} draw${scopeRows.length!==1?'s':''} loaded</div>`;
+  const dateLabel=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">📅 Today: <strong>${todayKey}</strong> · ${todayRows.length} draw${todayRows.length!==1?'s':''} · Hit counts from <strong>${curYear}</strong> (${scopeRows.length} total draws)</div>`;
 
   // Pattern search matches (if boxes filled)
   let h=dateLabel+topH;
