@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=61"></script>
+<script src="lottolens-data.js?v=62"></script>
 <script>
 
 // ================================================================
@@ -19708,12 +19708,12 @@ function _renderPosToday(){
 
   function renderPattern_pt(key){
     const [posStr,digStr]=key.split('|');
-    const posSet=new Set(posStr.split('').map(Number));
+    const posArr=posStr.split('').map(Number);
     let h='<div style="display:flex;gap:4px;">';
     for(let i=0;i<5;i++){
-      const idx2=posStr.split('').indexOf(String(i));
-      const filled=posSet.has(i);
-      const digit=filled?digStr[posStr.split('').map(Number).indexOf(i)]:'·';
+      const idx=posArr.indexOf(i);
+      const filled=idx>=0;
+      const digit=filled?digStr[idx]:'·';
       h+=`<div style="width:26px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-family:'DM Mono',monospace;font-size:.85rem;font-weight:800;${filled?'background:var(--ac1);color:#fff;':'background:var(--g1);color:var(--g4);'}">${digit}</div>`;
     }
     h+='</div>';
