@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=63"></script>
+<script src="lottolens-data.js?v=64"></script>
 <script>
 
 // ================================================================
@@ -19758,8 +19758,13 @@ function _renderPosToday(){
       if(is4){
         const hc=haventComeFor4_today(key);
         if(hc.length){
+          const hcId='ptHC'+i;
+          const hcNums=hc.map(x=>x.number).join(' ');
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
-          s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
+          s+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">`;
+          s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;">🚫 Hasn't Come</div>`;
+          s+=`<button id="${hcId}" onclick="event.stopPropagation();navigator.clipboard.writeText('${hcNums}').then(()=>{const b=document.getElementById('${hcId}');b.textContent='✓';setTimeout(()=>b.textContent='📋',1500);})" style="font-size:.58rem;padding:1px 5px;border-radius:3px;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;cursor:pointer;font-weight:700;">📋</button>`;
+          s+=`</div>`;
           s+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
           hc.forEach(({number,type})=>{
             const tc=typeColor[type]||'#374151';
