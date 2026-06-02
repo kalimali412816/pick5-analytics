@@ -781,6 +781,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('hotcold',this)">🔥 Hot/Cold</div>
   <div class="tab" onclick="switchTab('search',this)">🔍 Search</div>
   <div class="tab" onclick="switchTab('posSearch',this)">🎯 Position</div>
+  <div class="tab" onclick="switchTab('posToday',this)">📅 Positions Today</div>
   <div class="tab" onclick="switchTab('delta',this)">Σ Delta</div>
   <div class="tab" onclick="switchTab('trends',this)">📈 Trends</div>
   <div class="tab" onclick="switchTab('monthly',this)">📆 Monthly</div>
@@ -1205,6 +1206,33 @@ tr:hover td{background:var(--b0);}
       <div style="text-align:center;font-size:.68rem;color:var(--g5);margin-top:8px;">Type a digit (0–9) to fill a box · leave empty = wildcard · auto-advances · backspace to go back</div>
     </div>
     <div id="psContent" style="padding:16px;"></div>
+  </div>
+</div>
+<div id="panel-posToday" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>📅 Positions Today</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Position combos from today's draws only · updates as draws come in</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="ptState" onchange="_renderPosToday()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:16px;border-bottom:1px solid var(--g2);">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+        <input type="text" id="ptBox0" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="_ptHandleInput(0,this)" onkeydown="_ptHandleKey(event,0)" style="width:54px;height:64px;text-align:center;font-family:'DM Mono',monospace;font-size:2rem;font-weight:800;border:2.5px solid var(--g3);border-radius:10px;color:var(--g9);background:#fff;outline:none;" placeholder="·">
+        <input type="text" id="ptBox1" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="_ptHandleInput(1,this)" onkeydown="_ptHandleKey(event,1)" style="width:54px;height:64px;text-align:center;font-family:'DM Mono',monospace;font-size:2rem;font-weight:800;border:2.5px solid var(--g3);border-radius:10px;color:var(--g9);background:#fff;outline:none;" placeholder="·">
+        <input type="text" id="ptBox2" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="_ptHandleInput(2,this)" onkeydown="_ptHandleKey(event,2)" style="width:54px;height:64px;text-align:center;font-family:'DM Mono',monospace;font-size:2rem;font-weight:800;border:2.5px solid var(--g3);border-radius:10px;color:var(--g9);background:#fff;outline:none;" placeholder="·">
+        <input type="text" id="ptBox3" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="_ptHandleInput(3,this)" onkeydown="_ptHandleKey(event,3)" style="width:54px;height:64px;text-align:center;font-family:'DM Mono',monospace;font-size:2rem;font-weight:800;border:2.5px solid var(--g3);border-radius:10px;color:var(--g9);background:#fff;outline:none;" placeholder="·">
+        <input type="text" id="ptBox4" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="_ptHandleInput(4,this)" onkeydown="_ptHandleKey(event,4)" style="width:54px;height:64px;text-align:center;font-family:'DM Mono',monospace;font-size:2rem;font-weight:800;border:2.5px solid var(--g3);border-radius:10px;color:var(--g9);background:#fff;outline:none;" placeholder="·">
+        <button onclick="_ptClear()" style="background:var(--g0);border:1.5px solid var(--g3);border-radius:8px;padding:6px 12px;font-size:.78rem;cursor:pointer;font-weight:600;color:var(--g7);margin-left:8px;">Clear</button>
+      </div>
+      <div style="text-align:center;font-size:.68rem;color:var(--g5);margin-top:8px;">Type a digit (0–9) to fill a box · leave empty = wildcard · auto-advances · backspace to go back</div>
+    </div>
+    <div id="ptContent" style="padding:16px;"></div>
   </div>
 </div>
 <div id="panel-delta" class="panel">
@@ -2995,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=60"></script>
+<script src="lottolens-data.js?v=61"></script>
 <script>
 
 // ================================================================
@@ -9905,7 +9933,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -9935,6 +9963,7 @@ function renderCur(){
   else if(curTab==='hotcold')renderHotCold();
   else if(curTab==='search'){runSearch();_cdInitYear();}
   else if(curTab==='posSearch'){_renderPosSearch();}
+  else if(curTab==='posToday'){_renderPosToday();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -19568,6 +19597,252 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
+function _renderPosToday(){
+  const container=document.getElementById('ptContent');
+  if(!container)return;
+
+  const stEl=document.getElementById('ptState');
+  const stF=stEl?stEl.value:'ALL';
+
+  // Read pattern
+  const pat=[];
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('ptBox'+i);
+    pat.push(el&&el.value.match(/\d/)?el.value:null);
+  }
+  const filledCount=pat.filter(d=>d!==null).length;
+
+  // Get today's date key YYYY-MM-DD
+  const now=new Date();
+  const todayKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+
+  // Scope: only today's draws
+  let scopeRows=ALL.filter(r=>r.dk===todayKey);
+  if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
+
+  const POS=[0,1,2,3,4];
+  function combos(arr,k){
+    const out=[];
+    function rec(start,cur){
+      if(cur.length===k){out.push(cur.slice());return;}
+      for(let i=start;i<arr.length;i++){cur.push(arr[i]);rec(i+1,cur);cur.pop();}
+    }
+    rec(0,[]);
+    return out;
+  }
+  const pos2=combos(POS,2),pos3=combos(POS,3),pos4=combos(POS,4);
+  const counts2={},counts3={},counts4={};
+  scopeRows.forEach(r=>{
+    pos2.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');counts2[k]=(counts2[k]||0)+1;});
+    pos3.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');counts3[k]=(counts3[k]||0)+1;});
+    pos4.forEach(p=>{const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');counts4[k]=(counts4[k]||0)+1;});
+  });
+
+  function topNWithTies(obj,n){
+    const arr=Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+    if(arr.length<=n) return arr;
+    const cutoff=arr[n-1][1];
+    return arr.filter(([,c])=>c>=cutoff);
+  }
+  const top2=topNWithTies(counts2,3);
+  const top3=topNWithTies(counts3,3);
+  const top4=topNWithTies(counts4,10);
+
+  const scopeNumSet=new Set(scopeRows.map(r=>r.number));
+
+  // Reuse haventComeFor4 — but scoped to ALL draws (not just today) for hasn't-come logic
+  function haventComeFor4_today(key){
+    const [posStr,digStr]=key.split('|');
+    const posArr=posStr.split('').map(Number);
+    const missingPos=[0,1,2,3,4].find(p=>!posArr.includes(p));
+    const knownDigits=digStr.split('');
+    const knownCounts={};
+    knownDigits.forEach(d=>knownCounts[d]=(knownCounts[d]||0)+1);
+    const allSinglesIn4=Object.values(knownCounts).every(c=>c===1);
+    function buildNum(x){
+      const arr=Array(5);
+      posArr.forEach((p,i)=>arr[p]=knownDigits[i]);
+      arr[missingPos]=String(x);
+      return arr.join('');
+    }
+    const allDrawnSet=new Set(ALL.map(r=>r.number));
+    const results=[];
+    const order={Qu:0,Quads:1,TD:2,Triples:3,DD:4,Doubles:5,Singles:6};
+    if(allSinglesIn4){
+      const anyDigitDoubled=knownDigits.some(d=>
+        ALL.some(r=>{
+          for(let i=0;i<posArr.length;i++){if(r.number[posArr[i]]!==knownDigits[i])return false;}
+          return r.number.split('').filter(ch=>ch===d).length>=2;
+        })
+      );
+      if(!anyDigitDoubled){
+        knownDigits.forEach(d=>{
+          const num=buildNum(d);
+          if(!allDrawnSet.has(num)){
+            const pat=_getRepeatKey(num);
+            results.push({number:num,type:pat});
+          }
+        });
+      }
+      for(let x=0;x<=9;x++){
+        const xs=String(x);
+        if(knownDigits.includes(xs)) continue;
+        const num=buildNum(xs);
+        const pat=_getRepeatKey(num);
+        if((pat==='DD'||pat==='Triples'||pat==='TD'||pat==='Quads'||pat==='Qu')&&!allDrawnSet.has(num)){
+          results.push({number:num,type:pat});
+        }
+      }
+    } else {
+      for(let x=0;x<=9;x++){
+        const num=buildNum(String(x));
+        const pat=_getRepeatKey(num);
+        if((pat==='DD'||pat==='Triples'||pat==='TD'||pat==='Quads'||pat==='Qu')&&!allDrawnSet.has(num)){
+          results.push({number:num,type:pat});
+        }
+      }
+    }
+    results.sort((a,b)=>(order[a.type]||9)-(order[b.type]||9));
+    return results;
+  }
+
+  function renderPattern_pt(key){
+    const [posStr,digStr]=key.split('|');
+    const posSet=new Set(posStr.split('').map(Number));
+    let h='<div style="display:flex;gap:4px;">';
+    for(let i=0;i<5;i++){
+      const idx2=posStr.split('').indexOf(String(i));
+      const filled=posSet.has(i);
+      const digit=filled?digStr[posStr.split('').map(Number).indexOf(i)]:'·';
+      h+=`<div style="width:26px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-family:'DM Mono',monospace;font-size:.85rem;font-weight:800;${filled?'background:var(--ac1);color:#fff;':'background:var(--g1);color:var(--g4);'}">${digit}</div>`;
+    }
+    h+='</div>';
+    return h;
+  }
+
+  function renderTopSection_pt(label,items,emoji){
+    if(!items.length) return '';
+    const is4=(label==='4-Digit Positions');
+    const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
+    const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
+    const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
+    let s=`<div style="margin-bottom:10px;">`;
+    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">${emoji} Top ${label}: <span style="color:var(--ac1);font-weight:800;">${items.length} combo${items.length!==1?'s':''}</span></div>`;
+    s+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
+    const ranks=[];
+    for(let i=0;i<items.length;i++){
+      if(i===0||items[i][1]!==items[i-1][1]) ranks.push(i+1);
+      else ranks.push(ranks[i-1]);
+    }
+    items.forEach(([key,cnt],i)=>{
+      const rk=ranks[i];
+      const rkColors=['#fbbf24','#cbd5e1','#d97706'];
+      s+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
+      s+=`<div onclick="_ptApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
+      s+=`<div style="font-size:.78rem;font-weight:800;color:${rkColors[Math.min(rk-1,2)]};min-width:22px;">#${rk}</div>`;
+      s+=`<div style="display:flex;align-items:center;">${renderPattern_pt(key)}</div>`;
+      s+=`<div style="flex:1;"></div>`;
+      s+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
+      s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
+      s+=`</div>`;
+      if(is4){
+        const hc=haventComeFor4_today(key);
+        if(hc.length){
+          s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
+          s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
+          s+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
+          hc.forEach(({number,type})=>{
+            const tc=typeColor[type]||'#374151';
+            const bg=typeBg[type]||'#f3f4f6';
+            const lbl=typeLabel[type]||type;
+            s+=`<span onclick="event.stopPropagation();_ptApplyPattern('01234|${number}')" title="${type}" style="font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;padding:2px 6px;border-radius:4px;background:${bg};color:${tc};border:1px solid ${tc}44;cursor:pointer;">${number}<span style="font-size:.55rem;margin-left:2px;opacity:.7;">${lbl}</span></span>`;
+          });
+          s+=`</div></div>`;
+        }
+      }
+      s+=`</div>`;
+    });
+    s+=`</div></div>`;
+    return s;
+  }
+
+  let topH=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px;">`;
+  topH+=`<div>${renderTopSection_pt('2-Digit Positions',top2,'🥈')}</div>`;
+  topH+=`<div>${renderTopSection_pt('3-Digit Positions',top3,'🥉')}</div>`;
+  topH+=`<div>${renderTopSection_pt('4-Digit Positions',top4,'🏅')}</div>`;
+  topH+=`</div>`;
+
+  // Date badge
+  const dateLabel=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">📅 Showing draws for <strong>${todayKey}</strong> · ${scopeRows.length} draw${scopeRows.length!==1?'s':''} loaded</div>`;
+
+  // Pattern search matches (if boxes filled)
+  let h=dateLabel+topH;
+
+  if(filledCount>0){
+    const matches=scopeRows.filter(r=>{
+      for(let i=0;i<5;i++){if(pat[i]!==null&&r.number[i]!==pat[i])return false;}
+      return true;
+    });
+    h+=`<div style="font-size:.78rem;font-weight:700;color:var(--g7);margin-bottom:8px;">All Matches (${matches.length})</div>`;
+    if(!matches.length){
+      h+=`<div style="color:var(--g5);font-size:.8rem;padding:12px 0;">No draws today match this pattern yet.</div>`;
+    } else {
+      h+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
+      matches.forEach(r=>{
+        h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;border:1px solid var(--g2);border-radius:7px;">`;
+        h+=`<span class="badge" style="font-size:.65rem;">${r.state}</span>`;
+        h+=`<span style="font-size:.7rem;color:var(--g5);">${r.dk} ${r.draw}</span>`;
+        h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.95rem;color:var(--g9);">${r.number}</span>`;
+        h+=`</div>`;
+      });
+      h+=`</div>`;
+    }
+  }
+
+  container.innerHTML=h;
+}
+
+function _ptApplyPattern(key){
+  const [posStr,digStr]=key.split('|');
+  const posArr=posStr.split('').map(Number);
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('ptBox'+i);
+    if(el){
+      const idx=posArr.indexOf(i);
+      el.value=idx>=0?digStr[idx]:'';
+    }
+  }
+  _renderPosToday();
+}
+
+function _ptHandleInput(idx,el){
+  el.value=el.value.replace(/[^0-9]/g,'').slice(-1);
+  if(el.value){
+    const next=document.getElementById('ptBox'+(idx+1));
+    if(next) next.focus();
+  }
+  _renderPosToday();
+}
+
+function _ptHandleKey(e,idx){
+  if(e.key==='Backspace'){
+    const el=document.getElementById('ptBox'+idx);
+    if(el&&!el.value){
+      const prev=document.getElementById('ptBox'+(idx-1));
+      if(prev){prev.focus();prev.value='';_renderPosToday();}
+    }
+  }
+}
+
+function _ptClear(){
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('ptBox'+i);
+    if(el) el.value='';
+  }
+  _renderPosToday();
+}
+
+
 function _renderPosSearch(){
   const container=document.getElementById('psContent');
   if(!container)return;
