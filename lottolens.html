@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=69"></script>
+<script src="lottolens-data.js?v=70"></script>
 <script>
 
 // ================================================================
@@ -16608,14 +16608,17 @@ function runMultiSearch(){
   const monthSet = _msParseRanges(monthRaw, 1, 12);
   const daySet = _msParseRanges(dayRaw, 1, 31);
 
-  // Build input list (preserve order, dedupe by search key)
-  const seen = new Set();
+  // Build input list — in normalized mode, group all raw permutations under one search key
+  const seenKeys = new Set();
   const inputs = [];
+  const rawsByKey = new Map(); // sorted key -> all raw inputs entered
   tokens.forEach(t=>{
     const n = t.padStart(5,'0').slice(-5);
     const key = useNorm ? srt(n) : n;
-    if(seen.has(key)) return;
-    seen.add(key);
+    if(!rawsByKey.has(key)) rawsByKey.set(key, []);
+    rawsByKey.get(key).push(n);
+    if(seenKeys.has(key)) return;
+    seenKeys.add(key);
     inputs.push({raw:n, key, hits:[]});
   });
 
@@ -16666,9 +16669,10 @@ function runMultiSearch(){
   allRows.sort((a,b)=>b.row.dk.localeCompare(a.row.dk) || a.row.state.localeCompare(b.row.state));
 
   const uniqueResultNums = [...new Set(allRows.map(x=>x.row.number))];
-  // For copy: include all matched input permutations too
-  const allMatchedInputs = [...new Set(Object.values(normMatchMap).flatMap(s=>[...s]))];
-  window._msResultNums = useNorm && allMatchedInputs.length ? allMatchedInputs : uniqueResultNums;
+  // For copy in normalized mode: copy all raw inputs that had at least one hit
+  const matchedRawInputs = [];
+  inputs.forEach(inp=>{ if(inp.hits.length>0 && rawsByKey.has(inp.key)) matchedRawInputs.push(...rawsByKey.get(inp.key)); });
+  window._msResultNums = useNorm && matchedRawInputs.length ? matchedRawInputs : uniqueResultNums;
 
   let html = '';
 
@@ -16676,7 +16680,8 @@ function runMultiSearch(){
   html += '<div style="background:var(--g1);border-radius:8px;padding:10px 14px;margin-bottom:12px;">';
   html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">';
   html += '<div style="font-size:.82rem;flex:1;min-width:240px;">';
-  html += '<strong>' + inputs.length + ' number' + (inputs.length===1?'':'s') + ' searched</strong> · ';
+  const totalRawInputs = [...rawsByKey.values()].reduce((s,a)=>s+a.length,0);
+  html += '<strong>' + totalRawInputs + ' number' + (totalRawInputs===1?'':'s') + ' searched</strong> · ';
   html += '<span style="color:var(--g6);">Match: ' + matchModeStr + '</span> · ';
   html += '<span style="color:var(--g6);">Filters: ' + filterStr + '</span> · ';
   html += '<strong>' + totalMatches + ' match' + (totalMatches===1?'':'es') + '</strong>';
@@ -16729,7 +16734,8 @@ function runMultiSearch(){
     html += '<td style="padding:7px 10px;">' + drawPill + '</td>';
     html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;font-weight:700;">' + row.number + '</td>';
     if(useNorm){
-      const allInputs = normMatchMap[row.number] ? [...normMatchMap[row.number]].join(', ') : input.raw;
+      const rowKey = srt(row.number);
+      const allInputs = rawsByKey.has(rowKey) ? rawsByKey.get(rowKey).join(', ') : input.raw;
       html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;color:var(--g6);">' + allInputs + '</td>';
     }
     html += '</tr>';
