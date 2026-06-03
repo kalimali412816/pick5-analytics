@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=65"></script>
+<script src="lottolens-data.js?v=67"></script>
 <script>
 
 // ================================================================
@@ -19617,10 +19617,25 @@ function _renderPosToday(){
   const todayKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   const curYear=String(now.getFullYear());
 
-  // Scope: current year draws (for hit counts), today flagged
+  // Scope: current year draws (for hit counts)
   let scopeRows=ALL.filter(r=>r.dk.startsWith(curYear));
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
-  const todayRows=scopeRows.filter(r=>r.dk===todayKey);
+
+  // Determine active day:
+  // - If today has mid draws → show today (mid + eve if available)
+  // - Otherwise → show the most recent day that has BOTH mid and eve (last full day)
+  const todayMidRows=scopeRows.filter(r=>r.dk===todayKey&&r.draw==='Midday');
+  let activeKey=todayKey;
+  if(todayMidRows.length===0){
+    // Find most recent day with both mid and eve
+    const allDks=[...new Set(scopeRows.map(r=>r.dk))].sort().reverse();
+    for(const dk of allDks){
+      const hasMid=scopeRows.some(r=>r.dk===dk&&r.draw==='Midday');
+      const hasEve=scopeRows.some(r=>r.dk===dk&&r.draw==='Evening');
+      if(hasMid&&hasEve){activeKey=dk;break;}
+    }
+  }
+  const todayRows=scopeRows.filter(r=>r.dk===activeKey);
   const todayNums=new Set(todayRows.map(r=>r.number));
 
   const POS=[0,1,2,3,4];
@@ -19788,7 +19803,8 @@ function _renderPosToday(){
   topH+=`</div>`;
 
   // Date badge
-  const dateLabel=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">📅 Today: <strong>${todayKey}</strong> · ${todayRows.length} draw${todayRows.length!==1?'s':''} · Hit counts from <strong>${curYear}</strong> (${scopeRows.length} total draws)</div>`;
+  const isToday=activeKey===todayKey;
+  const dateLabel=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">📅 ${isToday?'Today':'Last full day'}: <strong>${activeKey}</strong> · ${todayRows.length} draw${todayRows.length!==1?'s':''} · Hit counts from <strong>${curYear}</strong> (${scopeRows.length} total draws)</div>`;
 
   // Pattern search matches (if boxes filled)
   let h=dateLabel+topH;
