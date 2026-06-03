@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=68"></script>
+<script src="lottolens-data.js?v=69"></script>
 <script>
 
 // ================================================================
@@ -16648,12 +16648,27 @@ function runMultiSearch(){
   const matchModeStr = useNorm ? 'Normalized' : 'Exact';
 
   // Stash unique result numbers for the Copy button (deduped, preserves chronological order from newest)
+  // Build a map: drawn number -> all input raws that matched it (for normalized mode)
+  const normMatchMap = {}; // drawn number -> Set of input.raw
+  inputs.forEach(inp => inp.hits.forEach(r => {
+    if(!normMatchMap[r.number]) normMatchMap[r.number] = new Set();
+    normMatchMap[r.number].add(inp.raw);
+  }));
   const allRows = [];
-  inputs.forEach(inp => inp.hits.forEach(r => allRows.push({row:r, input:inp})));
+  // Dedupe rows by drawn number (show each drawn number once, with all matched inputs)
+  const seenRows = new Set();
+  inputs.forEach(inp => inp.hits.forEach(r => {
+    if(!seenRows.has(r.number+r.dk+r.state+r.draw)){
+      seenRows.add(r.number+r.dk+r.state+r.draw);
+      allRows.push({row:r, input:inp});
+    }
+  }));
   allRows.sort((a,b)=>b.row.dk.localeCompare(a.row.dk) || a.row.state.localeCompare(b.row.state));
 
   const uniqueResultNums = [...new Set(allRows.map(x=>x.row.number))];
-  window._msResultNums = uniqueResultNums;
+  // For copy: include all matched input permutations too
+  const allMatchedInputs = [...new Set(Object.values(normMatchMap).flatMap(s=>[...s]))];
+  window._msResultNums = useNorm && allMatchedInputs.length ? allMatchedInputs : uniqueResultNums;
 
   let html = '';
 
@@ -16714,7 +16729,8 @@ function runMultiSearch(){
     html += '<td style="padding:7px 10px;">' + drawPill + '</td>';
     html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;font-weight:700;">' + row.number + '</td>';
     if(useNorm){
-      html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;color:var(--g6);">' + input.raw + '</td>';
+      const allInputs = normMatchMap[row.number] ? [...normMatchMap[row.number]].join(', ') : input.raw;
+      html += '<td style="padding:7px 10px;font-family:\'DM Mono\',monospace;color:var(--g6);">' + allInputs + '</td>';
     }
     html += '</tr>';
   });
