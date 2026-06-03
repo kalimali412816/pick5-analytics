@@ -3023,7 +3023,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=67"></script>
+<script src="lottolens-data.js?v=68"></script>
 <script>
 
 // ================================================================
@@ -19622,17 +19622,14 @@ function _renderPosToday(){
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
 
   // Determine active day:
-  // - If today has mid draws → show today (mid + eve if available)
-  // - Otherwise → show the most recent day that has BOTH mid and eve (last full day)
-  const todayMidRows=scopeRows.filter(r=>r.dk===todayKey&&r.draw==='Midday');
+  // - If today has any draws → show today
+  // - Otherwise → show the most recent previous day that has data
+  const todayAllRows=ALL.filter(r=>r.dk===todayKey);
   let activeKey=todayKey;
-  if(todayMidRows.length===0){
-    // Find most recent day with both mid and eve
-    const allDks=[...new Set(scopeRows.map(r=>r.dk))].sort().reverse();
+  if(todayAllRows.length===0){
+    const allDks=[...new Set(ALL.map(r=>r.dk))].sort().reverse();
     for(const dk of allDks){
-      const hasMid=scopeRows.some(r=>r.dk===dk&&r.draw==='Midday');
-      const hasEve=scopeRows.some(r=>r.dk===dk&&r.draw==='Evening');
-      if(hasMid&&hasEve){activeKey=dk;break;}
+      if(dk<todayKey){activeKey=dk;break;}
     }
   }
   const todayRows=scopeRows.filter(r=>r.dk===activeKey);
