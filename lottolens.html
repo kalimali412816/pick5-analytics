@@ -811,6 +811,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('unseenSingles',this)">🔍 Unseen</div>
   <div class="tab" onclick="switchTab('tracker',this)">📡 Most Drawn</div>
   <div class="tab" onclick="switchTab('permMatcher',this)">🔀 Perm Matcher</div>
+  <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
 </div>
 
 <!-- RESULTS -->
@@ -2932,6 +2933,29 @@ tr:hover td{background:var(--b0);}
     <div id="trackerContent" style="padding:16px;"></div>
   </div>
 </div>
+<div id="panel-posTrips" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>🎯 Position Trips</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">3-digit positions where all 3 digits match · 4-digit positions where 3 of 4 digits match · min 2 hits</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="ptripState" onchange="_renderPosTrips()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
+        </select>
+        <select id="ptripScope" onchange="_renderPosTrips()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Time</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+      </div>
+    </div>
+    <div id="ptripContent" style="padding:16px;"></div>
+  </div>
+</div>
 <div id="panel-permMatcher" class="panel">
   <div class="card">
     <div class="ch">
@@ -3051,7 +3075,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=74"></script>
+<script src="lottolens-data.js?v=75"></script>
 <script>
 
 // ================================================================
@@ -9961,7 +9985,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -9993,6 +10017,7 @@ function renderCur(){
   else if(curTab==='posSearch'){_renderPosSearch();}
   else if(curTab==='posToday'){_renderPosToday();}
   else if(curTab==='permMatcher'){_renderPermMatcher();}
+  else if(curTab==='posTrips'){_renderPosTrips();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -19648,6 +19673,104 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
+function _renderPosTrips(){
+  const container=document.getElementById('ptripContent');
+  if(!container) return;
+
+  const stF=document.getElementById('ptripState').value;
+  const scF=document.getElementById('ptripScope').value;
+
+  // Build scope
+  let rows=ALL;
+  if(stF!=='ALL') rows=rows.filter(r=>r.state===stF);
+  if(scF!=='ALL') rows=rows.filter(r=>r.dk.startsWith(scF));
+
+  const POS=[0,1,2,3,4];
+  function combos(arr,k){
+    const out=[];
+    function rec(s,cur){if(cur.length===k){out.push(cur.slice());return;}for(let i=s;i<arr.length;i++){cur.push(arr[i]);rec(i+1,cur);cur.pop();}}
+    rec(0,[]);
+    return out;
+  }
+
+  // 3-digit trip positions: all 3 digits identical
+  const counts3t={};
+  combos(POS,3).forEach(p=>{
+    rows.forEach(r=>{
+      const digits=p.map(i=>r.number[i]);
+      if(digits[0]===digits[1]&&digits[1]===digits[2]){
+        const k=p.join('')+'|'+digits.join('');
+        counts3t[k]=(counts3t[k]||0)+1;
+      }
+    });
+  });
+
+  // 4-digit trip positions: exactly 3 of 4 digits identical (any 3)
+  const counts4t={};
+  combos(POS,4).forEach(p=>{
+    rows.forEach(r=>{
+      const digits=p.map(i=>r.number[i]);
+      // Check if any 3 of the 4 are identical
+      const freq={};
+      digits.forEach(d=>freq[d]=(freq[d]||0)+1);
+      const vals=Object.values(freq);
+      // Exactly 3 same: [3,1] pattern
+      if(vals.includes(3)&&vals.length===2){
+        const k=p.join('')+'|'+digits.join('');
+        counts4t[k]=(counts4t[k]||0)+1;
+      }
+    });
+  });
+
+  // Filter to min 2 hits and sort by count desc
+  const top3=Object.entries(counts3t).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
+  const top4=Object.entries(counts4t).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
+
+  function renderPatternTrip(key){
+    const [posStr,digStr]=key.split('|');
+    const posSet=new Set(posStr.split('').map(Number));
+    let out='';
+    for(let i=0;i<5;i++){
+      const isFilled=posSet.has(i);
+      const ch=isFilled?digStr[posStr.indexOf(String(i))]:'·';
+      const isTrip=isFilled&&digStr.split('').filter((d,idx)=>posStr[idx]!==undefined).filter(d=>d===ch).length>=3;
+      out+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;border:1.5px solid ${isFilled?(isTrip?'#f59e0b':'#c4b5fd'):'var(--g2)'};background:${isFilled?(isTrip?'#fef3c7':'#ede9fe'):'#fff'};color:${isFilled?(isTrip?'#92400e':'#5b21b6'):'var(--g4)'};font-family:'DM Mono',monospace;font-weight:${isFilled?'800':'400'};font-size:.85rem;border-radius:5px;margin-right:2px;">${ch}</span>`;
+    }
+    return out;
+  }
+
+  function renderSection(label,items,emoji){
+    if(!items.length) return `<div style="font-size:.75rem;color:var(--g5);padding:8px 0;">No ${label} combos with 2+ hits found.</div>`;
+    let s=`<div style="margin-bottom:16px;">`;
+    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">${emoji} ${label}: <span style="color:var(--ac1);font-weight:800;">${items.length} combo${items.length!==1?'s':''}</span></div>`;
+    s+=`<div style="display:flex;flex-direction:column;gap:3px;">`;
+    items.forEach(([key,cnt],i)=>{
+      const rk=i+1;
+      // Check for ties
+      const rkColor=i===0?'#fbbf24':i===1?'#cbd5e1':i===2?'#d97706':'var(--g5)';
+      s+=`<div onclick="_psApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:#fff;border:1px solid var(--g2);cursor:pointer;">`;
+      s+=`<div style="font-size:.75rem;font-weight:800;color:${rkColor};min-width:24px;">#${rk}</div>`;
+      s+=`<div>${renderPatternTrip(key)}</div>`;
+      s+=`<div style="flex:1;"></div>`;
+      s+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
+      s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
+      s+=`</div>`;
+    });
+    s+=`</div></div>`;
+    return s;
+  }
+
+  const total=rows.length;
+  let h=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:14px;">${total.toLocaleString()} draws in scope · click any combo to load into Position search</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">`;
+  h+=`<div>${renderSection('3-Digit Trip Positions',top3,'🥉')}</div>`;
+  h+=`<div>${renderSection('4-Digit Trip Positions',top4,'🏅')}</div>`;
+  h+=`</div>`;
+
+  container.innerHTML=h;
+}
+
+
 function _renderPermMatcher(){
   // nothing to render on load — results shown on button click
 }
