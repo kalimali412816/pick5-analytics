@@ -3075,7 +3075,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=75"></script>
+<script src="lottolens-data.js?v=76"></script>
 <script>
 
 // ================================================================
@@ -19681,9 +19681,9 @@ function _renderPosTrips(){
   const scF=document.getElementById('ptripScope').value;
 
   // Build scope
-  let rows=ALL;
-  if(stF!=='ALL') rows=rows.filter(r=>r.state===stF);
-  if(scF!=='ALL') rows=rows.filter(r=>r.dk.startsWith(scF));
+  let scopeRows=ALL;
+  if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
+  if(scF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(scF));
 
   const POS=[0,1,2,3,4];
   function combos(arr,k){
@@ -19696,7 +19696,7 @@ function _renderPosTrips(){
   // 3-digit trip positions: all 3 digits identical
   const counts3t={};
   combos(POS,3).forEach(p=>{
-    rows.forEach(r=>{
+    scopeRows.forEach(r=>{
       const digits=p.map(i=>r.number[i]);
       if(digits[0]===digits[1]&&digits[1]===digits[2]){
         const k=p.join('')+'|'+digits.join('');
@@ -19705,16 +19705,14 @@ function _renderPosTrips(){
     });
   });
 
-  // 4-digit trip positions: exactly 3 of 4 digits identical (any 3)
+  // 4-digit trip positions: exactly 3 of 4 digits identical
   const counts4t={};
   combos(POS,4).forEach(p=>{
-    rows.forEach(r=>{
+    scopeRows.forEach(r=>{
       const digits=p.map(i=>r.number[i]);
-      // Check if any 3 of the 4 are identical
       const freq={};
       digits.forEach(d=>freq[d]=(freq[d]||0)+1);
       const vals=Object.values(freq);
-      // Exactly 3 same: [3,1] pattern
       if(vals.includes(3)&&vals.length===2){
         const k=p.join('')+'|'+digits.join('');
         counts4t[k]=(counts4t[k]||0)+1;
@@ -19722,9 +19720,41 @@ function _renderPosTrips(){
     });
   });
 
-  // Filter to min 2 hits and sort by count desc
+  // Filter to min 2 hits, sort by count desc
   const top3=Object.entries(counts3t).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
   const top4=Object.entries(counts4t).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
+
+  // Reuse haventComeFor4 if available (defined in _renderPosSearch scope)
+  // We define our own local version here
+  function haventComeTrip(key){
+    const [posStr,digStr]=key.split('|');
+    const posArr=posStr.split('').map(Number);
+    const missingPositions=[0,1,2,3,4].filter(p=>!posArr.includes(p));
+    if(missingPositions.length!==1) return []; // only handle 4-pos (1 missing)
+    const missingPos=missingPositions[0];
+    const knownDigits=digStr.split('');
+    function buildNum(x){
+      const arr=Array(5);
+      posArr.forEach((p,i)=>arr[p]=knownDigits[i]);
+      arr[missingPos]=String(x);
+      return arr.join('');
+    }
+    const allDrawnSet=new Set(ALL.map(r=>r.number));
+    const results=[];
+    const order={Qu:0,Quads:1,TD:2,Triples:3,DD:4,Doubles:5,Singles:6};
+    const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
+    const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
+    const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
+    for(let x=0;x<=9;x++){
+      const num=buildNum(x);
+      const pat=_getRepeatKey(num);
+      if(!allDrawnSet.has(num)){
+        results.push({number:num,type:pat,tc:typeColor[pat]||'#374151',bg:typeBg[pat]||'#f3f4f6',lbl:typeLabel[pat]||pat});
+      }
+    }
+    results.sort((a,b)=>(order[a.type]||9)-(order[b.type]||9));
+    return results;
+  }
 
   function renderPatternTrip(key){
     const [posStr,digStr]=key.split('|');
@@ -19733,38 +19763,87 @@ function _renderPosTrips(){
     for(let i=0;i<5;i++){
       const isFilled=posSet.has(i);
       const ch=isFilled?digStr[posStr.indexOf(String(i))]:'·';
-      const isTrip=isFilled&&digStr.split('').filter((d,idx)=>posStr[idx]!==undefined).filter(d=>d===ch).length>=3;
-      out+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;border:1.5px solid ${isFilled?(isTrip?'#f59e0b':'#c4b5fd'):'var(--g2)'};background:${isFilled?(isTrip?'#fef3c7':'#ede9fe'):'#fff'};color:${isFilled?(isTrip?'#92400e':'#5b21b6'):'var(--g4)'};font-family:'DM Mono',monospace;font-weight:${isFilled?'800':'400'};font-size:.85rem;border-radius:5px;margin-right:2px;">${ch}</span>`;
+      out+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;border:1.5px solid ${isFilled?'#f59e0b':'var(--g2)'};background:${isFilled?'#fef3c7':'#fff'};color:${isFilled?'#92400e':'var(--g4)'};font-family:'DM Mono',monospace;font-weight:${isFilled?'800':'400'};font-size:.85rem;border-radius:5px;margin-right:2px;">${ch}</span>`;
     }
     return out;
   }
 
-  function renderSection(label,items,emoji){
-    if(!items.length) return `<div style="font-size:.75rem;color:var(--g5);padding:8px 0;">No ${label} combos with 2+ hits found.</div>`;
-    let s=`<div style="margin-bottom:16px;">`;
-    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">${emoji} ${label}: <span style="color:var(--ac1);font-weight:800;">${items.length} combo${items.length!==1?'s':''}</span></div>`;
+  function renderMatches(key){
+    // Show all matches for this pattern from scopeRows
+    const [posStr,digStr]=key.split('|');
+    const posArr=posStr.split('').map(Number);
+    const matches=scopeRows.filter(r=>{
+      for(let i=0;i<posArr.length;i++){if(r.number[posArr[i]]!==digStr[i])return false;}
+      return true;
+    }).sort((a,b)=>b.dk.localeCompare(a.dk));
+    if(!matches.length) return '';
+    let s=`<div style="margin-top:6px;padding:6px 8px;background:#f8fafc;border-top:1px dashed var(--g2);">`;
+    s+=`<div style="font-size:.6rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">📋 All Matches (${matches.length})</div>`;
     s+=`<div style="display:flex;flex-direction:column;gap:3px;">`;
-    items.forEach(([key,cnt],i)=>{
-      const rk=i+1;
-      // Check for ties
-      const rkColor=i===0?'#fbbf24':i===1?'#cbd5e1':i===2?'#d97706':'var(--g5)';
-      s+=`<div onclick="_psApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:#fff;border:1px solid var(--g2);cursor:pointer;">`;
-      s+=`<div style="font-size:.75rem;font-weight:800;color:${rkColor};min-width:24px;">#${rk}</div>`;
-      s+=`<div>${renderPatternTrip(key)}</div>`;
-      s+=`<div style="flex:1;"></div>`;
-      s+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
-      s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
+    matches.forEach(r=>{
+      const drawCls=r.draw==='Midday'?'mid-badge':'eve-badge';
+      s+=`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;">`;
+      s+=`<span class="badge" style="font-size:.6rem;">${r.state}</span>`;
+      s+=`<span style="color:var(--g5);">${r.dateStr||r.dk}</span>`;
+      s+=`<span class="${drawCls}" style="font-size:.6rem;">${r.draw==='Midday'?'MID':'EVE'}</span>`;
+      s+=`<span style="font-family:'DM Mono',monospace;font-weight:800;color:var(--g9);">${r.number}</span>`;
       s+=`</div>`;
     });
     s+=`</div></div>`;
     return s;
   }
 
-  const total=rows.length;
-  let h=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:14px;">${total.toLocaleString()} draws in scope · click any combo to load into Position search</div>`;
-  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">`;
-  h+=`<div>${renderSection('3-Digit Trip Positions',top3,'🥉')}</div>`;
-  h+=`<div>${renderSection('4-Digit Trip Positions',top4,'🏅')}</div>`;
+  function renderSection(label,items,emoji,show4){
+    if(!items.length) return `<div style="font-size:.75rem;color:var(--g5);padding:8px 0;">No ${label} combos with 2+ hits found.</div>`;
+    let s=`<div style="margin-bottom:16px;">`;
+    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">${emoji} ${label}: <span style="color:var(--ac1);font-weight:800;">${items.length} combo${items.length!==1?'s':''}</span></div>`;
+    s+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
+    items.forEach(([key,cnt],i)=>{
+      const rkColors=['#fbbf24','#cbd5e1','#d97706'];
+      const rk=i+1;
+      const expanded=`ptexp_${key.replace(/[|]/g,'_')}`;
+      s+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
+      // Header row — click to expand/collapse matches
+      s+=`<div onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display==='none'?'block':'none';})(this)" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
+      s+=`<div style="font-size:.75rem;font-weight:800;color:${rkColors[Math.min(i,2)]};min-width:24px;">#${rk}</div>`;
+      s+=`<div>${renderPatternTrip(key)}</div>`;
+      s+=`<div style="flex:1;"></div>`;
+      s+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
+      s+=`<div style="font-size:.62rem;color:var(--g5);margin-right:4px;">hits</div>`;
+      s+=`<div style="font-size:.65rem;color:var(--g4);">▾</div>`;
+      s+=`</div>`;
+      // Collapsible body
+      s+=`<div style="display:none;">`;
+      s+=renderMatches(key);
+      // Hasn't Come (4-pos only)
+      if(show4){
+        const hc=haventComeTrip(key);
+        if(hc.length){
+          const hcId=`ptripHC${i}`;
+          const hcNums=hc.map(x=>x.number).join(' ');
+          s+=`<div style="padding:4px 8px 6px 8px;background:#fffbeb;border-top:1px dashed #fde68a;">`;
+          s+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">`;
+          s+=`<div style="font-size:.58rem;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.3px;">🚫 Hasn't Come</div>`;
+          s+=`<button id="${hcId}" onclick="event.stopPropagation();navigator.clipboard.writeText('${hcNums}').then(()=>{const b=document.getElementById('${hcId}');b.textContent='✓';setTimeout(()=>b.textContent='📋',1500);})" style="font-size:.58rem;padding:1px 5px;border-radius:3px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;cursor:pointer;font-weight:700;">📋</button>`;
+          s+=`</div>`;
+          s+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
+          hc.forEach(({number,type,tc,bg,lbl})=>{
+            s+=`<span onclick="event.stopPropagation();_psApplyPattern('01234|${number}')" title="${type}" style="font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;padding:2px 6px;border-radius:4px;background:${bg};color:${tc};border:1px solid ${tc}44;cursor:pointer;">${number}<span style="font-size:.55rem;margin-left:2px;opacity:.7;">${lbl}</span></span>`;
+          });
+          s+=`</div></div>`;
+        }
+      }
+      s+=`</div></div>`;
+    });
+    s+=`</div></div>`;
+    return s;
+  }
+
+  const total=scopeRows.length;
+  let h=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:14px;">${total.toLocaleString()} draws in scope · click any row to expand matches + hasn't come</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">`;
+  h+=`<div>${renderSection('3-Digit Trip Positions',top3,'🥉',false)}</div>`;
+  h+=`<div>${renderSection('4-Digit Trip Positions',top4,'🏅',true)}</div>`;
   h+=`</div>`;
 
   container.innerHTML=h;
