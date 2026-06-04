@@ -810,6 +810,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('sameDayRepeat',this)">📅 Day Repeats</div>
   <div class="tab" onclick="switchTab('unseenSingles',this)">🔍 Unseen</div>
   <div class="tab" onclick="switchTab('tracker',this)">📡 Most Drawn</div>
+  <div class="tab" onclick="switchTab('permMatcher',this)">🔀 Perm Matcher</div>
 </div>
 
 <!-- RESULTS -->
@@ -2931,6 +2932,33 @@ tr:hover td{background:var(--b0);}
     <div id="trackerContent" style="padding:16px;"></div>
   </div>
 </div>
+<div id="panel-permMatcher" class="panel">
+  <div class="card">
+    <div class="ch">
+      <h3>🔀 Permutation Matcher</h3>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Paste two lists of 5-digit numbers · find every number in List 1 that is a permutation of any number in List 2</div>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:.7rem;font-weight:700;color:var(--g6);display:block;margin-bottom:5px;">LIST 1 — Your watchlist</label>
+          <textarea id="pmList1" rows="10" placeholder="Paste numbers here&#10;space, comma, or newline separated" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid var(--g3);border-radius:8px;font-family:'DM Mono',monospace;font-size:.8rem;resize:vertical;outline:none;color:var(--g8);"></textarea>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:700;color:var(--g6);display:block;margin-bottom:5px;">LIST 2 — Codes to match against</label>
+          <textarea id="pmList2" rows="10" placeholder="Paste numbers here&#10;space, comma, or newline separated" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid var(--g3);border-radius:8px;font-family:'DM Mono',monospace;font-size:.8rem;resize:vertical;outline:none;color:var(--g8);"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="_runPermMatcher()" style="background:var(--ac1);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:.82rem;font-weight:700;cursor:pointer;">🔍 Find Matches</button>
+        <button onclick="document.getElementById('pmList1').value='';document.getElementById('pmList2').value='';document.getElementById('pmResults').innerHTML=''" style="background:var(--g1);border:1.5px solid var(--g3);border-radius:8px;padding:8px 14px;font-size:.78rem;cursor:pointer;color:var(--g7);">✕ Clear</button>
+        <span id="pmSummary" style="font-size:.78rem;color:var(--g5);"></span>
+        <button id="pmCopyBtn" onclick="_pmCopyAll()" style="display:none;background:#0891b2;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.78rem;font-weight:700;cursor:pointer;margin-left:auto;">📋 Copy All Matches</button>
+      </div>
+      <div id="pmResults"></div>
+    </div>
+  </div>
+</div>
 <div id="panel-backtest" class="panel">
   <div class="card">
     <div class="ch" style="flex-wrap:wrap;gap:8px;">
@@ -3023,7 +3051,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=72"></script>
+<script src="lottolens-data.js?v=73"></script>
 <script>
 
 // ================================================================
@@ -9933,7 +9961,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -9964,6 +9992,7 @@ function renderCur(){
   else if(curTab==='search'){runSearch();_cdInitYear();}
   else if(curTab==='posSearch'){_renderPosSearch();}
   else if(curTab==='posToday'){_renderPosToday();}
+  else if(curTab==='permMatcher'){_renderPermMatcher();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -19619,6 +19648,81 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
+function _renderPermMatcher(){
+  // nothing to render on load — results shown on button click
+}
+
+function _runPermMatcher(){
+  const raw1=document.getElementById('pmList1').value;
+  const raw2=document.getElementById('pmList2').value;
+  const parse=s=>s.match(/\b\d{5}\b/g)||[];
+  const list1=new Set(parse(raw1));
+  const list2=[...new Set(parse(raw2))]; // dedupe list2
+
+  if(!list1.size||!list2.length){
+    document.getElementById('pmResults').innerHTML='<div style="color:var(--g5);font-size:.8rem;">Paste numbers into both lists first.</div>';
+    return;
+  }
+
+  // For each list2 code, generate all permutations and find matches in list1
+  function perms(s){
+    if(s.length<=1) return [s];
+    const out=new Set();
+    for(let i=0;i<s.length;i++){
+      const rest=s.slice(0,i)+s.slice(i+1);
+      perms(rest).forEach(p=>out.add(s[i]+p));
+    }
+    return [...out];
+  }
+
+  const results=[];
+  list2.forEach(code=>{
+    const matches=perms(code).filter(p=>list1.has(p)).sort();
+    if(matches.length) results.push({code,matches});
+  });
+
+  const allMatches=[...new Set(results.flatMap(r=>r.matches))];
+  window._pmMatches=allMatches;
+
+  const summary=document.getElementById('pmSummary');
+  const copyBtn=document.getElementById('pmCopyBtn');
+  const container=document.getElementById('pmResults');
+
+  if(!results.length){
+    summary.textContent=`0 of ${list2.length} codes matched`;
+    copyBtn.style.display='none';
+    container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">No permutation matches found.</div>';
+    return;
+  }
+
+  summary.textContent=`${results.length} of ${list2.length} codes matched · ${allMatches.length} unique match${allMatches.length!==1?'es':''}`;
+  copyBtn.style.display='';
+
+  let h='<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">';
+  results.forEach(({code,matches})=>{
+    h+=`<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--g0);border:1px solid var(--g2);border-radius:7px;">`;
+    h+=`<span style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--g5);min-width:52px;">${code}</span>`;
+    h+=`<span style="font-size:.72rem;color:var(--g4);">→</span>`;
+    h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+    matches.forEach(m=>{
+      h+=`<span style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--g9);">${m}</span>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+='</div>';
+  container.innerHTML=h;
+}
+
+function _pmCopyAll(){
+  if(!window._pmMatches||!window._pmMatches.length) return;
+  navigator.clipboard.writeText(window._pmMatches.join(' ')).then(()=>{
+    const btn=document.getElementById('pmCopyBtn');
+    btn.textContent='✓ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy All Matches',1500);
+  });
+}
+
+
 function _renderPosToday(){
   const container=document.getElementById('ptContent');
   if(!container)return;
