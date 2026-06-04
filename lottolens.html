@@ -3075,7 +3075,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=76"></script>
+<script src="lottolens-data.js?v=77"></script>
 <script>
 
 // ================================================================
@@ -19781,11 +19781,10 @@ function _renderPosTrips(){
     s+=`<div style="font-size:.6rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">📋 All Matches (${matches.length})</div>`;
     s+=`<div style="display:flex;flex-direction:column;gap:3px;">`;
     matches.forEach(r=>{
-      const drawCls=r.draw==='Midday'?'mid-badge':'eve-badge';
       s+=`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;">`;
-      s+=`<span class="badge" style="font-size:.6rem;">${r.state}</span>`;
-      s+=`<span style="color:var(--g5);">${r.dateStr||r.dk}</span>`;
-      s+=`<span class="${drawCls}" style="font-size:.6rem;">${r.draw==='Midday'?'MID':'EVE'}</span>`;
+      s+=`<span class="st">${r.state}</span>`;
+      s+=`<span style="color:var(--g5);font-size:.72rem;">${r.dateStr}</span>`;
+      s+=`<span class="${r.draw==='midday'?'dm':'de'}">${r.draw}</span>`;
       s+=`<span style="font-family:'DM Mono',monospace;font-weight:800;color:var(--g9);">${r.number}</span>`;
       s+=`</div>`;
     });
