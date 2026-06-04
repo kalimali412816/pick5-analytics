@@ -3075,7 +3075,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=77"></script>
+<script src="lottolens-data.js?v=78"></script>
 <script>
 
 // ================================================================
@@ -19695,18 +19695,21 @@ function _renderPosTrips(){
 
   // 3-digit trip positions: all 3 digits identical
   const counts3t={};
+  const recent3t={};
   combos(POS,3).forEach(p=>{
     scopeRows.forEach(r=>{
       const digits=p.map(i=>r.number[i]);
       if(digits[0]===digits[1]&&digits[1]===digits[2]){
         const k=p.join('')+'|'+digits.join('');
         counts3t[k]=(counts3t[k]||0)+1;
+        if(!recent3t[k]||r.dk>recent3t[k]) recent3t[k]=r.dk;
       }
     });
   });
 
   // 4-digit trip positions: exactly 3 of 4 digits identical
   const counts4t={};
+  const recent4t={};
   combos(POS,4).forEach(p=>{
     scopeRows.forEach(r=>{
       const digits=p.map(i=>r.number[i]);
@@ -19716,13 +19719,16 @@ function _renderPosTrips(){
       if(vals.includes(3)&&vals.length===2){
         const k=p.join('')+'|'+digits.join('');
         counts4t[k]=(counts4t[k]||0)+1;
+        if(!recent4t[k]||r.dk>recent4t[k]) recent4t[k]=r.dk;
       }
     });
   });
 
-  // Filter to min 2 hits, sort by count desc
-  const top3=Object.entries(counts3t).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
-  const top4=Object.entries(counts4t).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]);
+  // Filter to min 2 hits, sort by count desc then most recent dk desc on ties
+  const top3=Object.entries(counts3t).filter(([,c])=>c>=2)
+    .sort((a,b)=>b[1]-a[1]||(recent3t[b[0]]||'').localeCompare(recent3t[a[0]]||''));
+  const top4=Object.entries(counts4t).filter(([,c])=>c>=2)
+    .sort((a,b)=>b[1]-a[1]||(recent4t[b[0]]||'').localeCompare(recent4t[a[0]]||''));
 
   // Reuse haventComeFor4 if available (defined in _renderPosSearch scope)
   // We define our own local version here
