@@ -812,6 +812,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('tracker',this)">📡 Most Drawn</div>
   <div class="tab" onclick="switchTab('permMatcher',this)">🔀 Perm Matcher</div>
   <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
+  <div class="tab" onclick="switchTab('posFilter',this)">🔎 Position Search</div>
 </div>
 
 <!-- RESULTS -->
@@ -2933,6 +2934,92 @@ tr:hover td{background:var(--b0);}
     <div id="trackerContent" style="padding:16px;"></div>
   </div>
 </div>
+<div id="panel-posFilter" class="panel">
+  <div class="card">
+    <div class="ch">
+      <h3>🔎 Position Search</h3>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Find 4-digit position combos with 2+ hits that appeared on a specific day, month, or year</div>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+      <!-- Filters -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Position Type</label>
+          <select id="pfType" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+            <option value="4">4-Digit Positions</option>
+            <option value="3">3-Digit Positions</option>
+            <option value="2">2-Digit Positions</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Min Hits</label>
+          <select id="pfMinHits" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+            <option value="5">5+</option>
+            <option value="10">10+</option>
+            <option value="20">20+</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Filter Scope (hit counts)</label>
+          <select id="pfScope" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+            <option value="ALL">All Time</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">State</label>
+          <select id="pfState" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+            <option value="ALL">All States</option>
+            <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
+            <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
+            <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
+          </select>
+        </div>
+      </div>
+      <!-- Date filter -->
+      <div style="background:var(--g0);border:1.5px solid var(--g2);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:.7rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">🗓 Filter by Date — show only combos that hit on...</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.68rem;color:var(--g5);">Day of month</label>
+            <input type="number" id="pfDay" min="1" max="31" placeholder="e.g. 10" oninput="_renderPosFilter()" style="width:80px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.68rem;color:var(--g5);">Month</label>
+            <select id="pfMonth" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+              <option value="">Any</option>
+              <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
+              <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
+              <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
+              <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.68rem;color:var(--g5);">Year</label>
+            <select id="pfYear" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+              <option value="">Any</option>
+              <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+              <option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option>
+              <option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option>
+              <option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option>
+              <option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option>
+              <option value="2011">2011</option><option value="2010">2010</option>
+            </select>
+          </div>
+          <button onclick="document.getElementById('pfDay').value='';document.getElementById('pfMonth').value='';document.getElementById('pfYear').value='';_renderPosFilter();" style="padding:6px 12px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;color:var(--g7);">Clear Date</button>
+        </div>
+      </div>
+      <div id="pfResults" style="margin-top:4px;"></div>
+    </div>
+  </div>
+</div>
 <div id="panel-posTrips" class="panel">
   <div class="card">
     <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
@@ -3075,7 +3162,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=81"></script>
+<script src="lottolens-data.js?v=82"></script>
 <script>
 
 // ================================================================
@@ -9985,7 +10072,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','posFilter'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -10018,6 +10105,7 @@ function renderCur(){
   else if(curTab==='posToday'){_renderPosToday();}
   else if(curTab==='permMatcher'){_renderPermMatcher();}
   else if(curTab==='posTrips'){_renderPosTrips();}
+  else if(curTab==='posFilter'){_renderPosFilter();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -19673,6 +19761,152 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
+function _renderPosFilter(){
+  const container=document.getElementById('pfResults');
+  if(!container) return;
+
+  const posType=parseInt(document.getElementById('pfType').value);
+  const minHits=parseInt(document.getElementById('pfMinHits').value);
+  const scope=document.getElementById('pfScope').value;
+  const stF=document.getElementById('pfState').value;
+  const dayF=document.getElementById('pfDay').value.trim();
+  const monthF=document.getElementById('pfMonth').value;
+  const yearF=document.getElementById('pfYear').value;
+
+  // No date filter = show nothing yet
+  if(!dayF&&!monthF&&!yearF){
+    container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">Set at least one date filter above to see results.</div>';
+    return;
+  }
+
+  // Build full scope rows (for hit counts)
+  let allRows=ALL;
+  if(stF!=='ALL') allRows=allRows.filter(r=>r.state===stF);
+  if(scope!=='ALL') allRows=allRows.filter(r=>r.dk.startsWith(scope));
+
+  // Build date-filtered rows (must have hit on this date criteria)
+  let dateRows=allRows;
+  if(yearF) dateRows=dateRows.filter(r=>r.dk.startsWith(yearF));
+  if(monthF) dateRows=dateRows.filter(r=>r.dk.slice(5,7)===monthF);
+  if(dayF) dateRows=dateRows.filter(r=>r.dk.slice(8,10)===dayF.padStart(2,'0'));
+
+  if(!dateRows.length){
+    container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">No draws found for that date criteria.</div>';
+    return;
+  }
+
+  const POS=[0,1,2,3,4];
+  function combos(arr,k){
+    const out=[];
+    function rec(s,cur){if(cur.length===k){out.push(cur.slice());return;}for(let i=s;i<arr.length;i++){cur.push(arr[i]);rec(i+1,cur);cur.pop();}}
+    rec(0,[]);
+    return out;
+  }
+
+  // Build counts from ALL scope rows
+  const counts={};
+  const recentDk={};
+  combos(POS,posType).forEach(p=>{
+    allRows.forEach(r=>{
+      const k=p.join('')+'|'+p.map(i=>r.number[i]).join('');
+      counts[k]=(counts[k]||0)+1;
+      if(!recentDk[k]||r.dk>recentDk[k]) recentDk[k]=r.dk;
+    });
+  });
+
+  // Build keys that appeared in date-filtered rows
+  const dateKeys=new Set();
+  combos(POS,posType).forEach(p=>{
+    dateRows.forEach(r=>{
+      dateKeys.add(p.join('')+'|'+p.map(i=>r.number[i]).join(''));
+    });
+  });
+
+  // Filter: must be in dateKeys AND meet minHits
+  const results=Object.entries(counts)
+    .filter(([k,c])=>c>=minHits&&dateKeys.has(k))
+    .sort((a,b)=>b[1]-a[1]||(recentDk[b[0]]||'').localeCompare(recentDk[a[0]]||''));
+
+  if(!results.length){
+    container.innerHTML=`<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">No ${posType}-digit position combos with ${minHits}+ hits found for that date.</div>`;
+    return;
+  }
+
+  function renderPat(key){
+    const [posStr,digStr]=key.split('|');
+    const posSet=new Set(posStr.split('').map(Number));
+    let out='';
+    for(let i=0;i<5;i++){
+      const isFilled=posSet.has(i);
+      const ch=isFilled?digStr[posStr.indexOf(String(i))]:'·';
+      out+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:28px;border:1.5px solid ${isFilled?'#c4b5fd':'var(--g2)'};background:${isFilled?'#ede9fe':'#fff'};color:${isFilled?'#5b21b6':'var(--g4)'};font-family:'DM Mono',monospace;font-weight:${isFilled?'800':'400'};font-size:.85rem;border-radius:5px;margin-right:2px;">${ch}</span>`;
+    }
+    return out;
+  }
+
+  // Date label for summary
+  const dateParts=[];
+  if(dayF) dateParts.push(`day ${dayF}`);
+  if(monthF) dateParts.push(['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(monthF)]);
+  if(yearF) dateParts.push(yearF);
+  const dateLabel=dateParts.join(' ');
+
+  let h=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">${results.length} combo${results.length!==1?'s':''} with ${minHits}+ hits that appeared on <strong>${dateLabel}</strong> · ${dateRows.length} draw${dateRows.length!==1?'s':''} matched date filter</div>`;
+  h+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
+
+  results.forEach(([key,cnt],i)=>{
+    const rkColors=['#fbbf24','#cbd5e1','#d97706'];
+    const rk=i+1;
+    // Get the date-filtered hits for this key
+    const [posStr,digStr]=key.split('|');
+    const posArr=posStr.split('').map(Number);
+    const dateHits=dateRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx]));
+    const allHits=allRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx])).sort((a,b)=>b.dk.localeCompare(a.dk));
+
+    h+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
+    // Header
+    h+=`<div onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display==='none'?'block':'none';})(this)" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
+    h+=`<div style="font-size:.75rem;font-weight:800;color:${rkColors[Math.min(i,2)]};min-width:24px;">#${rk}</div>`;
+    h+=`<div>${renderPat(key)}</div>`;
+    h+=`<div style="flex:1;"></div>`;
+    h+=`<div style="font-size:.68rem;color:var(--ac1);font-weight:700;margin-right:6px;">${dateHits.length} on date</div>`;
+    h+=`<div style="font-family:'DM Mono',monospace;font-weight:700;color:var(--g7);font-size:.78rem;">${cnt}</div>`;
+    h+=`<div style="font-size:.62rem;color:var(--g5);margin-right:4px;">total</div>`;
+    h+=`<div style="font-size:.65rem;color:var(--g4);">▾</div>`;
+    h+=`</div>`;
+    // Collapsible: show date hits first, then all hits
+    h+=`<div style="display:none;">`;
+    h+=`<div style="padding:6px 10px;background:#f0fdf4;border-top:1px dashed #86efac;">`;
+    h+=`<div style="font-size:.6rem;font-weight:700;color:#15803d;text-transform:uppercase;margin-bottom:4px;">✅ Hits on ${dateLabel}</div>`;
+    dateHits.sort((a,b)=>b.dk.localeCompare(a.dk)).forEach(r=>{
+      h+=`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;margin-bottom:2px;">`;
+      h+=`<span class="st">${r.state}</span>`;
+      h+=`<span style="color:var(--g5);">${r.dateStr}</span>`;
+      h+=`<span class="${r.draw==='midday'?'dm':'de'}">${r.draw}</span>`;
+      h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;color:var(--g9);">${r.number}</span>`;
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+    if(allHits.length>dateHits.length){
+      h+=`<div style="padding:6px 10px;background:#fafafa;border-top:1px dashed var(--g2);">`;
+      h+=`<div style="font-size:.6rem;font-weight:700;color:var(--g5);text-transform:uppercase;margin-bottom:4px;">All ${cnt} hits</div>`;
+      allHits.forEach(r=>{
+        h+=`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;margin-bottom:2px;">`;
+        h+=`<span class="st">${r.state}</span>`;
+        h+=`<span style="color:var(--g5);">${r.dateStr}</span>`;
+        h+=`<span class="${r.draw==='midday'?'dm':'de'}">${r.draw}</span>`;
+        h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;color:var(--g9);">${r.number}</span>`;
+        h+=`</div>`;
+      });
+      h+=`</div>`;
+    }
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  container.innerHTML=h;
+}
+
+
 function _renderPosTrips(){
   const container=document.getElementById('ptripContent');
   if(!container) return;
