@@ -3162,7 +3162,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=84"></script>
+<script src="lottolens-data.js?v=85"></script>
 <script>
 
 // ================================================================
@@ -3808,6 +3808,7 @@ function msfSelectYear(id, yr, yms){
   });
   _msfUpdateBtn(id);
   if(id==='mlyS'||id==='mlyM'){renderMonthly();return;}
+  if(id==='palS'||id==='palM'){_renderPalindromes();return;}
   applyFiltersDebounced();
 }
 
