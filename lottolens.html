@@ -3162,7 +3162,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=85"></script>
+<script src="lottolens-data.js?v=86"></script>
 <script>
 
 // ================================================================
@@ -3699,22 +3699,26 @@ function toggleMSF(id){
   const drop = document.getElementById(id+'-drop');
   const btn = document.getElementById(id+'-btn');
   // Close all others
-  ['stF','moF','dayF','mlyS','mlyM','mlyD','ftM','ftD'].forEach(function(x){
+  ['stF','moF','dayF','mlyS','mlyM','mlyD','ftM','ftD','palS','palM','searchSt'].forEach(function(x){
     if(x!==id){
-      document.getElementById(x+'-drop').classList.remove('open');
-      document.getElementById(x+'-btn').classList.remove('open');
+      const d=document.getElementById(x+'-drop');
+      const b=document.getElementById(x+'-btn');
+      if(d) d.classList.remove('open');
+      if(b) b.classList.remove('open');
     }
   });
-  drop.classList.toggle('open');
-  btn.classList.toggle('open');
+  if(drop) drop.classList.toggle('open');
+  if(btn) btn.classList.toggle('open');
 }
 // Close dropdowns when clicking outside
 document.addEventListener('click', function(e){
-  ['stF','moF','dayF','mlyS','mlyM'].forEach(function(id){
+  ['stF','moF','dayF','mlyS','mlyM','mlyD','ftM','ftD','palS','palM','searchSt'].forEach(function(id){
     const wrap = document.getElementById(id+'-wrap');
     if(wrap && !wrap.contains(e.target)){
-      document.getElementById(id+'-drop').classList.remove('open');
-      document.getElementById(id+'-btn').classList.remove('open');
+      const d=document.getElementById(id+'-drop');
+      const b=document.getElementById(id+'-btn');
+      if(d) d.classList.remove('open');
+      if(b) b.classList.remove('open');
     }
   });
 });
