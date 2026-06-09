@@ -813,6 +813,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('permMatcher',this)">🔀 Perm Matcher</div>
   <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
   <div class="tab" onclick="switchTab('posFilter',this)">🔎 Position Search</div>
+  <div class="tab" onclick="switchTab('posConverge',this)">🎯 Position Convergence</div>
 </div>
 
 <!-- RESULTS -->
@@ -2933,6 +2934,51 @@ tr:hover td{background:var(--b0);}
     <div id="trackerContent" style="padding:16px;"></div>
   </div>
 </div>
+<div id="panel-posConverge" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>🎯 Position Convergence</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Numbers where 3+ distinct 4-digit position combos from history all point to the same T / TD / Q / Qu number</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="pcScope" onchange="_renderPosConverge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
+          <option value="ALL">All Time</option>
+          <option value="2026" selected>2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+        <select id="pcState" onchange="_renderPosConverge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
+          <option value="ALL">All States</option>
+          <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
+          <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
+          <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
+        </select>
+        <select id="pcMinPos" onchange="_renderPosConverge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
+          <option value="3">3+ positions</option>
+          <option value="4">4+ positions</option>
+          <option value="5">5 positions</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--g2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:.72rem;font-weight:700;color:var(--g6);">FILTER BY PATTERN:</span>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcT" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#fce7f3;color:#9d174d;font-weight:700;font-size:.72rem;">T</span></label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcTD" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#ede9fe;color:#5b21b6;font-weight:700;font-size:.72rem;">TD</span></label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcQ" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:.72rem;">Q</span></label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcQu" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#dbeafe;color:#0f2044;font-weight:700;font-size:.72rem;">Qu</span></label>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button id="pcCopyAll" onclick="_pcCopy('ALL')" style="background:var(--ac1);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>
+        <button onclick="_pcCopy('T')" style="background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy T</button>
+        <button onclick="_pcCopy('TD')" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy TD</button>
+        <button onclick="_pcCopy('Q')" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy Q</button>
+        <button onclick="_pcCopy('Qu')" style="background:#dbeafe;color:#0f2044;border:1px solid #93c5fd;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy Qu</button>
+      </div>
+    </div>
+    <div id="pcContent" style="padding:16px;"></div>
+  </div>
+</div>
 <div id="panel-posFilter" class="panel">
   <div class="card">
     <div class="ch">
@@ -3161,7 +3207,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=203"></script>
+<script src="lottolens-data.js?v=204"></script>
 <script>
 
 // ================================================================
@@ -10076,7 +10122,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','posFilter'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','posFilter','posConverge'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -10110,6 +10156,7 @@ function renderCur(){
   else if(curTab==='permMatcher'){_renderPermMatcher();}
   else if(curTab==='posTrips'){_renderPosTrips();}
   else if(curTab==='posFilter'){_renderPosFilter();}
+  else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -19765,6 +19812,178 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
+function _renderPosConverge(){
+  const container=document.getElementById('pcContent');
+  if(!container) return;
+
+  const scope=document.getElementById('pcScope').value;
+  const stF=document.getElementById('pcState').value;
+  const minPos=parseInt(document.getElementById('pcMinPos').value);
+  const wantT=document.getElementById('pcT').checked;
+  const wantTD=document.getElementById('pcTD').checked;
+  const wantQ=document.getElementById('pcQ').checked;
+  const wantQu=document.getElementById('pcQu').checked;
+
+  container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">Computing... this may take a moment.</div>';
+
+  // Use setTimeout to allow the UI to update before heavy computation
+  setTimeout(function(){
+    // Build scope rows
+    let rows=ALL;
+    if(scope!=='ALL') rows=rows.filter(r=>r.dk.startsWith(scope));
+    if(stF!=='ALL') rows=rows.filter(r=>r.state===stF);
+
+    function getPat(n){
+      const freq={};
+      n.split('').forEach(d=>freq[d]=(freq[d]||0)+1);
+      const vals=Object.values(freq).sort((a,b)=>b-a);
+      if(vals[0]===5) return 'Qu';
+      if(vals[0]===4) return 'Q';
+      if(vals[0]===3&&vals[1]===2) return 'TD';
+      if(vals[0]===3) return 'T';
+      return null;
+    }
+
+    const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d'};
+    const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3'};
+
+    // For each drawn number, find all 4-digit position combos that share 4 of 5 digits at same positions
+    // Target numbers: all T/TD/Q/Qu numbers — generate from drawn numbers' neighbors
+    // Approach: for each drawn number, generate all 10 possible "x" variants (replace each pos with wildcard)
+    // then check which target numbers (T/TD/Q/Qu) are pointed to by 3+ distinct position combos
+
+    // Step 1: collect all unique drawn numbers in scope
+    const drawnNums=new Set(rows.map(r=>r.number));
+
+    // Step 2: for every drawn number, for every 4-position subset, compute the "target" = that 4-pos pattern
+    // A target number N is "pointed to" by drawn number D via positions P if D[p]==N[p] for all p in P
+    // We want to find N (T/TD/Q/Qu) where 3+ distinct (pos,drawn_number) pairs point to N
+
+    // Build: targetNum -> Set of position strings that point to it
+    const targetPosMap={}; // targetNum -> Set of posStr|digStr
+
+    const POS=[0,1,2,3,4];
+    // All 4-position combos
+    const pos4=[];
+    for(let a=0;a<5;a++)for(let b=a+1;b<5;b++)for(let c=b+1;c<5;c++)for(let d=c+1;d<5;d++)
+      pos4.push([a,b,c,d]);
+
+    rows.forEach(r=>{
+      const num=r.number;
+      pos4.forEach(p=>{
+        const missingPos=[0,1,2,3,4].find(x=>!p.includes(x));
+        const digits=p.map(i=>num[i]).join('');
+        const posStr=p.join('');
+        const key=posStr+'|'+digits;
+        // Generate all 10 possible completions (x=0..9)
+        for(let x=0;x<=9;x++){
+          const arr=Array(5);
+          p.forEach((pi,idx)=>arr[pi]=digits[idx]);
+          arr[missingPos]=String(x);
+          const target=arr.join('');
+          const pat=getPat(target);
+          if(!pat) continue;
+          if(!targetPosMap[target]) targetPosMap[target]=new Set();
+          targetPosMap[target].add(key);
+        }
+      });
+    });
+
+    // Step 3: filter to targets with 3+ distinct position combos
+    const results=[];
+    Object.entries(targetPosMap).forEach(([num,posSet])=>{
+      if(posSet.size<minPos) return;
+      const pat=getPat(num);
+      if(!pat) return;
+      if(pat==='T'&&!wantT) return;
+      if(pat==='TD'&&!wantTD) return;
+      if(pat==='Q'&&!wantQ) return;
+      if(pat==='Qu'&&!wantQu) return;
+      // For each position combo, find which drawn numbers contributed
+      const posDetails=[];
+      posSet.forEach(key=>{
+        const [posStr,digStr]=key.split('|');
+        const posArr=posStr.split('').map(Number);
+        // Find draws in scope that match this 4-pos pattern
+        const matching=rows.filter(r=>posArr.every((p,i)=>r.number[p]===digStr[i]));
+        if(matching.length>0){
+          posDetails.push({key,posStr,digStr,draws:matching});
+        }
+      });
+      if(posDetails.length>=minPos){
+        const alreadyDrawn=drawnNums.has(num);
+        results.push({num,pat,posCount:posDetails.length,posDetails,alreadyDrawn});
+      }
+    });
+
+    // Sort: Qu > Q > TD > T, then by posCount desc
+    const order={Qu:0,Q:1,TD:2,T:3};
+    results.sort((a,b)=>(order[a.pat]||9)-(order[b.pat]||9)||b.posCount-a.posCount);
+
+    // Store for copy
+    window._pcResults=results;
+
+    if(!results.length){
+      container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">No convergence numbers found for current filters.</div>';
+      return;
+    }
+
+    let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">${results.length} numbers found where ${minPos}+ distinct 4-digit positions point to the same T/TD/Q/Qu number</div>`;
+    h+=`<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+    results.forEach(({num,pat,posCount,posDetails,alreadyDrawn})=>{
+      const tc=PAT_COLOR[pat]||'#374151';
+      const bg=PAT_BG[pat]||'#f3f4f6';
+      h+=`<div style="border:1.5px solid ${tc}44;border-radius:8px;overflow:hidden;">`;
+      // Header
+      h+=`<div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${bg};cursor:pointer;">`;
+      h+=`<span style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;color:${tc};">${num}</span>`;
+      h+=`<span style="padding:2px 8px;border-radius:4px;background:${tc};color:#fff;font-size:.7rem;font-weight:700;">${pat}</span>`;
+      h+=`<span style="font-size:.7rem;color:${tc};font-weight:700;">${posCount} positions</span>`;
+      if(alreadyDrawn) h+=`<span style="padding:2px 7px;border-radius:4px;background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:700;">✓ Already Drawn</span>`;
+      h+=`<div style="flex:1;"></div>`;
+      h+=`<span style="font-size:.65rem;color:${tc};opacity:.7;">▾ details</span>`;
+      h+=`</div>`;
+      // Collapsible details
+      h+=`<div style="display:none;padding:8px 12px;background:#fff;border-top:1px dashed ${tc}44;">`;
+      h+=`<div style="font-size:.62rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;">Contributing position combos:</div>`;
+      posDetails.forEach(({posStr,digStr,draws:drs})=>{
+        h+=`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;flex-wrap:wrap;">`;
+        // Render the position pattern
+        let pat_html='';
+        for(let i=0;i<5;i++){
+          const idx=posStr.indexOf(String(i));
+          const filled=idx>=0;
+          const ch=filled?digStr[idx]:'·';
+          pat_html+=`<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;border:1.5px solid ${filled?tc:'var(--g2)'};background:${filled?bg:'#fff'};color:${filled?tc:'var(--g4)'};font-family:'DM Mono',monospace;font-weight:${filled?'800':'400'};font-size:.82rem;border-radius:4px;margin-right:1px;">${ch}</span>`;
+        }
+        h+=`<div>${pat_html}</div>`;
+        h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+        drs.forEach(r=>{
+          h+=`<span style="font-size:.7rem;background:var(--g0);border:1px solid var(--g2);border-radius:4px;padding:1px 6px;font-family:'DM Mono',monospace;">${r.dateStr} <b>${r.state}</b> ${r.number} <span style="font-size:.6rem;color:var(--g5);">${r.draw==='midday'?'M':'E'}</span></span>`;
+        });
+        h+=`</div></div>`;
+      });
+      h+=`</div></div>`;
+    });
+    h+=`</div>`;
+    container.innerHTML=h;
+  },50);
+}
+
+window._pcResults=[];
+function _pcCopy(patFilter){
+  const res=window._pcResults||[];
+  const nums=res
+    .filter(r=>patFilter==='ALL'||r.pat===patFilter)
+    .map(r=>r.num);
+  if(!nums.length){alert('No numbers to copy.');return;}
+  navigator.clipboard.writeText(nums.join(' ')).then(()=>{
+    alert('Copied '+nums.length+' numbers!');
+  });
+}
+
+
 function _renderPosFilter(){
   const container=document.getElementById('pfResults');
   if(!container) return;
