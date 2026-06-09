@@ -2964,12 +2964,14 @@ tr:hover td{background:var(--b0);}
     </div>
     <div style="padding:12px 16px;border-bottom:1px solid var(--g2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <span style="font-size:.72rem;font-weight:700;color:var(--g6);">FILTER BY PATTERN:</span>
+      <label id="pcDDlbl" style="display:none;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcDD" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#fef9c3;color:#854d0e;font-weight:700;font-size:.72rem;">DD</span></label>
       <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcT" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#fce7f3;color:#9d174d;font-weight:700;font-size:.72rem;">T</span></label>
       <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcTD" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#ede9fe;color:#5b21b6;font-weight:700;font-size:.72rem;">TD</span></label>
       <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcQ" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:.72rem;">Q</span></label>
       <label style="display:flex;align-items:center;gap:4px;font-size:.75rem;cursor:pointer;"><input type="checkbox" id="pcQu" checked onchange="_renderPosConverge()"> <span style="padding:2px 7px;border-radius:4px;background:#dbeafe;color:#0f2044;font-weight:700;font-size:.72rem;">Qu</span></label>
       <div style="margin-left:auto;display:flex;gap:6px;">
         <button id="pcCopyAll" onclick="_pcCopy('ALL')" style="background:var(--ac1);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>
+        <button id="pcCopyDD" onclick="_pcCopy('DD')" style="display:none;background:#fef9c3;color:#854d0e;border:1px solid #fde047;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy DD</button>
         <button onclick="_pcCopy('T')" style="background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy T</button>
         <button onclick="_pcCopy('TD')" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy TD</button>
         <button onclick="_pcCopy('Q')" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy Q</button>
@@ -3207,7 +3209,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=205"></script>
+<script src="lottolens-data.js?v=206"></script>
 <script>
 
 // ================================================================
@@ -19818,11 +19820,19 @@ function _renderPosConverge(){
 
   const scope=document.getElementById('pcScope').value;
   const stF=document.getElementById('pcState').value;
-  const minPos=parseInt(document.getElementById('pcMinPos').value);
+  const specificState=stF!=='ALL';
+  // State-specific rules: 2+ positions, DD included
+  const minPos=specificState?2:parseInt(document.getElementById('pcMinPos').value);
+  const wantDD=specificState&&document.getElementById('pcDD').checked;
   const wantT=document.getElementById('pcT').checked;
   const wantTD=document.getElementById('pcTD').checked;
   const wantQ=document.getElementById('pcQ').checked;
   const wantQu=document.getElementById('pcQu').checked;
+  // Show/hide DD controls
+  const ddLbl=document.getElementById('pcDDlbl');
+  const ddCopyBtn=document.getElementById('pcCopyDD');
+  if(ddLbl) ddLbl.style.display=specificState?'flex':'none';
+  if(ddCopyBtn) ddCopyBtn.style.display=specificState?'':'none';
 
   container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">Computing... this may take a moment.</div>';
 
@@ -19841,11 +19851,12 @@ function _renderPosConverge(){
       if(vals[0]===4) return 'Q';
       if(vals[0]===3&&vals[1]===2) return 'TD';
       if(vals[0]===3) return 'T';
+      if(vals[0]===2&&vals[1]===2) return 'DD';
       return null;
     }
 
-    const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d'};
-    const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3'};
+    const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e'};
+    const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3'};
 
     // For each drawn number, find all 4-digit position combos that share 4 of 5 digits at same positions
     // Target numbers: all T/TD/Q/Qu numbers — generate from drawn numbers' neighbors
@@ -19895,6 +19906,7 @@ function _renderPosConverge(){
       if(posSet.size<minPos) return;
       const pat=getPat(num);
       if(!pat) return;
+      if(pat==='DD'&&!wantDD) return;
       if(pat==='T'&&!wantT) return;
       if(pat==='TD'&&!wantTD) return;
       if(pat==='Q'&&!wantQ) return;
