@@ -3207,7 +3207,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=204"></script>
+<script src="lottolens-data.js?v=205"></script>
 <script>
 
 // ================================================================
@@ -19917,8 +19917,12 @@ function _renderPosConverge(){
     });
 
     // Sort: Qu > Q > TD > T, then by posCount desc
+    // Exclude numbers already drawn in scope
     const order={Qu:0,Q:1,TD:2,T:3};
-    results.sort((a,b)=>(order[a.pat]||9)-(order[b.pat]||9)||b.posCount-a.posCount);
+    const finalResults=results.filter(r=>!r.alreadyDrawn);
+    finalResults.sort((a,b)=>(order[a.pat]||9)-(order[b.pat]||9)||b.posCount-a.posCount);
+    results.length=0;
+    finalResults.forEach(r=>results.push(r));
 
     // Store for copy
     window._pcResults=results;
@@ -19940,7 +19944,7 @@ function _renderPosConverge(){
       h+=`<span style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;color:${tc};">${num}</span>`;
       h+=`<span style="padding:2px 8px;border-radius:4px;background:${tc};color:#fff;font-size:.7rem;font-weight:700;">${pat}</span>`;
       h+=`<span style="font-size:.7rem;color:${tc};font-weight:700;">${posCount} positions</span>`;
-      if(alreadyDrawn) h+=`<span style="padding:2px 7px;border-radius:4px;background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:700;">✓ Already Drawn</span>`;
+      // already drawn numbers are excluded entirely — not shown
       h+=`<div style="flex:1;"></div>`;
       h+=`<span style="font-size:.65rem;color:${tc};opacity:.7;">▾ details</span>`;
       h+=`</div>`;
