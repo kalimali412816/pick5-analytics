@@ -2978,6 +2978,12 @@ tr:hover td{background:var(--b0);}
         <button onclick="_pcCopy('Qu')" style="background:#dbeafe;color:#0f2044;border:1px solid #93c5fd;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copy Qu</button>
       </div>
     </div>
+    <div style="padding:8px 16px;border-bottom:1px solid var(--g2);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:.72rem;font-weight:700;color:var(--g6);">CONTAINS DIGITS:</span>
+      <input type="text" id="pcContains" maxlength="5" placeholder="e.g. 44 or 567" oninput="(function(){var v=this.value.replace(/[^0-9]/g,'').slice(0,5);if(v!==this.value)this.value=v;_renderPosConverge();}).call(this)" style="width:90px;padding:4px 8px;border:1.5px solid var(--g3);border-radius:6px;font-size:.8rem;font-family:'DM Mono',monospace;letter-spacing:2px;">
+      <span style="font-size:.68rem;color:var(--g5);">Filter results to numbers containing these digits (any order)</span>
+      <button onclick="document.getElementById('pcContains').value='';_renderPosConverge();" style="padding:3px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
+    </div>
     <div id="pcContent" style="padding:16px;"></div>
   </div>
 </div>
@@ -3209,7 +3215,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=215"></script>
+<script src="lottolens-data.js?v=217"></script>
 <script>
 
 // ================================================================
@@ -19935,6 +19941,16 @@ function _renderPosConverge(){
     finalResults.sort((a,b)=>(order[a.pat]||9)-(order[b.pat]||9)||b.posCount-a.posCount);
     results.length=0;
     finalResults.forEach(r=>results.push(r));
+
+    // Apply contains digit filter
+    const pcContains=document.getElementById('pcContains');
+    const containsVal=pcContains?pcContains.value.trim():'';
+    const containsDigits=containsVal.split('');
+    if(containsDigits.length>0&&containsVal!==''){
+      results=results.filter(function(r){
+        return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
+      });
+    }
 
     // Store for copy
     window._pcResults=results;
