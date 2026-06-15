@@ -3215,7 +3215,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=219"></script>
+<script src="lottolens-data.js?v=220"></script>
 <script>
 
 // ================================================================
@@ -19840,11 +19840,7 @@ function _renderPosConverge(){
   if(ddLbl) ddLbl.style.display=specificState?'flex':'none';
   if(ddCopyBtn) ddCopyBtn.style.display=specificState?'':'none';
 
-  container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">Computing... this may take a moment.</div>';
-
-  // Use setTimeout to allow the UI to update before heavy computation
-  setTimeout(function(){
-    // Build scope rows
+  // Build scope rows
     let rows=ALL;
     if(scope!=='ALL') rows=rows.filter(r=>r.dk.startsWith(scope));
     if(stF!=='ALL') rows=rows.filter(r=>r.state===stF);
@@ -19946,10 +19942,11 @@ function _renderPosConverge(){
     window._pcAllResults=results;
     // Apply contains filter and render
     _pcFilterRender();
-  },50);
 }
 
 function _pcFilterRender(){
+  // If no cached results yet, run full compute first
+  if(!window._pcAllResults){_renderPosConverge();return;}
   const container=document.getElementById('pcContent');
   if(!container) return;
   const allResults=window._pcAllResults||[];
