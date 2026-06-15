@@ -2980,9 +2980,9 @@ tr:hover td{background:var(--b0);}
     </div>
     <div style="padding:8px 16px;border-bottom:1px solid var(--g2);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <span style="font-size:.72rem;font-weight:700;color:var(--g6);">CONTAINS DIGITS:</span>
-      <input type="text" id="pcContains" maxlength="5" placeholder="e.g. 44 or 567" oninput="(function(){var v=this.value.replace(/[^0-9]/g,'').slice(0,5);if(v!==this.value)this.value=v;_renderPosConverge();}).call(this)" style="width:90px;padding:4px 8px;border:1.5px solid var(--g3);border-radius:6px;font-size:.8rem;font-family:'DM Mono',monospace;letter-spacing:2px;">
+      <input type="text" id="pcContains" maxlength="5" placeholder="e.g. 44 or 567" oninput="(function(){var v=this.value.replace(/[^0-9]/g,'').slice(0,5);if(v!==this.value)this.value=v;_pcFilterRender();}).call(this)" style="width:90px;padding:4px 8px;border:1.5px solid var(--g3);border-radius:6px;font-size:.8rem;font-family:'DM Mono',monospace;letter-spacing:2px;">
       <span style="font-size:.68rem;color:var(--g5);">Filter results to numbers containing these digits (any order)</span>
-      <button onclick="document.getElementById('pcContains').value='';_renderPosConverge();" style="padding:3px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
+      <button onclick="document.getElementById('pcContains').value='';_pcFilterRender();" style="padding:3px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
     </div>
     <div id="pcContent" style="padding:16px;"></div>
   </div>
@@ -3215,7 +3215,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=218"></script>
+<script src="lottolens-data.js?v=219"></script>
 <script>
 
 // ================================================================
@@ -19942,19 +19942,26 @@ function _renderPosConverge(){
     results.length=0;
     finalResults.forEach(r=>results.push(r));
 
-    // Apply contains digit filter
-    const pcContains=document.getElementById('pcContains');
-    const containsVal=pcContains?pcContains.value.trim():'';
-    const containsDigits=containsVal.split('');
-    if(containsDigits.length>0&&containsVal!==''){
-      results=results.filter(function(r){
-        return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
-      });
-    }
+    // Store ALL results (before contains filter) for fast re-filtering
+    window._pcAllResults=results;
+    // Apply contains filter and render
+    _pcFilterRender();
+  },50);
+}
 
-    // Store for copy
-    window._pcResults=results;
-
+function _pcFilterRender(){
+  const container=document.getElementById('pcContent');
+  if(!container) return;
+  const allResults=window._pcAllResults||[];
+  const pcContains=document.getElementById('pcContains');
+  const containsVal=pcContains?pcContains.value.trim():'';
+  const containsDigits=containsVal.split('');
+  let results=allResults;
+  if(containsDigits.length>0&&containsVal!==''){
+    results=results.filter(function(r){
+      return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
+    });
+  }
     if(!results.length){
       container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">No convergence numbers found for current filters.</div>';
       return;
@@ -20000,7 +20007,6 @@ function _renderPosConverge(){
     });
     h+=`</div>`;
     container.innerHTML=h;
-  },50);
 }
 
 window._pcResults=[];
