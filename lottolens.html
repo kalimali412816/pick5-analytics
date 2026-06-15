@@ -3215,7 +3215,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=222"></script>
+<script src="lottolens-data.js?v=223"></script>
 <script>
 
 // ================================================================
@@ -19943,22 +19943,12 @@ function _renderPosConverge(){
     finalResults.forEach(r=>results.push(r));
 
     // Apply contains digit filter
-    const pcContains=document.getElementById('pcContains');
-    const containsVal=pcContains?pcContains.value.trim():'';
-    const containsDigits=containsVal.split('');
-    if(containsDigits.length>0&&containsVal!==''){
+    var pcContainsEl=document.getElementById('pcContains');
+    var containsVal2=pcContainsEl?pcContainsEl.value.trim():'';
+    var containsDigits2=containsVal2.split('');
+    if(containsDigits2.length>0&&containsVal2!==''){
       results=results.filter(function(r){
-        return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
-      });
-    }
-
-    // Apply contains digit filter
-    const pcContains=document.getElementById('pcContains');
-    const containsVal=pcContains?pcContains.value.trim():'';
-    const containsDigits=containsVal.split('');
-    if(containsDigits.length>0&&containsVal!==''){
-      results=results.filter(function(r){
-        return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
+        return containsDigits2.every(function(d){return r.num.indexOf(d)>=0;});
       });
     }
 
