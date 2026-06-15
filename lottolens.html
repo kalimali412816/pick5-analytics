@@ -3215,7 +3215,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=221"></script>
+<script src="lottolens-data.js?v=222"></script>
 <script>
 
 // ================================================================
@@ -19952,21 +19952,19 @@ function _renderPosConverge(){
       });
     }
 
+    // Apply contains digit filter
+    const pcContains=document.getElementById('pcContains');
+    const containsVal=pcContains?pcContains.value.trim():'';
+    const containsDigits=containsVal.split('');
+    if(containsDigits.length>0&&containsVal!==''){
+      results=results.filter(function(r){
+        return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
+      });
+    }
+
     // Store for copy
     window._pcResults=results;
 
-  const container=document.getElementById('pcContent');
-  if(!container) return;
-  const allResults=window._pcAllResults||[];
-  const pcContains=document.getElementById('pcContains');
-  const containsVal=pcContains?pcContains.value.trim():'';
-  const containsDigits=containsVal.split('');
-  let results=allResults;
-  if(containsDigits.length>0&&containsVal!==''){
-    results=results.filter(function(r){
-      return containsDigits.every(function(d){return r.num.indexOf(d)>=0;});
-    });
-  }
     if(!results.length){
       container.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:8px 0;">No convergence numbers found for current filters.</div>';
       return;
