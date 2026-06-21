@@ -814,6 +814,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
   <div class="tab" onclick="switchTab('posFilter',this)">🔎 Position Search</div>
   <div class="tab" onclick="switchTab('posConverge',this)">🎯 Position Convergence</div>
+  <div class="tab" onclick="switchTab('posRepeat',this)">📅 Pos Day Repeat</div>
 </div>
 
 <!-- RESULTS -->
@@ -2934,6 +2935,50 @@ tr:hover td{background:var(--b0);}
     <div id="trackerContent" style="padding:16px;"></div>
   </div>
 </div>
+<div id="panel-posRepeat" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>📅 Pos Day Repeat</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">4-digit position combos that hit 2+ times on the same day-of-month</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="prScope" onchange="_renderPosRepeat()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
+          <option value="2026" selected>2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="ALL">All Time</option>
+        </select>
+        <select id="prState" onchange="_renderPosRepeat()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
+          <option value="ALL">All States</option>
+          <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
+          <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
+          <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:10px 16px;border-bottom:1px solid var(--g2);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="text" id="prSearch" placeholder="Filter by pos, digits, day, state, pattern..." oninput="_renderPosRepeat()" style="padding:5px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;width:280px;">
+      <span id="prCount" style="font-size:.72rem;color:var(--g5);"></span>
+      <button onclick="navigator.clipboard.writeText((window._prResults||[]).map(function(r){return 'Day '+r.day+' '+r.pos+'|'+r.dig+' '+r.hits+'x: '+r.occs.map(function(o){return o.d+' '+o.st+' '+o.num+'['+o.pat+']['+o.draw+']';}).join(' → ');}).join('
+')).then(function(){alert('Copied!');})" style="padding:5px 12px;background:var(--ac1);color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>
+    </div>
+    <div style="overflow-x:auto;max-height:70vh;overflow-y:auto;">
+      <table style="border-collapse:collapse;width:100%;font-size:12px;">
+        <thead style="position:sticky;top:0;z-index:1;">
+          <tr style="background:var(--g1);">
+            <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Day</th>
+            <th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Pattern</th>
+            <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Hits</th>
+            <th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Occurrences (earliest → latest)</th>
+          </tr>
+        </thead>
+        <tbody id="prTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 <div id="panel-posConverge" class="panel">
   <div class="card">
     <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
@@ -3215,7 +3260,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=235"></script>
+<script src="lottolens-data.js?v=237"></script>
 <script>
 
 // ================================================================
@@ -10130,7 +10175,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','posFilter','posConverge'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','posFilter','posConverge','posRepeat'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -10165,6 +10210,7 @@ function renderCur(){
   else if(curTab==='posTrips'){_renderPosTrips();}
   else if(curTab==='posFilter'){_renderPosFilter();}
   else if(curTab==='posConverge'){_renderPosConverge();}
+  else if(curTab==='posRepeat'){_renderPosRepeat();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -19820,6 +19866,106 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
+function _renderPosRepeat(){
+  const scope=document.getElementById('prScope').value;
+  const stF=document.getElementById('prState').value;
+  const q=(document.getElementById('prSearch').value||'').toLowerCase();
+  const tbody=document.getElementById('prTbody');
+  if(!tbody) return;
+
+  const PC={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+  const PB={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+
+  function getPat(n){
+    var f={};
+    n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    var v=Object.values(f).sort(function(a,b){return b-a;});
+    if(v[0]===5) return 'Qu';
+    if(v[0]===4) return 'Q';
+    if(v[0]===3&&v[1]===2) return 'TD';
+    if(v[0]===3) return 'T';
+    if(v[0]===2&&v[1]===2) return 'DD';
+    if(v[0]===2) return 'D';
+    return 'S';
+  }
+
+  // Build draws from ALL
+  var src=ALL;
+  if(scope!=='ALL') src=src.filter(function(r){return r.dk.startsWith(scope);});
+  if(stF!=='ALL') src=src.filter(function(r){return r.state===stF;});
+
+  // Build 4-pos combo counts per day-of-month
+  var pos4=[];
+  for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var d=c+1;d<5;d++)
+    pos4.push([a,b,c,d]);
+
+  var keyMap={};
+  src.forEach(function(r){
+    var dayNum=parseInt(r.dk.slice(8,10));
+    pos4.forEach(function(p){
+      var digits=p.map(function(i){return r.number[i];}).join('');
+      var k=p.join('')+'|'+digits+'|'+dayNum;
+      if(!keyMap[k]) keyMap[k]=[];
+      keyMap[k].push({d:r.dk,st:r.state,num:r.number,pat:getPat(r.number),draw:r.draw==='midday'?'M':'E'});
+    });
+  });
+
+  // Filter to 2+ hits, sort each by date asc
+  var results=[];
+  Object.keys(keyMap).forEach(function(k){
+    var occs=keyMap[k];
+    if(occs.length<2) return;
+    var parts=k.split('|');
+    var pos=parts[0],dig=parts[1],day=parseInt(parts[2]);
+    occs.sort(function(a,b){return a.d.localeCompare(b.d);});
+    results.push({pos:pos,dig:dig,day:day,hits:occs.length,occs:occs});
+  });
+  results.sort(function(a,b){return a.day-b.day||a.pos.localeCompare(b.pos);});
+
+  // Apply search filter
+  var filtered=results.filter(function(r){
+    if(!q) return true;
+    var s=r.pos+r.dig+r.day+r.occs.map(function(o){return o.d+o.st+o.num+o.pat+o.draw;}).join('');
+    return s.toLowerCase().indexOf(q)>=0;
+  });
+
+  window._prResults=filtered;
+  document.getElementById('prCount').textContent=filtered.length+' combos';
+
+  function renderPat(pos,dig){
+    var o='';
+    for(var i=0;i<5;i++){
+      var idx=pos.indexOf(String(i));
+      var filled=idx>=0;
+      var ch=filled?dig[idx]:'·';
+      o+='<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:24px;border:1.5px solid '+(filled?'#c4b5fd':'var(--g2)')+';background:'+(filled?'#ede9fe':'#fff')+';color:'+(filled?'#5b21b6':'var(--g4)')+';font-family:monospace;font-weight:'+(filled?'800':'400')+';font-size:11px;border-radius:4px;margin-right:1px;">'+ch+'</span>';
+    }
+    return o;
+  }
+
+  function occHtml(occs){
+    return '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+occs.map(function(o){
+      var bc=PC[o.pat]||'#374151',bg=PB[o.pat]||'#f3f4f6';
+      var dbg=o.draw==='M'?'#fef3c7':'#dbeafe',dtc=o.draw==='M'?'#92400e':'#1e40af';
+      return '<span style="display:flex;align-items:center;gap:3px;font-size:11px;font-family:monospace;">'+o.d+' <b>'+o.st+'</b> '+o.num+' <span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+o.pat+'</span><span style="padding:1px 4px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+o.draw+'</span></span>';
+    }).join('<span style="color:var(--g3);margin:0 2px;">→</span>')+'</div>';
+  }
+
+  tbody.innerHTML='';
+  var lastDay=-1;
+  filtered.forEach(function(r,i){
+    var tr=document.createElement('tr');
+    tr.style.cssText=(i%2===0)?'background:var(--g0);':'background:#fff;';
+    if(r.day!==lastDay&&i>0) tr.style.borderTop='2px solid #c4b5fd';
+    var dayCell=r.day!==lastDay?'<td style="padding:5px 10px;text-align:center;font-family:monospace;font-weight:800;color:#5b21b6;font-size:14px;border-bottom:0.5px solid var(--g2);">'+r.day+'</td>':'<td style="border-bottom:0.5px solid var(--g2);"></td>';
+    lastDay=r.day;
+    var hitColor=r.hits>=3?'#dc2626':'#5b21b6';
+    tr.innerHTML=dayCell+'<td style="padding:5px 10px;border-bottom:0.5px solid var(--g2);">'+renderPat(r.pos,r.dig)+'</td><td style="padding:5px 10px;text-align:center;font-weight:800;color:'+hitColor+';border-bottom:0.5px solid var(--g2);">'+r.hits+'x</td><td style="padding:5px 10px;border-bottom:0.5px solid var(--g2);">'+occHtml(r.occs)+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+
 function _renderPosConverge(){
   const container=document.getElementById('pcContent');
   if(!container) return;
