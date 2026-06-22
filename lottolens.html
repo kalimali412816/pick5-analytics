@@ -3260,7 +3260,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=242"></script>
+<script src="lottolens-data.js?v=243"></script>
 <script>
 
 // ================================================================
@@ -5639,14 +5639,15 @@ function _buildConsecStreakWidget(inline){
 
       displayBwdChains.forEach((chain)=>{
         const isGreen2=chain.len>=3;
-        const rowBg=activeBwd?(isGreen2?'#f0fdf4':'#fffbeb'):'#fff';
-        const rowBorder=activeBwd?(isGreen2?'#86efac':'#fcd34d'):'var(--g2)';
+        const isChainActiveBwd=_isUnfiltered?(chain.latestCurDk===latestDk):(_filtDks.has(chain.latestCurDk));
+        const rowBg=isChainActiveBwd?(isGreen2?'#f0fdf4':'#fffbeb'):'#fff';
+        const rowBorder=isChainActiveBwd?(isGreen2?'#86efac':'#fcd34d'):'var(--g2)';
 
         let row=`<div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:8px;padding:8px 12px;">`;
         row+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">`;
         row+=`<span class="st" style="min-width:28px;">${st}</span>`;
 
-        if(activeBwd) row+=`<span style="background:${isGreen2?'#dcfce7':'#fef3c7'};color:${isGreen2?'#065f46':'#92400e'};border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;">${isGreen2?'🟢':'🟡'} ACTIVE</span>`;
+        if(isChainActiveBwd) row+=`<span style="background:${isGreen2?'#dcfce7':'#fef3c7'};color:${isGreen2?'#065f46':'#92400e'};border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;">${isGreen2?'🟢':'🟡'} ACTIVE</span>`;
 
         const hym=chain.hist_ym.split('-');
         const firstCur=chain.chain[0].cur_dk.split('-');
@@ -5665,10 +5666,10 @@ function _buildConsecStreakWidget(inline){
         row+=`<span style="font-size:.68rem;background:var(--b0);border:1px solid var(--b3);border-radius:4px;padding:1px 6px;color:var(--b7);font-weight:700;">${chain.len}d</span>`;
         row+=`<span style="font-size:.68rem;color:var(--g5);">← ${histRangeLabel}</span>`;
 
-        if(!activeBwd) row+=`<span style="font-size:.7rem;font-weight:${overdueBwd?700:400};color:${overdueBwd?'#dc2626':'var(--g5)'};">${daysSince}d ago${overdueBwd?' ⚠️':''}</span>`;
+        if(!isChainActiveBwd) row+=`<span style="font-size:.7rem;font-weight:${overdueBwd?700:400};color:${overdueBwd?'#dc2626':'var(--g5)'};">${daysSince}d ago${overdueBwd?' ⚠️':''}</span>`;
 
         // Previous day button (backward) — lastHd-1
-        if(activeBwd){
+        if(isChainActiveBwd){
           const histPrevDk=`${chain.hist_ym}-${String(lastHd-1).padStart(2,'0')}`;
           const histPrevExists=lastHd>1&&ALL.some(r=>r.dk===histPrevDk);
           if(histPrevExists){
