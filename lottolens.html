@@ -3260,7 +3260,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=239"></script>
+<script src="lottolens-data.js?v=240"></script>
 <script>
 
 // ================================================================
@@ -5329,32 +5329,43 @@ function _buildConsecStreakWidget(inline){
         const days2=e2.histYmDays.get(ym);
         days1.forEach(d1v=>{
           if(days2.has(d1v+1)){
-            // Get matching cur records and their sources
+            // Forward: hist day goes up (e.g. 17→18→19)
             const rec1=e1.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v))||e1.recs[0];
             const rec2=e2.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v+1))||e2.recs[0];
             const srcs1=getSources(rec1,ym,d1v);
             const srcs2=getSources(rec2,ym,d1v+1);
-            edges.push({dk1,dk2,hist_ym:ym,hd1:d1v,hd2:d1v+1,rec1,rec2,srcs1,srcs2});
+            edges.push({dk1,dk2,hist_ym:ym,hd1:d1v,hd2:d1v+1,rec1,rec2,srcs1,srcs2,dir:'fwd'});
+          }
+          if(days2.has(d1v-1)){
+            // Backward: hist day goes down (e.g. 19→18→17)
+            const rec1b=e1.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v))||e1.recs[0];
+            const rec2b=e2.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v-1))||e2.recs[0];
+            const srcs1b=getSources(rec1b,ym,d1v);
+            const srcs2b=getSources(rec2b,ym,d1v-1);
+            edges.push({dk1,dk2,hist_ym:ym,hd1:d1v,hd2:d1v-1,rec1:rec1b,rec2:rec2b,srcs1:srcs1b,srcs2:srcs2b,dir:'bwd'});
           }
         });
       });
     }
 
-    // Merge edges into chains (bidirectional — same hist_ym, consecutive hd)
+    // Separate fwd and bwd edges
+    const fwdEdges=edges.filter(e=>e.dir!=='bwd');
+    const bwdEdges=edges.filter(e=>e.dir==='bwd');
+
+    // Merge edges into chains (forward)
     const usedEdges=new Set();
     const chains=[];
-    edges.forEach((e,idx)=>{
+    fwdEdges.forEach((e,idx)=>{
       if(usedEdges.has(idx)) return;
-      // Build chain starting from this edge
       const links=[
         {cur_dk:e.dk1,hist_day:e.hd1,rec:e.rec1,srcs:e.srcs1},
         {cur_dk:e.dk2,hist_day:e.hd2,rec:e.rec2,srcs:e.srcs2}
       ];
       usedEdges.add(idx);
       let lastEdge=e;
-      for(let j=idx+1;j<edges.length;j++){
+      for(let j=idx+1;j<fwdEdges.length;j++){
         if(usedEdges.has(j)) continue;
-        const ne=edges[j];
+        const ne=fwdEdges[j];
         if(ne.hist_ym===lastEdge.hist_ym&&ne.dk1===lastEdge.dk2&&ne.hd1===lastEdge.hd2){
           links.push({cur_dk:ne.dk2,hist_day:ne.hd2,rec:ne.rec2,srcs:ne.srcs2});
           usedEdges.add(j); lastEdge=ne;
@@ -5363,7 +5374,31 @@ function _buildConsecStreakWidget(inline){
       // Deduplicate links by cur_dk
       const seen=new Set(); const ulinks=links.filter(l=>{if(seen.has(l.cur_dk))return false;seen.add(l.cur_dk);return true;});
       chains.push({hist_ym:e.hist_ym,chain:ulinks,len:ulinks.length,
-        latestCurDk:ulinks[ulinks.length-1].cur_dk});
+        latestCurDk:ulinks[ulinks.length-1].cur_dk,dir:'fwd'});
+    });
+
+    // Backward chains
+    const usedBwdEdges=new Set();
+    const bwdChains=[];
+    bwdEdges.forEach((e,idx)=>{
+      if(usedBwdEdges.has(idx)) return;
+      const blinks=[
+        {cur_dk:e.dk1,hist_day:e.hd1,rec:e.rec1,srcs:e.srcs1},
+        {cur_dk:e.dk2,hist_day:e.hd2,rec:e.rec2,srcs:e.srcs2}
+      ];
+      usedBwdEdges.add(idx);
+      let lastBwdEdge=e;
+      for(let j=idx+1;j<bwdEdges.length;j++){
+        if(usedBwdEdges.has(j)) continue;
+        const ne=bwdEdges[j];
+        if(ne.hist_ym===lastBwdEdge.hist_ym&&ne.dk1===lastBwdEdge.dk2&&ne.hd1===lastBwdEdge.hd2){
+          blinks.push({cur_dk:ne.dk2,hist_day:ne.hd2,rec:ne.rec2,srcs:ne.srcs2});
+          usedBwdEdges.add(j); lastBwdEdge=ne;
+        }
+      }
+      const seenB=new Set(); const ulinksB=blinks.filter(l=>{if(seenB.has(l.cur_dk))return false;seenB.add(l.cur_dk);return true;});
+      bwdChains.push({hist_ym:e.hist_ym,chain:ulinksB,len:ulinksB.length,
+        latestCurDk:ulinksB[ulinksB.length-1].cur_dk,dir:'bwd'});
     });
 
     // Deduplicate chains
@@ -5387,7 +5422,13 @@ function _buildConsecStreakWidget(inline){
       if(gaps.length) avgGap=Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
     }
 
-    stateData.push({st,chains:uniqueChains,lastChain,daysSince,avgGap,totalChains:uniqueChains.length});
+    // Deduplicate backward chains
+    const seenBwdChains=new Set();
+    const uniqueBwdChains=bwdChains.filter(c=>{
+      const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day;
+      if(seenBwdChains.has(k))return false; seenBwdChains.add(k); return true;
+    });
+    stateData.push({st,chains:uniqueChains,lastChain,daysSince,avgGap,totalChains:uniqueChains.length,bwdChains:uniqueBwdChains});
   });
 
   stateData.sort((a,b)=>{
@@ -5571,6 +5612,45 @@ function _buildConsecStreakWidget(inline){
   });
 
   html+=`</div>`;
+
+  // ── Backward Consecutive Section ──────────────────────────────
+  // Collect all backward chains across states
+  const allBwdChains=[];
+  stateData.forEach(d=>{
+    if(d.bwdChains) d.bwdChains.forEach(c=>allBwdChains.push({...c,st:d.st}));
+  });
+
+  if(allBwdChains.length>0){
+    allBwdChains.sort((a,b)=>b.latestCurDk.localeCompare(a.latestCurDk));
+    html+=`<div style="margin-top:18px;border-top:2px solid var(--g2);padding-top:12px;">`;
+    html+=`<div style="font-size:.8rem;font-weight:700;color:var(--b6);margin-bottom:8px;">⬇️ Backward Consecutive Streaks (e.g. 19→18→17)</div>`;
+    html+=`<div style="display:flex;flex-direction:column;gap:8px;">`;
+    allBwdChains.forEach(chain=>{
+      const isActive=chain.latestCurDk===latestDk;
+      const isGreen=chain.len>=3;
+      const rowBg=isActive?(isGreen?'#f0fdf4':'#fffbeb'):'#fff';
+      const rowBorder=isActive?(isGreen?'#86efac':'#fcd34d'):'var(--g2)';
+      const hym=chain.hist_ym.split('-');
+      const hymLabel=mn[+hym[1]-1]+' '+hym[0];
+      let row=`<div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:8px;padding:8px 12px;">`;
+      row+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">`;
+      row+=`<span class="st">${chain.st}</span>`;
+      if(isActive) row+=`<span style="background:${isGreen?'#dcfce7':'#fef3c7'};color:${isGreen?'#065f46':'#92400e'};border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;">${isGreen?'🟢':'🟡'} ACTIVE</span>`;
+      row+=`<span style="font-size:.75rem;color:var(--g7);font-weight:600;">${hymLabel}</span>`;
+      row+=`<span style="font-size:.7rem;color:var(--g5);">hist days: ${chain.chain.map(l=>l.hist_day).join('→')}</span>`;
+      row+=`<span style="font-size:.7rem;color:var(--g5);">cur dates: ${chain.chain.map(l=>l.cur_dk.slice(5)).join('→')}</span>`;
+      row+=`</div>`;
+      row+=`<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+      chain.chain.forEach(link=>{
+        const src=link.srcs&&link.srcs[0];
+        if(src) row+=`<span style="font-size:.7rem;background:var(--g0);border:1px solid var(--g2);border-radius:4px;padding:2px 7px;font-family:'DM Mono',monospace;">${link.cur_dk.slice(5)} <b>${src.state||chain.st}</b> ${src.number||''}</span>`;
+      });
+      row+=`</div></div>`;
+      html+=row;
+    });
+    html+=`</div></div>`;
+  }
+
   if(!inline) html+=`</div>`;
   return html;
 }
