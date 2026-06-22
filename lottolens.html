@@ -3260,7 +3260,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=240"></script>
+<script src="lottolens-data.js?v=241"></script>
 <script>
 
 // ================================================================
@@ -5614,39 +5614,115 @@ function _buildConsecStreakWidget(inline){
   html+=`</div>`;
 
   // ── Backward Consecutive Section ──────────────────────────────
-  // Collect all backward chains across states
-  const allBwdChains=[];
-  stateData.forEach(d=>{
-    if(d.bwdChains) d.bwdChains.forEach(c=>allBwdChains.push({...c,st:d.st}));
-  });
-
-  if(allBwdChains.length>0){
-    allBwdChains.sort((a,b)=>b.latestCurDk.localeCompare(a.latestCurDk));
+  const bwdStateData=stateData.filter(d=>d.bwdChains&&d.bwdChains.length>0);
+  if(bwdStateData.length>0){
     html+=`<div style="margin-top:18px;border-top:2px solid var(--g2);padding-top:12px;">`;
-    html+=`<div style="font-size:.8rem;font-weight:700;color:var(--b6);margin-bottom:8px;">⬇️ Backward Consecutive Streaks (e.g. 19→18→17)</div>`;
-    html+=`<div style="display:flex;flex-direction:column;gap:8px;">`;
-    allBwdChains.forEach(chain=>{
-      const isActive=chain.latestCurDk===latestDk;
-      const isGreen=chain.len>=3;
-      const rowBg=isActive?(isGreen?'#f0fdf4':'#fffbeb'):'#fff';
-      const rowBorder=isActive?(isGreen?'#86efac':'#fcd34d'):'var(--g2)';
-      const hym=chain.hist_ym.split('-');
-      const hymLabel=mn[+hym[1]-1]+' '+hym[0];
-      let row=`<div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:8px;padding:8px 12px;">`;
-      row+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">`;
-      row+=`<span class="st">${chain.st}</span>`;
-      if(isActive) row+=`<span style="background:${isGreen?'#dcfce7':'#fef3c7'};color:${isGreen?'#065f46':'#92400e'};border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;">${isGreen?'🟢':'🟡'} ACTIVE</span>`;
-      row+=`<span style="font-size:.75rem;color:var(--g7);font-weight:600;">${hymLabel}</span>`;
-      row+=`<span style="font-size:.7rem;color:var(--g5);">hist days: ${chain.chain.map(l=>l.hist_day).join('→')}</span>`;
-      row+=`<span style="font-size:.7rem;color:var(--g5);">cur dates: ${chain.chain.map(l=>l.cur_dk.slice(5)).join('→')}</span>`;
-      row+=`</div>`;
-      row+=`<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
-      chain.chain.forEach(link=>{
-        const src=link.srcs&&link.srcs[0];
-        if(src) row+=`<span style="font-size:.7rem;background:var(--g0);border:1px solid var(--g2);border-radius:4px;padding:2px 7px;font-family:'DM Mono',monospace;">${link.cur_dk.slice(5)} <b>${src.state||chain.st}</b> ${src.number||''}</span>`;
+    html+=`<div style="font-size:.8rem;font-weight:700;color:var(--b6);margin-bottom:10px;">⬇️ Backward Consecutive Streaks (e.g. 19→18→17)</div>`;
+    html+=`<div style="display:flex;flex-direction:column;gap:10px;">`;
+
+    bwdStateData.forEach(d=>{
+      const {st,bwdChains,daysSince,avgGap,totalChains}=d;
+      const lastBwdChain=bwdChains[0]||null;
+      const trulyActiveBwd=lastBwdChain&&lastBwdChain.latestCurDk===latestDk;
+      const activeBwd=_isUnfiltered?trulyActiveBwd:(lastBwdChain&&_filtDks.has(lastBwdChain.latestCurDk));
+      const overdueBwd=avgGap&&daysSince>0&&daysSince>=avgGap*1.5;
+
+      let activeBwdChains;
+      if(_isUnfiltered){
+        activeBwdChains=bwdChains.filter(c=>c.latestCurDk===latestDk);
+      } else {
+        activeBwdChains=bwdChains.filter(c=>_filtDks.has(c.latestCurDk));
+      }
+      const displayBwdChains=activeBwdChains.length?activeBwdChains:(_isUnfiltered?[]:(lastBwdChain?[lastBwdChain]:[]));
+      if(!displayBwdChains.length) return;
+
+      displayBwdChains.forEach((chain)=>{
+        const isGreen2=chain.len>=3;
+        const rowBg=activeBwd?(isGreen2?'#f0fdf4':'#fffbeb'):'#fff';
+        const rowBorder=activeBwd?(isGreen2?'#86efac':'#fcd34d'):'var(--g2)';
+
+        let row=`<div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:8px;padding:8px 12px;">`;
+        row+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">`;
+        row+=`<span class="st" style="min-width:28px;">${st}</span>`;
+
+        if(activeBwd) row+=`<span style="background:${isGreen2?'#dcfce7':'#fef3c7'};color:${isGreen2?'#065f46':'#92400e'};border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;">${isGreen2?'🟢':'🟡'} ACTIVE</span>`;
+
+        const hym=chain.hist_ym.split('-');
+        const firstCur=chain.chain[0].cur_dk.split('-');
+        const lastCur=chain.chain[chain.chain.length-1].cur_dk.split('-');
+        const firstHd=chain.chain[0].hist_day, lastHd=chain.chain[chain.chain.length-1].hist_day;
+        const rangeLabel=+firstCur[1]===+lastCur[1]
+          ?`${mn[+firstCur[1]-1]} ${+firstCur[2]}–${+lastCur[2]}`
+          :`${mn[+firstCur[1]-1]} ${+firstCur[2]}–${mn[+lastCur[1]-1]} ${+lastCur[2]}`;
+        const histFirstDate=new Date(chain.hist_ym+'-'+String(firstHd).padStart(2,'0'));
+        const histLastDate=new Date(chain.hist_ym+'-'+String(lastHd).padStart(2,'0'));
+        const histRangeLabel=histFirstDate.getMonth()===histLastDate.getMonth()
+          ?`${mn[histFirstDate.getMonth()]} ${firstHd}–${lastHd} ${hym[0]}`
+          :`${mn[histFirstDate.getMonth()]} ${firstHd}–${mn[histLastDate.getMonth()]} ${lastHd} ${hym[0]}`;
+
+        row+=`<span style="font-size:.72rem;font-weight:600;color:var(--g7);">${rangeLabel}</span>`;
+        row+=`<span style="font-size:.68rem;background:var(--b0);border:1px solid var(--b3);border-radius:4px;padding:1px 6px;color:var(--b7);font-weight:700;">${chain.len}d</span>`;
+        row+=`<span style="font-size:.68rem;color:var(--g5);">← ${histRangeLabel}</span>`;
+
+        if(!activeBwd) row+=`<span style="font-size:.7rem;font-weight:${overdueBwd?700:400};color:${overdueBwd?'#dc2626':'var(--g5)'};">${daysSince}d ago${overdueBwd?' ⚠️':''}</span>`;
+
+        // Previous day button (backward) — lastHd-1
+        if(activeBwd){
+          const histPrevDk=`${chain.hist_ym}-${String(lastHd-1).padStart(2,'0')}`;
+          const histPrevExists=lastHd>1&&ALL.some(r=>r.dk===histPrevDk);
+          if(histPrevExists){
+            const histPrevDate=new Date(histPrevDk);
+            const histPrevLabel=mn[histPrevDate.getMonth()]+' '+histPrevDate.getDate()+' '+hym[0];
+            row+=`<span style="cursor:pointer;color:var(--b5);font-size:.7rem;text-decoration:underline;margin-left:4px;" onclick="cmod();_consecNextDay('${histPrevDk}','${st}')">📅 ← ${histPrevLabel}</span>`;
+          }
+        }
+
+        const stYmTop2=stateTopYm[st]||[];
+        if(stYmTop2.length){
+          const [topYm2,topCnt2]=stYmTop2[0];
+          const topYmP2=topYm2.split('-');
+          const topYmLabel2=mn[+topYmP2[1]-1]+' '+topYmP2[0];
+          row+=`<span style="background:#dcfce7;border:1px solid #86efac;border-radius:5px;padding:1px 7px;font-size:.62rem;font-weight:700;color:#065f46;">🔁 ${topYmLabel2} (${topCnt2}x)</span>`;
+        }
+
+        row+=`<span style="margin-left:auto;font-size:.68rem;color:var(--g5);">${bwdChains.length}x`;
+        if(avgGap) row+=` · avg ${avgGap}d`;
+        row+=`</span></div>`;
+
+        // Chain links with source states
+        row+=`<div style="margin-left:8px;border-left:3px solid ${isGreen2?'#86efac':'#fcd34d'};padding-left:10px;display:flex;flex-direction:column;gap:4px;">`;
+        chain.chain.forEach(link=>{
+          const cp=link.cur_dk.split('-');
+          const curLabel=`${mn[+cp[1]-1]} ${+cp[2]}`;
+          const hym2=chain.hist_ym.split('-');
+          const histLabel=`${mn[+hym2[1]-1]} ${link.hist_day} ${hym2[0]}`;
+          const rec=link.rec;
+          const srcs=link.srcs||[];
+
+          row+=`<div style="display:flex;align-items:flex-start;gap:6px;font-size:.72rem;">`;
+          row+=`<span style="color:var(--g6);min-width:52px;flex-shrink:0;">${curLabel}</span>`;
+          row+=`<div style="display:flex;flex-direction:column;gap:2px;">`;
+          if(rec){
+            row+=`<div style="display:flex;align-items:center;gap:5px;">`;
+            row+=`<span class="${rec.draw==='midday'?'dm':'de'}" style="font-size:.65rem;">${rec.draw}</span>`;
+            row+=`<span class="nr" style="cursor:pointer;font-size:.75rem;" onclick="cmod();showNumModal('${rec.sorted}')">${rec.number}</span>`;
+            row+=`<span class="ns">(${rec.sorted})</span>`;
+            row+=`<span style="background:var(--b0);border:1px solid var(--b3);border-radius:4px;padding:0 5px;font-size:.65rem;font-weight:700;color:var(--b7);">Σ${rec.sum}</span>`;
+            row+=`<span style="color:var(--g4);margin:0 2px;">←</span>`;
+            row+=`<span style="color:var(--g5);font-size:.68rem;">${histLabel}</span>`;
+            row+=`</div>`;
+          }
+          if(srcs.length){
+            const sameSt=srcs.every(s=>s.state===st);
+            row+=`<div style="font-size:.66rem;color:${sameSt?'var(--b6)':'var(--g5)'};margin-left:2px;">`;
+            row+=`src: ${srcs.slice(0,3).map(s=>`<span style="font-weight:${s.state===st?700:400};color:${s.state===st?'var(--b7)':'var(--g5)'};">${s.state} ${s.number}</span>`).join(' ')}`;
+            row+=`</div>`;
+          }
+          row+=`</div></div>`;
+        });
+        row+=`</div></div>`;
+        html+=row;
       });
-      row+=`</div></div>`;
-      html+=row;
     });
     html+=`</div></div>`;
   }
