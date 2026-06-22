@@ -3260,7 +3260,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=241"></script>
+<script src="lottolens-data.js?v=242"></script>
 <script>
 
 // ================================================================
@@ -5428,6 +5428,7 @@ function _buildConsecStreakWidget(inline){
       const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day;
       if(seenBwdChains.has(k))return false; seenBwdChains.add(k); return true;
     });
+    uniqueBwdChains.sort((a,b)=>b.latestCurDk.localeCompare(a.latestCurDk));
     stateData.push({st,chains:uniqueChains,lastChain,daysSince,avgGap,totalChains:uniqueChains.length,bwdChains:uniqueBwdChains});
   });
 
