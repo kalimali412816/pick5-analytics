@@ -3118,10 +3118,11 @@ tr:hover td{background:var(--b0);}
       <div style="background:var(--g0);border:1.5px solid var(--ac1);border-radius:10px;padding:12px 14px;margin-top:8px;">
         <div style="font-size:.7rem;font-weight:700;color:var(--ac1);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">🔍 Number Lookup — find matching position combos</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="text" id="pfLookup" maxlength="5" placeholder="e.g. 01722" oninput="(function(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,5);_pfHighlight();}).call(this)" style="width:100px;padding:6px 10px;border:1.5px solid var(--ac1);border-radius:7px;font-size:.85rem;font-family:'DM Mono',monospace;letter-spacing:2px;font-weight:700;">
-          <span id="pfLookupMsg" style="font-size:.75rem;color:var(--g5);"></span>
-          <button onclick="document.getElementById('pfLookup').value='';_pfHighlight();" style="padding:4px 10px;border:1px solid var(--g3);border-radius:6px;font-size:.72rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
+          <input type="text" id="pfLookup" maxlength="5" placeholder="e.g. 01722" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5);" onkeydown="if(event.key==='Enter')_pfHighlight();" style="width:110px;padding:6px 10px;border:1.5px solid var(--ac1);border-radius:7px;font-size:.9rem;font-family:'DM Mono',monospace;letter-spacing:3px;font-weight:700;">
+          <button onclick="_pfHighlight();" style="padding:6px 14px;background:var(--ac1);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;">Search</button>
+          <button onclick="document.getElementById('pfLookup').value='';document.getElementById('pfLookupMsg').innerHTML='';document.querySelectorAll('#pfResults [data-poskey]').forEach(function(r){r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';});" style="padding:6px 10px;border:1px solid var(--g3);border-radius:6px;font-size:.72rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
         </div>
+        <div id="pfLookupMsg" style="margin-top:8px;font-size:.78rem;line-height:1.6;"></div>
       </div>
       <div id="pfResults" style="margin-top:8px;"></div>
     </div>
@@ -3269,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=248"></script>
+<script src="lottolens-data.js?v=249"></script>
 <script>
 
 // ================================================================
@@ -20531,8 +20532,10 @@ function _renderPosFilter(){
   });
   h+=`</div>`;
   container.innerHTML=h;
-  // Re-apply lookup highlight after render
-  _pfHighlight();
+  // Re-apply lookup highlight if a number is entered
+  if(document.getElementById('pfLookup')&&document.getElementById('pfLookup').value.length===5){
+    _pfHighlight();
+  }
 }
 
 
