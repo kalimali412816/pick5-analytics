@@ -3114,7 +3114,16 @@ tr:hover td{background:var(--b0);}
           <button onclick="document.getElementById('pfDay').value='';document.getElementById('pfMonth').value='';document.getElementById('pfYear').value='';_renderPosFilter();" style="padding:6px 12px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;color:var(--g7);">Clear Date</button>
         </div>
       </div>
-      <div id="pfResults" style="margin-top:4px;"></div>
+      <!-- Number lookup -->
+      <div style="background:var(--g0);border:1.5px solid var(--ac1);border-radius:10px;padding:12px 14px;margin-top:8px;">
+        <div style="font-size:.7rem;font-weight:700;color:var(--ac1);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">🔍 Number Lookup — find matching position combos</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="pfLookup" maxlength="5" placeholder="e.g. 01722" oninput="(function(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,5);_pfHighlight();}).call(this)" style="width:100px;padding:6px 10px;border:1.5px solid var(--ac1);border-radius:7px;font-size:.85rem;font-family:'DM Mono',monospace;letter-spacing:2px;font-weight:700;">
+          <span id="pfLookupMsg" style="font-size:.75rem;color:var(--g5);"></span>
+          <button onclick="document.getElementById('pfLookup').value='';_pfHighlight();" style="padding:4px 10px;border:1px solid var(--g3);border-radius:6px;font-size:.72rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
+        </div>
+      </div>
+      <div id="pfResults" style="margin-top:8px;"></div>
     </div>
   </div>
 </div>
@@ -3260,7 +3269,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=245"></script>
+<script src="lottolens-data.js?v=246"></script>
 <script>
 
 // ================================================================
@@ -20320,6 +20329,67 @@ function _pcCopy(patFilter){
 }
 
 
+function _pfHighlight(){
+  const num=document.getElementById('pfLookup').value.trim();
+  const msg=document.getElementById('pfLookupMsg');
+  const rows=document.querySelectorAll('#pfResults [data-poskey]');
+
+  if(!num||num.length<5){
+    // Clear all highlights
+    rows.forEach(function(r){
+      r.style.background='';
+      r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';
+    });
+    if(msg) msg.textContent=num.length>0&&num.length<5?'Enter all 5 digits':'';
+    return;
+  }
+
+  // For each result row, check if the number matches the position combo
+  var matchCount=0;
+  var bestMatch=null;
+  var bestHits=0;
+
+  rows.forEach(function(r){
+    var key=r.getAttribute('data-poskey'); // format: "posStr|digStr"
+    if(!key) return;
+    var parts=key.split('|');
+    var posStr=parts[0], digStr=parts[1];
+    var posArr=posStr.split('').map(Number);
+    // Check if num has matching digits at all positions in this combo
+    var matches=posArr.every(function(p,idx){return num[p]===digStr[idx];});
+    if(matches){
+      r.style.background='#ede9fe';
+      r.style.border='2px solid #7c3aed';
+      r.style.borderRadius='8px';
+      matchCount++;
+      var hits=parseInt(r.getAttribute('data-hits')||'0');
+      if(hits>bestHits){bestHits=hits;bestMatch=key;}
+    } else {
+      r.style.background='';
+      r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';
+    }
+  });
+
+  if(msg){
+    if(matchCount===0){
+      msg.textContent='No matching position combos for '+num;
+      msg.style.color='#dc2626';
+    } else {
+      var bestPosStr=bestMatch?bestMatch.split('|')[0]:'';
+      var bestDigStr=bestMatch?bestMatch.split('|')[1]:'';
+      // Build display: show number with best position highlighted
+      var display='';
+      for(var i=0;i<5;i++){
+        var idx=bestPosStr.indexOf(String(i));
+        display+=idx>=0?'['+num[i]+']':num[i];
+      }
+      msg.textContent=matchCount+' match'+(matchCount>1?'es':'')+' — best: '+display+' ('+bestHits+'x hits)';
+      msg.style.color='#5b21b6';
+    }
+  }
+}
+
+
 function _renderPosFilter(){
   const container=document.getElementById('pfResults');
   if(!container) return;
@@ -20422,7 +20492,7 @@ function _renderPosFilter(){
     const dateHits=dateRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx]));
     const allHits=allRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx])).sort((a,b)=>b.dk.localeCompare(a.dk));
 
-    h+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
+    h+=`<div data-poskey="${key}" data-hits="${cnt}" style="border-radius:7px;border:0.5px solid var(--color-border-tertiary,#e5e7eb);overflow:hidden;background:#fff;">`;
     // Header
     h+=`<div onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display==='none'?'block':'none';})(this)" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
     h+=`<div style="font-size:.75rem;font-weight:800;color:${rkColors[Math.min(i,2)]};min-width:24px;">#${rk}</div>`;
