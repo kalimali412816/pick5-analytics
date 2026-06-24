@@ -3270,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=251"></script>
+<script src="lottolens-data.js?v=252"></script>
 <script>
 
 // ================================================================
@@ -20335,58 +20335,52 @@ function _pfHighlight(){
   const msg=document.getElementById('pfLookupMsg');
   const rows=document.querySelectorAll('#pfResults [data-poskey]');
 
-  if(!num||num.length<3){
+  if(!num||num.length<1){
     rows.forEach(function(r){
       r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';
     });
-    if(msg){msg.innerHTML='<span style="color:#6b7280;">Enter 3, 4, or 5 digits</span>';} return;
+    if(msg){msg.innerHTML='';} return;
   }
-  var comboLen=num.length; // 3=match 3-pos, 4=match 4-pos, 5=match any
+  var comboLen=num.length;
 
-  // Build digit frequency map for the search number
+  // digit freq helper
   function digitFreq(s){var f={};s.split('').forEach(function(d){f[d]=(f[d]||0)+1;});return f;}
-  function canMake(needed, available){
-    // needed: array of digits required, available: freq map
-    var avail=Object.assign({},available);
-    for(var i=0;i<needed.length;i++){
-      var d=needed[i];
-      if(!avail[d]) return false;
-      avail[d]--;
+
+  // Check if inputDigits are ALL contained within comboDigits (combo must have at least those digits)
+  function inputIsSubsetOfCombo(inputFreq, comboDigits){
+    var comboFreq=digitFreq(comboDigits);
+    for(var d in inputFreq){
+      if((comboFreq[d]||0)<inputFreq[d]) return false;
     }
     return true;
   }
-  function bestArrangement(posStr, digStr, num){
+
+  // Build the best 5-digit number: place combo digits at their positions, fill missing with remaining combo digits
+  function buildNumber(posStr, digStr){
     var posArr=posStr.split('').map(Number);
     var missingPositions=[0,1,2,3,4].filter(function(x){return posArr.indexOf(x)===-1;});
-    // Find leftover digits from num not used by the combo
-    var used=digStr.split('');
-    var avail=num.split('');
-    used.forEach(function(d){var i=avail.indexOf(d);if(i>=0)avail.splice(i,1);});
-    var result=Array(5).fill('·');
+    var result=Array(5).fill('x');
     posArr.forEach(function(p,i){result[p]=digStr[i];});
-    missingPositions.forEach(function(p,i){result[p]=avail[i]||'·';});
+    // Leave missing positions as x (they can be anything)
     return result.join('');
   }
 
-  var numFreq=digitFreq(num);
+  var inputFreq=digitFreq(num);
   var matches=[];
   rows.forEach(function(r){
     var key=r.getAttribute('data-poskey');
     if(!key) return;
     var parts=key.split('|');
     var posStr=parts[0], digStr=parts[1];
-    // For 3-digit input: only match 3-pos combos; 4-digit: 4-pos; 5-digit: any
-    if(comboLen===3&&posStr.length!==3) return;
-    if(comboLen===4&&posStr.length!==4) return;
-    // Check if the combo's digits can be made from num's digits
-    var needed=digStr.split('');
-    var isMatch=canMake(needed,numFreq);
+    // Check if input digits are a subset of the combo's digits
+    // i.e. the combo's 4 digits contain all of the user's input digits
+    var isMatch=inputIsSubsetOfCombo(inputFreq, digStr);
     if(isMatch){
       r.style.background='#ede9fe';r.style.border='2.5px solid #7c3aed';
       r.style.boxShadow='0 0 0 3px #c4b5fd55';r.style.borderRadius='8px';
       var hits=parseInt(r.getAttribute('data-hits')||'0');
-      var best=bestArrangement(posStr,digStr,num);
-      matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,best:best,el:r});
+      var built=buildNumber(posStr,digStr);
+      matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,built:built,el:r});
       if(matches.length===1) r.scrollIntoView({behavior:'smooth',block:'nearest'});
     } else {
       r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';
@@ -20395,22 +20389,29 @@ function _pfHighlight(){
 
   if(!msg) return;
   if(matches.length===0){
-    msg.innerHTML='<span style="color:#dc2626;">No permutation matches for <b>'+num+'</b> ('+comboLen+'-digit combos)</span>';
+    msg.innerHTML='<span style="color:#dc2626;">No combos containing <b>'+num+'</b> found in results</span>';
     return;
   }
 
   matches.sort(function(a,b){return b.hits-a.hits;});
   var summaryParts=matches.map(function(m){
+    // Render the position pattern with digits
     var pat='';
     for(var i=0;i<5;i++){
       var idx=m.posStr.indexOf(String(i));
-      if(idx>=0) pat+='<span style="background:#7c3aed;color:#fff;border-radius:3px;padding:0 3px;font-weight:800;">'+m.digStr[m.posStr.indexOf(String(i))]+'</span>';
-      else pat+='<span style="color:#9ca3af;">·</span>';
+      if(idx>=0){
+        var d=m.digStr[idx];
+        var isInput=num.indexOf(d)>=0;
+        pat+='<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;background:'+(isInput?'#7c3aed':'#ede9fe')+';color:'+(isInput?'#fff':'#5b21b6')+';border-radius:4px;font-family:monospace;font-weight:800;font-size:12px;margin-right:1px;">'+d+'</span>';
+      } else {
+        pat+='<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;color:#9ca3af;font-size:12px;margin-right:1px;">·</span>';
+      }
     }
-    return '<span style="font-family:monospace;font-weight:700;color:#1e1b4b;">'+m.best+'</span> '+pat+' <span style="font-size:.7rem;color:#5b21b6;">('+m.hits+'x)</span>';
+    return '<span style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:6px;padding:4px 8px;display:inline-flex;align-items:center;gap:6px;"><span style="font-family:monospace;font-weight:800;font-size:13px;color:#1e1b4b;">'+m.built+'</span>'+pat+'<span style="font-size:.68rem;color:#5b21b6;font-weight:700;">'+m.hits+'x</span></span>';
   });
-  msg.innerHTML='<div style="margin-bottom:4px;"><span style="color:#5b21b6;font-weight:700;">'+matches.length+' permutation match'+(matches.length>1?'es':'')+' for <b>'+num+'</b></span></div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+summaryParts.map(function(s){return '<span style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:6px;padding:3px 8px;">'+s+'</span>';}).join('')+'</div>';
+
+  msg.innerHTML='<div style="margin-bottom:6px;"><span style="color:#5b21b6;font-weight:700;">'+matches.length+' combo'+(matches.length>1?'s':'')+' containing <b>'+num+'</b></span> — digits shown in dark purple, free positions as x</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'+summaryParts.join('')+'</div>';
 }
 
 
