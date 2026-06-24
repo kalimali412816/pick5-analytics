@@ -3119,7 +3119,7 @@ tr:hover td{background:var(--b0);}
         <div style="font-size:.7rem;font-weight:700;color:var(--ac1);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">🔍 Number Lookup — find matching position combos</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="text" id="pfLookup" maxlength="5" placeholder="e.g. 01722" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5);" onkeydown="if(event.key==='Enter')_pfHighlight();" style="width:110px;padding:6px 10px;border:1.5px solid var(--ac1);border-radius:7px;font-size:.9rem;font-family:'DM Mono',monospace;letter-spacing:3px;font-weight:700;">
-          <button onclick="_pfHighlight();" style="padding:6px 14px;background:var(--ac1);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;">Search</button>
+          <button onclick="_pfHighlight();" style="padding:6px 14px;background:#5b21b6;color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;display:inline-block;">Search</button>
           <button onclick="document.getElementById('pfLookup').value='';document.getElementById('pfLookupMsg').innerHTML='';document.querySelectorAll('#pfResults [data-poskey]').forEach(function(r){r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';});" style="padding:6px 10px;border:1px solid var(--g3);border-radius:6px;font-size:.72rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
         </div>
         <div id="pfLookupMsg" style="margin-top:8px;font-size:.78rem;line-height:1.6;"></div>
@@ -3270,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=249"></script>
+<script src="lottolens-data.js?v=250"></script>
 <script>
 
 // ================================================================
@@ -20337,41 +20337,62 @@ function _pfHighlight(){
 
   if(!num||num.length<5){
     rows.forEach(function(r){
-      r.style.background='';
-      r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';
-      r.style.boxShadow='';
+      r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';
     });
-    if(msg){msg.innerHTML='';msg.style.color='';}
-    return;
+    if(msg){msg.innerHTML='';} return;
   }
 
+  // Build digit frequency map for the search number
+  function digitFreq(s){var f={};s.split('').forEach(function(d){f[d]=(f[d]||0)+1;});return f;}
+  function canMake(needed, available){
+    // needed: array of digits required, available: freq map
+    var avail=Object.assign({},available);
+    for(var i=0;i<needed.length;i++){
+      var d=needed[i];
+      if(!avail[d]) return false;
+      avail[d]--;
+    }
+    return true;
+  }
+  function bestArrangement(posStr, digStr, num){
+    // Place the required digits at their positions, fill remaining with leftover digits from num
+    var posArr=posStr.split('').map(Number);
+    var missingPos=[0,1,2,3,4].find(function(x){return posArr.indexOf(x)===-1;});
+    // Find which digit from num is left over (not used by the combo)
+    var used=digStr.split('');
+    var avail=num.split('');
+    used.forEach(function(d){var i=avail.indexOf(d);if(i>=0)avail.splice(i,1);});
+    var result=Array(5);
+    posArr.forEach(function(p,i){result[p]=digStr[i];});
+    result[missingPos]=avail[0]||'?';
+    return result.join('');
+  }
+
+  var numFreq=digitFreq(num);
   var matches=[];
   rows.forEach(function(r){
     var key=r.getAttribute('data-poskey');
     if(!key) return;
     var parts=key.split('|');
     var posStr=parts[0], digStr=parts[1];
-    var posArr=posStr.split('').map(Number);
-    var isMatch=posArr.every(function(p,idx){return num[p]===digStr[idx];});
+    // Check if the combo's 4 digits can be made from num's digits
+    var needed=digStr.split('');
+    var isMatch=canMake(needed,numFreq);
     if(isMatch){
-      r.style.background='#ede9fe';
-      r.style.border='2.5px solid #7c3aed';
-      r.style.boxShadow='0 0 0 3px #c4b5fd55';
-      r.style.borderRadius='8px';
+      r.style.background='#ede9fe';r.style.border='2.5px solid #7c3aed';
+      r.style.boxShadow='0 0 0 3px #c4b5fd55';r.style.borderRadius='8px';
       var hits=parseInt(r.getAttribute('data-hits')||'0');
-      matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,el:r});
-      // Scroll first match into view
+      var best=bestArrangement(posStr,digStr,num);
+      matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,best:best,el:r});
       if(matches.length===1) r.scrollIntoView({behavior:'smooth',block:'nearest'});
     } else {
-      r.style.background='';
-      r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';
-      r.style.boxShadow='';
+      r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';
     }
   });
 
   if(!msg) return;
   if(matches.length===0){
-    msg.innerHTML='<span style="color:#dc2626;">No matches for <b>'+num+'</b></span>';
+    msg.innerHTML='<span style="color:#dc2626;">No permutation matches for <b>'+num+'</b></span>';
     return;
   }
 
@@ -20380,12 +20401,13 @@ function _pfHighlight(){
     var pat='';
     for(var i=0;i<5;i++){
       var idx=m.posStr.indexOf(String(i));
-      if(idx>=0) pat+='<span style="background:#7c3aed;color:#fff;border-radius:3px;padding:0 3px;font-weight:800;">'+num[i]+'</span>';
+      if(idx>=0) pat+='<span style="background:#7c3aed;color:#fff;border-radius:3px;padding:0 3px;font-weight:800;">'+m.digStr[m.posStr.indexOf(String(i))]+'</span>';
       else pat+='<span style="color:#9ca3af;">·</span>';
     }
-    return pat+' <span style="font-size:.7rem;color:#5b21b6;">('+m.hits+'x)</span>';
+    return '<span style="font-family:monospace;font-weight:700;color:#1e1b4b;">'+m.best+'</span> '+pat+' <span style="font-size:.7rem;color:#5b21b6;">('+m.hits+'x)</span>';
   });
-  msg.innerHTML='<span style="color:#5b21b6;font-weight:700;">'+matches.length+' match'+(matches.length>1?'es':'')+' for <b>'+num+'</b>:</span> '+summaryParts.join(' &nbsp; ');
+  msg.innerHTML='<div style="margin-bottom:4px;"><span style="color:#5b21b6;font-weight:700;">'+matches.length+' permutation match'+(matches.length>1?'es':'')+' for <b>'+num+'</b></span></div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+summaryParts.map(function(s){return '<span style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:6px;padding:3px 8px;">'+s+'</span>';}).join('')+'</div>';
 }
 
 
