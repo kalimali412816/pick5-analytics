@@ -3269,7 +3269,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=246"></script>
+<script src="lottolens-data.js?v=247"></script>
 <script>
 
 // ================================================================
@@ -20335,58 +20335,56 @@ function _pfHighlight(){
   const rows=document.querySelectorAll('#pfResults [data-poskey]');
 
   if(!num||num.length<5){
-    // Clear all highlights
     rows.forEach(function(r){
       r.style.background='';
       r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';
+      r.style.boxShadow='';
     });
-    if(msg) msg.textContent=num.length>0&&num.length<5?'Enter all 5 digits':'';
+    if(msg){msg.innerHTML='';msg.style.color='';}
     return;
   }
 
-  // For each result row, check if the number matches the position combo
-  var matchCount=0;
-  var bestMatch=null;
-  var bestHits=0;
-
+  var matches=[];
   rows.forEach(function(r){
-    var key=r.getAttribute('data-poskey'); // format: "posStr|digStr"
+    var key=r.getAttribute('data-poskey');
     if(!key) return;
     var parts=key.split('|');
     var posStr=parts[0], digStr=parts[1];
     var posArr=posStr.split('').map(Number);
-    // Check if num has matching digits at all positions in this combo
-    var matches=posArr.every(function(p,idx){return num[p]===digStr[idx];});
-    if(matches){
+    var isMatch=posArr.every(function(p,idx){return num[p]===digStr[idx];});
+    if(isMatch){
       r.style.background='#ede9fe';
-      r.style.border='2px solid #7c3aed';
+      r.style.border='2.5px solid #7c3aed';
+      r.style.boxShadow='0 0 0 3px #c4b5fd55';
       r.style.borderRadius='8px';
-      matchCount++;
       var hits=parseInt(r.getAttribute('data-hits')||'0');
-      if(hits>bestHits){bestHits=hits;bestMatch=key;}
+      matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,el:r});
+      // Scroll first match into view
+      if(matches.length===1) r.scrollIntoView({behavior:'smooth',block:'nearest'});
     } else {
       r.style.background='';
       r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';
+      r.style.boxShadow='';
     }
   });
 
-  if(msg){
-    if(matchCount===0){
-      msg.textContent='No matching position combos for '+num;
-      msg.style.color='#dc2626';
-    } else {
-      var bestPosStr=bestMatch?bestMatch.split('|')[0]:'';
-      var bestDigStr=bestMatch?bestMatch.split('|')[1]:'';
-      // Build display: show number with best position highlighted
-      var display='';
-      for(var i=0;i<5;i++){
-        var idx=bestPosStr.indexOf(String(i));
-        display+=idx>=0?'['+num[i]+']':num[i];
-      }
-      msg.textContent=matchCount+' match'+(matchCount>1?'es':'')+' — best: '+display+' ('+bestHits+'x hits)';
-      msg.style.color='#5b21b6';
-    }
+  if(!msg) return;
+  if(matches.length===0){
+    msg.innerHTML='<span style="color:#dc2626;">No matches for <b>'+num+'</b></span>';
+    return;
   }
+
+  matches.sort(function(a,b){return b.hits-a.hits;});
+  var summaryParts=matches.map(function(m){
+    var pat='';
+    for(var i=0;i<5;i++){
+      var idx=m.posStr.indexOf(String(i));
+      if(idx>=0) pat+='<span style="background:#7c3aed;color:#fff;border-radius:3px;padding:0 3px;font-weight:800;">'+num[i]+'</span>';
+      else pat+='<span style="color:#9ca3af;">·</span>';
+    }
+    return pat+' <span style="font-size:.7rem;color:#5b21b6;">('+m.hits+'x)</span>';
+  });
+  msg.innerHTML='<span style="color:#5b21b6;font-weight:700;">'+matches.length+' match'+(matches.length>1?'es':'')+' for <b>'+num+'</b>:</span> '+summaryParts.join(' &nbsp; ');
 }
 
 
@@ -20492,7 +20490,7 @@ function _renderPosFilter(){
     const dateHits=dateRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx]));
     const allHits=allRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx])).sort((a,b)=>b.dk.localeCompare(a.dk));
 
-    h+=`<div data-poskey="${key}" data-hits="${cnt}" style="border-radius:7px;border:0.5px solid var(--color-border-tertiary,#e5e7eb);overflow:hidden;background:#fff;">`;
+    h+=`<div data-poskey="${key}" data-hits="${cnt}" style="border-radius:7px;border:0.5px solid var(--color-border-tertiary,#e5e7eb);background:#fff;">`;
     // Header
     h+=`<div onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display==='none'?'block':'none';})(this)" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
     h+=`<div style="font-size:.75rem;font-weight:800;color:${rkColors[Math.min(i,2)]};min-width:24px;">#${rk}</div>`;
