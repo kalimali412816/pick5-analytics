@@ -3270,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=252"></script>
+<script src="lottolens-data.js?v=254"></script>
 <script>
 
 // ================================================================
@@ -20346,22 +20346,36 @@ function _pfHighlight(){
   // digit freq helper
   function digitFreq(s){var f={};s.split('').forEach(function(d){f[d]=(f[d]||0)+1;});return f;}
 
-  // Check if inputDigits are ALL contained within comboDigits (combo must have at least those digits)
-  function inputIsSubsetOfCombo(inputFreq, comboDigits){
-    var comboFreq=digitFreq(comboDigits);
+  // Check if combo digits + free positions (filled optimally) can contain all input digits
+  function comboCanContainInput(inputFreq, digStr, numFreePos){
+    var comboFreq=digitFreq(digStr);
+    // How many input digits are already satisfied by combo?
+    var stillNeeded=0;
     for(var d in inputFreq){
-      if((comboFreq[d]||0)<inputFreq[d]) return false;
+      var have=comboFreq[d]||0;
+      var need=inputFreq[d];
+      if(have<need) stillNeeded+=(need-have);
     }
-    return true;
+    // Free positions can fill the rest
+    return stillNeeded<=numFreePos;
   }
 
-  // Build the best 5-digit number: place combo digits at their positions, fill missing with remaining combo digits
-  function buildNumber(posStr, digStr){
+  // Build the best 5-digit number: fill free positions with needed input digits first
+  function buildNumber(posStr, digStr, inputFreq){
     var posArr=posStr.split('').map(Number);
     var missingPositions=[0,1,2,3,4].filter(function(x){return posArr.indexOf(x)===-1;});
-    var result=Array(5).fill('x');
+    var result=Array(5);
     posArr.forEach(function(p,i){result[p]=digStr[i];});
-    // Leave missing positions as x (they can be anything)
+    // Fill free positions with leftover needed input digits
+    var comboFreq=digitFreq(digStr);
+    var toFill=[];
+    for(var d in inputFreq){
+      var still=inputFreq[d]-(comboFreq[d]||0);
+      for(var i=0;i<still;i++) toFill.push(d);
+    }
+    missingPositions.forEach(function(p,i){
+      result[p]=toFill[i]||'x';
+    });
     return result.join('');
   }
 
@@ -20372,14 +20386,13 @@ function _pfHighlight(){
     if(!key) return;
     var parts=key.split('|');
     var posStr=parts[0], digStr=parts[1];
-    // Check if input digits are a subset of the combo's digits
-    // i.e. the combo's 4 digits contain all of the user's input digits
-    var isMatch=inputIsSubsetOfCombo(inputFreq, digStr);
+    var numFreePos=5-posStr.length;
+    var isMatch=comboCanContainInput(inputFreq, digStr, numFreePos);
     if(isMatch){
       r.style.background='#ede9fe';r.style.border='2.5px solid #7c3aed';
       r.style.boxShadow='0 0 0 3px #c4b5fd55';r.style.borderRadius='8px';
       var hits=parseInt(r.getAttribute('data-hits')||'0');
-      var built=buildNumber(posStr,digStr);
+      var built=buildNumber(posStr,digStr,inputFreq);
       matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,built:built,el:r});
       if(matches.length===1) r.scrollIntoView({behavior:'smooth',block:'nearest'});
     } else {
