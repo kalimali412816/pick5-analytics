@@ -3270,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=259"></script>
+<script src="lottolens-data.js?v=260"></script>
 <script>
 
 // ================================================================
@@ -20058,11 +20058,11 @@ function _renderPosRepeat(){
   }
 
   // Get consecutive streak yellow/green keys using Pos Day Repeat's own scope
-  var pats=new Set(['S','D','DD','T','TD','Q','Qu']);
   var prScopeRows=ALL;
   if(scope!=='ALL') prScopeRows=prScopeRows.filter(function(r){return r.dk.startsWith(scope);});
   if(stF!=='ALL') prScopeRows=prScopeRows.filter(function(r){return r.state===stF;});
-  var consecResult=findConsecutivePatterns(prScopeRows,pats);
+  var prPats=findPatternsCached(prScopeRows);
+  var consecResult=findConsecutivePatterns(prScopeRows,prPats);
   var yellowKeys=consecResult.yellow||new Set();
   var greenKeys=consecResult.green||new Set();
 
