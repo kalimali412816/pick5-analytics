@@ -3270,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=257"></script>
+<script src="lottolens-data.js?v=258"></script>
 <script>
 
 // ================================================================
@@ -20057,6 +20057,12 @@ function _renderPosRepeat(){
     return 'S';
   }
 
+  // Get consecutive streak yellow/green keys (same as Results tab)
+  var pats=new Set(['S','D','DD','T','TD','Q','Qu']);
+  var consecResult=findConsecutivePatternsCached(FILT,pats);
+  var yellowKeys=consecResult.yellow||new Set();
+  var greenKeys=consecResult.green||new Set();
+
   // Build draws from ALL
   var src=ALL;
   if(scope!=='ALL') src=src.filter(function(r){return r.dk.startsWith(scope);});
@@ -20115,7 +20121,13 @@ function _renderPosRepeat(){
     return '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+occs.map(function(o){
       var bc=PC[o.pat]||'#374151',bg=PB[o.pat]||'#f3f4f6';
       var dbg=o.draw==='M'?'#fef3c7':'#dbeafe',dtc=o.draw==='M'?'#92400e':'#1e40af';
-      return '<span style="display:flex;align-items:center;gap:3px;font-size:11px;font-family:monospace;">'+o.d+' <b>'+o.st+'</b> '+o.num+' <span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+o.pat+'</span><span style="padding:1px 4px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+o.draw+'</span></span>';
+      var streakKey=o.st+'-'+o.d+'-'+(o.draw==='M'?'midday':'evening');
+      var isGrn=greenKeys.has(streakKey);
+      var isYlw=!isGrn&&yellowKeys.has(streakKey);
+      var outerBg=isGrn?'background:#dcfce7;border:1.5px solid #86efac;border-radius:6px;padding:2px 5px;':
+                  isYlw?'background:#fef9c3;border:1.5px solid #fcd34d;border-radius:6px;padding:2px 5px;':'';
+      var streak=isGrn?'🟢 ':isYlw?'🟡 ':'';
+      return '<span style="display:flex;align-items:center;gap:3px;font-size:11px;font-family:monospace;'+outerBg+'">'+streak+o.d+' <b>'+o.st+'</b> '+o.num+' <span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+o.pat+'</span><span style="padding:1px 4px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+o.draw+'</span></span>';
     }).join('<span style="color:var(--g3);margin:0 2px;">→</span>')+'</div>';
   }
 
