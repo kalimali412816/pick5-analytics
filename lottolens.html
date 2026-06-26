@@ -3270,7 +3270,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=261"></script>
+<script src="lottolens-data.js?v=262"></script>
 <script>
 
 // ================================================================
@@ -20057,38 +20057,10 @@ function _renderPosRepeat(){
     return 'S';
   }
 
-  // Build a set of all draw keys for fast lookup
-  var allDkSet=new Set(ALL.map(function(r){return r.state+'-'+r.dk+'-'+r.draw;}));
-  // Helper: given a dk (YYYY-MM-DD), return the next calendar day dk
-  function nextDk(dk){
-    var d=new Date(dk+'T12:00:00Z');
-    d.setUTCDate(d.getUTCDate()+1);
-    return d.toISOString().slice(0,10);
-  }
-  function prevDk(dk){
-    var d=new Date(dk+'T12:00:00Z');
-    d.setUTCDate(d.getUTCDate()-1);
-    return d.toISOString().slice(0,10);
-  }
-  // A draw is "yellow" if it has a draw on the immediately next or prev calendar day (same state+draw)
-  // A draw is "green" if it has draws on 2+ consecutive calendar days around it
-  function getStreakColor(st, dk, draw){
-    var key=st+'-'+dk+'-'+draw;
-    var hasNext=allDkSet.has(st+'-'+nextDk(dk)+'-'+draw);
-    var hasPrev=allDkSet.has(st+'-'+prevDk(dk)+'-'+draw);
-    if(!hasNext&&!hasPrev) return '';
-    // Green = part of a 3+ chain
-    if(hasNext&&hasPrev) return 'green';
-    if(hasNext){
-      var nn=nextDk(nextDk(dk));
-      return allDkSet.has(st+'-'+nn+'-'+draw)?'green':'yellow';
-    }
-    if(hasPrev){
-      var pp=prevDk(prevDk(dk));
-      return allDkSet.has(st+'-'+pp+'-'+draw)?'green':'yellow';
-    }
-    return '';
-  }
+  // Use exact same streak keys as Results tab
+  var prConsec=findConsecutivePatternsCached(FILT, findPatternsCached(FILT));
+  var yellowKeys=prConsec.yellow||new Set();
+  var greenKeys=prConsec.green||new Set();
 
   // Build draws from ALL
   var src=ALL;
@@ -20148,10 +20120,9 @@ function _renderPosRepeat(){
     return '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+occs.map(function(o){
       var bc=PC[o.pat]||'#374151',bg=PB[o.pat]||'#f3f4f6';
       var dbg=o.draw==='M'?'#fef3c7':'#dbeafe',dtc=o.draw==='M'?'#92400e':'#1e40af';
-      var drawFull=o.draw==='M'?'midday':'evening';
-      var streakColor=getStreakColor(o.st,o.d,drawFull);
-      var isGrn=streakColor==='green';
-      var isYlw=streakColor==='yellow';
+      var streakKey=o.st+'-'+o.d+'-'+(o.draw==='M'?'midday':'evening');
+      var isGrn=greenKeys.has(streakKey);
+      var isYlw=!isGrn&&yellowKeys.has(streakKey);
       var outerBg=isGrn?'background:#dcfce7;border:1.5px solid #86efac;border-radius:6px;padding:2px 5px;':
                   isYlw?'background:#fef9c3;border:1.5px solid #fcd34d;border-radius:6px;padding:2px 5px;':'';
       var streak=isGrn?'🟢 ':isYlw?'🟡 ':'';
