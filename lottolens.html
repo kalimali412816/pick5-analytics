@@ -3310,7 +3310,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=272"></script>
+<script src="lottolens-data.js?v=273"></script>
 <script>
 
 // ================================================================
@@ -20480,11 +20480,46 @@ function _pfHighlight(){
 }
 
 
+function _buildFreqMaps(src){
+  // Build _freqD2Nums, _freqD3Nums, _freqD4Nums from src rows
+  var d2recs={},d3recs={},d4recs={};
+  src.forEach(function(r){
+    var d=r.number.split('');
+    // 2-digit
+    for(var a=0;a<5;a++) for(var b=a+1;b<5;b++){
+      var p=[d[a],d[b]].sort().join('');
+      if(!d2recs[p])d2recs[p]=[];
+      var k2=r.state+r.dk+r.draw;
+      if(!d2recs[p].find(function(x){return x.state+x.dk+x.draw===k2;}))d2recs[p].push(r);
+    }
+    // 3-digit
+    for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++){
+      var p=[d[a],d[b],d[c]].sort().join('');
+      if(!d3recs[p])d3recs[p]=[];
+      var k3=r.state+r.dk+r.draw;
+      if(!d3recs[p].find(function(x){return x.state+x.dk+x.draw===k3;}))d3recs[p].push(r);
+    }
+    // 4-digit
+    for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var dd=c+1;dd<5;dd++){
+      var p=[d[a],d[b],d[c],d[dd]].sort().join('');
+      if(!d4recs[p])d4recs[p]=[];
+      var k4=r.state+r.dk+r.draw;
+      if(!d4recs[p].find(function(x){return x.state+x.dk+x.draw===k4;}))d4recs[p].push(r);
+    }
+  });
+  window._freqD2Nums=d2recs;
+  window._freqD3Nums=d3recs;
+  window._freqD4Nums=d4recs;
+}
+
 function _renderDigitSearch(){
   const input=document.getElementById('dsInput');
   const msg=document.getElementById('dsMsg');
   const results=document.getElementById('dsResults');
   const topCombos=document.getElementById('dsTopCombos');
+
+  // Always rebuild freq maps from FILT so search works without visiting Frequency tab
+  _buildFreqMaps(FILT);
 
   // Always rebuild top combos (respects global FILT)
   if(topCombos){
