@@ -1197,6 +1197,18 @@ tr:hover td{background:var(--b0);}
           <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
         </select>
         <select id="psYear" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;"></select>
+        <select id="psMinHits" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="0">Min Hits: Any</option>
+          <option value="2">Min 2</option><option value="3">Min 3</option><option value="4">Min 4</option>
+          <option value="5">Min 5</option><option value="6">Min 6</option><option value="7">Min 7</option>
+          <option value="8">Min 8</option><option value="10">Min 10</option>
+        </select>
+        <select id="psMaxHits" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="9999">Max Hits: Any</option>
+          <option value="2">Max 2</option><option value="3">Max 3</option><option value="4">Max 4</option>
+          <option value="5">Max 5</option><option value="6">Max 6</option><option value="7">Max 7</option>
+          <option value="8">Max 8</option><option value="10">Max 10</option>
+        </select>
       </div>
     </div>
     <div style="padding:16px;border-bottom:1px solid var(--g2);">
@@ -3270,7 +3282,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=264"></script>
+<script src="lottolens-data.js?v=265"></script>
 <script>
 
 // ================================================================
@@ -21137,6 +21149,10 @@ function _renderPosSearch(){
   const stEl=document.getElementById('psState');
   const stF=stEl?stEl.value:'ALL';
   const yrF=yrEl?yrEl.value:'ALL';
+  const minHitsEl=document.getElementById('psMinHits');
+  const maxHitsEl=document.getElementById('psMaxHits');
+  const minHits=minHitsEl?parseInt(minHitsEl.value)||0:0;
+  const maxHits=maxHitsEl?parseInt(maxHitsEl.value)||9999:9999;
 
   // Read pattern
   const pat=[];
@@ -21177,9 +21193,12 @@ function _renderPosSearch(){
     const cutoff=arr[n-1][1];
     return arr.filter(([,c])=>c>=cutoff);
   }
-  const top2=topNWithTies(counts2,3);
-  const top3=topNWithTies(counts3,3);
-  const top4=topNWithTies(counts4,10);
+  function applyHitsFilter(arr){
+    return arr.filter(([,c])=>c>=minHits&&c<=maxHits);
+  }
+  const top2=applyHitsFilter(topNWithTies(counts2,minHits>0?99999:3));
+  const top3=applyHitsFilter(topNWithTies(counts3,minHits>0?99999:3));
+  const top4=applyHitsFilter(topNWithTies(counts4,minHits>0?99999:10));
 
   // Track new combos via localStorage — NEW = wasn't in the list last render
   const _LS_PREV='ll_combo_prev_list';
