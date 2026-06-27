@@ -812,10 +812,10 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('tracker',this)">📡 Most Drawn</div>
   <div class="tab" onclick="switchTab('permMatcher',this)">🔀 Perm Matcher</div>
   <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
-  <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
   <div class="tab" onclick="switchTab('posFilter',this)">🔎 Position Search</div>
   <div class="tab" onclick="switchTab('posConverge',this)">🎯 Position Convergence</div>
   <div class="tab" onclick="switchTab('posRepeat',this)">📅 Pos Day Repeat</div>
+  <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
 </div>
 
 <!-- RESULTS -->
@@ -3060,8 +3060,8 @@ tr:hover td{background:var(--b0);}
       </div>
     </div>
     <div style="padding:14px 16px;border-bottom:1px solid var(--g2);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="dsInput" maxlength="4" placeholder="e.g. 0027 or 259" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4);" onkeydown="if(event.key==='Enter')_renderDigitSearch();" style="width:120px;padding:7px 12px;border:2px solid var(--ac1);border-radius:8px;font-size:1rem;font-family:'DM Mono',monospace;letter-spacing:3px;font-weight:700;">
-      <button onclick="_renderDigitSearch();" style="padding:7px 18px;background:var(--ac1);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;">Search</button>
+      <input type="text" id="dsInput" maxlength="4" placeholder="e.g. 0027 or 259" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4);" onkeydown="if(event.key==='Enter')_renderDigitSearch();" style="width:130px;padding:7px 12px;border:2px solid var(--pur);border-radius:8px;font-size:1rem;font-family:'DM Mono',monospace;letter-spacing:3px;font-weight:700;">
+      <button onclick="_renderDigitSearch();" style="padding:7px 18px;background:var(--pur);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;">Search</button>
       <button onclick="document.getElementById('dsInput').value='';document.getElementById('dsResults').innerHTML='';document.getElementById('dsMsg').textContent='';" style="padding:7px 12px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
       <span id="dsMsg" style="font-size:.78rem;color:var(--g5);"></span>
     </div>
@@ -3310,7 +3310,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=270"></script>
+<script src="lottolens-data.js?v=272"></script>
 <script>
 
 // ================================================================
@@ -20511,13 +20511,14 @@ function _renderDigitSearch(){
     function topN(obj,n){return Object.entries(obj).sort(function(a,b){return b[1]-a[1];}).slice(0,n);}
     var t2=topN(d2,3),t3=topN(d3,5),t4=topN(d4,8);
     var h='';
-    function mkBadge(combo,cnt,col){
+    function mkBadge(combo,cnt,col,rank){
+      var medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
       var oc='_freqDigitClick("'+combo+'","'+combo+'")';
-      return '<span onclick="'+oc+'" style="cursor:pointer;background:#fff;border:2px solid '+col+';border-radius:8px;padding:5px 12px;font-family:monospace;font-weight:800;font-size:.9rem;display:inline-flex;align-items:center;gap:6px;"><span style="color:'+col+';">'+combo+'</span><span style="font-size:.72rem;color:var(--g5);">'+cnt+'x</span></span>';
+      return '<span onclick="'+oc+'" style="cursor:pointer;background:var(--g0);border:1.5px solid var(--g3);border-radius:8px;padding:5px 12px;font-family:monospace;font-weight:700;font-size:.88rem;display:inline-flex;align-items:center;gap:5px;">'+(medal?'<span>'+medal+'</span>':'')+'<span style="color:var(--g9);font-weight:800;">'+combo+'</span><span style="font-size:.7rem;color:var(--g5);font-weight:500;">'+cnt+'x</span></span>';
     }
-    if(t2.length){h+='<div style="margin-bottom:8px;"><span style="font-size:.68rem;font-weight:700;color:var(--b6);text-transform:uppercase;margin-right:6px;">2-digit</span>';t2.forEach(function(e){h+=mkBadge(e[0],e[1],'var(--b5)');});h+='</div>';}
-    if(t3.length){h+='<div style="margin-bottom:8px;"><span style="font-size:.68rem;font-weight:700;color:var(--ac2);text-transform:uppercase;margin-right:6px;">3-digit</span>';t3.forEach(function(e){h+=mkBadge(e[0],e[1],'var(--ac2)');});h+='</div>';}
-    if(t4.length){h+='<div><span style="font-size:.68rem;font-weight:700;color:var(--pur);text-transform:uppercase;margin-right:6px;">4-digit</span>';t4.forEach(function(e){h+=mkBadge(e[0],e[1],'var(--pur)');});h+='</div>';}
+    if(t2.length){h+='<div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--b6);text-transform:uppercase;min-width:52px;">2-digit</span>';t2.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--b5)',i+1);});h+='</div>';}
+    if(t3.length){h+='<div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--ac2);text-transform:uppercase;min-width:52px;">3-digit</span>';t3.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--ac2)',i+1);});h+='</div>';}
+    if(t4.length){h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--pur);text-transform:uppercase;min-width:52px;">4-digit</span>';t4.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--pur)',i+1);});h+='</div>';}
     topCombos.innerHTML=h;
   }
 
