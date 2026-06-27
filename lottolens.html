@@ -3310,7 +3310,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=273"></script>
+<script src="lottolens-data.js?v=276"></script>
 <script>
 
 // ================================================================
@@ -20481,30 +20481,25 @@ function _pfHighlight(){
 
 
 function _buildFreqMaps(src){
-  // Build _freqD2Nums, _freqD3Nums, _freqD4Nums from src rows
   var d2recs={},d3recs={},d4recs={};
   src.forEach(function(r){
-    var d=r.number.split('');
-    // 2-digit
-    for(var a=0;a<5;a++) for(var b=a+1;b<5;b++){
-      var p=[d[a],d[b]].sort().join('');
+    var dk=r.state+r.dk+r.draw;
+    var digs=r.number.split('');
+    var i,j,k,l,p;
+    for(i=0;i<5;i++) for(j=i+1;j<5;j++){
+      p=[digs[i],digs[j]].sort().join('');
       if(!d2recs[p])d2recs[p]=[];
-      var k2=r.state+r.dk+r.draw;
-      if(!d2recs[p].find(function(x){return x.state+x.dk+x.draw===k2;}))d2recs[p].push(r);
+      if(!d2recs[p].find(function(x){return x.state+x.dk+x.draw===dk;}))d2recs[p].push(r);
     }
-    // 3-digit
-    for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++){
-      var p=[d[a],d[b],d[c]].sort().join('');
+    for(i=0;i<5;i++) for(j=i+1;j<5;j++) for(k=j+1;k<5;k++){
+      p=[digs[i],digs[j],digs[k]].sort().join('');
       if(!d3recs[p])d3recs[p]=[];
-      var k3=r.state+r.dk+r.draw;
-      if(!d3recs[p].find(function(x){return x.state+x.dk+x.draw===k3;}))d3recs[p].push(r);
+      if(!d3recs[p].find(function(x){return x.state+x.dk+x.draw===dk;}))d3recs[p].push(r);
     }
-    // 4-digit
-    for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var dd=c+1;dd<5;dd++){
-      var p=[d[a],d[b],d[c],d[dd]].sort().join('');
+    for(i=0;i<5;i++) for(j=i+1;j<5;j++) for(k=j+1;k<5;k++) for(l=k+1;l<5;l++){
+      p=[digs[i],digs[j],digs[k],digs[l]].sort().join('');
       if(!d4recs[p])d4recs[p]=[];
-      var k4=r.state+r.dk+r.draw;
-      if(!d4recs[p].find(function(x){return x.state+x.dk+x.draw===k4;}))d4recs[p].push(r);
+      if(!d4recs[p].find(function(x){return x.state+x.dk+x.draw===dk;}))d4recs[p].push(r);
     }
   });
   window._freqD2Nums=d2recs;
@@ -20518,14 +20513,15 @@ function _renderDigitSearch(){
   const results=document.getElementById('dsResults');
   const topCombos=document.getElementById('dsTopCombos');
 
-  // Always rebuild freq maps from FILT so search works without visiting Frequency tab
-  _buildFreqMaps(FILT);
+  // Always rebuild freq maps from FILT (fall back to ALL if FILT empty)
+  var dsRows=(FILT&&FILT.length)?FILT:ALL;
+  _buildFreqMaps(dsRows);
 
   // Always rebuild top combos (respects global FILT)
   if(topCombos){
     // Build digit counts from FILT
     const d2={},d3={},d4={};
-    FILT.forEach(function(r){
+    dsRows.forEach(function(r){
       const n=r.number;
       // 2-digit pairs
       for(var i=0;i<5;i++) for(var j=i+1;j<5;j++){
@@ -20548,13 +20544,19 @@ function _renderDigitSearch(){
     var h='';
     function mkBadge(combo,cnt,col,rank){
       var medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
-      var oc='_freqDigitClick("'+combo+'","'+combo+'")';
-      return '<span onclick="'+oc+'" style="cursor:pointer;background:var(--g0);border:1.5px solid var(--g3);border-radius:8px;padding:5px 12px;font-family:monospace;font-weight:700;font-size:.88rem;display:inline-flex;align-items:center;gap:5px;">'+(medal?'<span>'+medal+'</span>':'')+'<span style="color:var(--g9);font-weight:800;">'+combo+'</span><span style="font-size:.7rem;color:var(--g5);font-weight:500;">'+cnt+'x</span></span>';
+      return '<span data-dsc="'+combo+'" class="ds-badge" style="cursor:pointer;background:var(--g0);border:1.5px solid var(--g3);border-radius:8px;padding:5px 12px;font-family:monospace;font-weight:700;font-size:.88rem;display:inline-flex;align-items:center;gap:5px;">'+(medal?medal+' ':'')+'<span style="color:var(--g9);font-weight:800;">'+combo+'</span><span style="font-size:.7rem;color:var(--g5);font-weight:500;margin-left:4px;">'+cnt+'x</span></span>';
     }
     if(t2.length){h+='<div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--b6);text-transform:uppercase;min-width:52px;">2-digit</span>';t2.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--b5)',i+1);});h+='</div>';}
     if(t3.length){h+='<div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--ac2);text-transform:uppercase;min-width:52px;">3-digit</span>';t3.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--ac2)',i+1);});h+='</div>';}
     if(t4.length){h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--pur);text-transform:uppercase;min-width:52px;">4-digit</span>';t4.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--pur)',i+1);});h+='</div>';}
     topCombos.innerHTML=h;
+    // Attach click handlers via event delegation
+    topCombos.querySelectorAll('.ds-badge').forEach(function(el){
+      el.addEventListener('click',function(){
+        var c=this.getAttribute('data-dsc');
+        _freqDigitClick(c,c);
+      });
+    });
   }
 
   // Handle search input
