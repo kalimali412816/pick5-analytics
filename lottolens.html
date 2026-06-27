@@ -1197,6 +1197,12 @@ tr:hover td{background:var(--b0);}
           <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
         </select>
         <select id="psYear" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;"></select>
+        <select id="psPosLen" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="0">All Pos Types</option>
+          <option value="2">2-Digit</option>
+          <option value="3">3-Digit</option>
+          <option value="4">4-Digit</option>
+        </select>
         <select id="psMinHits" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="0">Min Hits: Any</option>
           <option value="2">Min 2</option><option value="3">Min 3</option><option value="4">Min 4</option>
@@ -3282,7 +3288,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=265"></script>
+<script src="lottolens-data.js?v=266"></script>
 <script>
 
 // ================================================================
@@ -21151,8 +21157,10 @@ function _renderPosSearch(){
   const yrF=yrEl?yrEl.value:'ALL';
   const minHitsEl=document.getElementById('psMinHits');
   const maxHitsEl=document.getElementById('psMaxHits');
+  const posLenEl=document.getElementById('psPosLen');
   const minHits=minHitsEl?parseInt(minHitsEl.value)||0:0;
   const maxHits=maxHitsEl?parseInt(maxHitsEl.value)||9999:9999;
+  const posLen=posLenEl?parseInt(posLenEl.value)||0:0; // 0=all, 2/3/4=specific
 
   // Read pattern
   const pat=[];
@@ -21196,9 +21204,9 @@ function _renderPosSearch(){
   function applyHitsFilter(arr){
     return arr.filter(([,c])=>c>=minHits&&c<=maxHits);
   }
-  const top2=applyHitsFilter(topNWithTies(counts2,minHits>0?99999:3));
-  const top3=applyHitsFilter(topNWithTies(counts3,minHits>0?99999:3));
-  const top4=applyHitsFilter(topNWithTies(counts4,minHits>0?99999:10));
+  const top2=(posLen===0||posLen===2)?applyHitsFilter(topNWithTies(counts2,minHits>0?99999:3)):[];
+  const top3=(posLen===0||posLen===3)?applyHitsFilter(topNWithTies(counts3,minHits>0?99999:3)):[];
+  const top4=(posLen===0||posLen===4)?applyHitsFilter(topNWithTies(counts4,minHits>0?99999:10)):[];
 
   // Track new combos via localStorage — NEW = wasn't in the list last render
   const _LS_PREV='ll_combo_prev_list';
