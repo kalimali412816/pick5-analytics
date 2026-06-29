@@ -2007,7 +2007,13 @@ tr:hover td{background:var(--b0);}
       <h3>🎯 Triple Digit Hot Days</h3>
       <div style="display:flex;gap:6px;align-items:center;">
         <select id="tripleScope" onchange="_renderTripleHotDays()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="2026">2026 Only</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
           <option value="all">All Time</option>
         </select>
       </div>
@@ -3310,7 +3316,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=278"></script>
+<script src="lottolens-data.js?v=279"></script>
 <script>
 
 // ================================================================
@@ -22182,7 +22188,7 @@ function _renderTripleHotDays(){
   const _dowLabels={1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',0:'Sun'};
   const _dowOrder=[1,2,3,4,5,6,0];
   const _dowShort={1:'Mo',2:'Tu',3:'We',4:'Th',5:'Fr',6:'Sa',0:'Su'};
-  const src=scope==='2026'?ALL.filter(r=>r.ym.startsWith('2026')):ALL;
+  const src=scope==='all'?ALL:ALL.filter(r=>r.ym.startsWith(scope));
   const tripleData={};
   for(let d=0;d<=9;d++) tripleData[d]={counts:{},total:0,examples:[],records:{}};
   src.forEach(r=>{
