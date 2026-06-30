@@ -1216,6 +1216,11 @@ tr:hover td{background:var(--b0);}
           <option value="5">Max 5</option><option value="6">Max 6</option><option value="7">Max 7</option>
           <option value="8">Max 8</option><option value="10">Max 10</option>
         </select>
+        <select id="psDraw" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="both">Mid + Eve</option>
+          <option value="midday">Midday Only</option>
+          <option value="evening">Evening Only</option>
+        </select>
       </div>
     </div>
     <div style="padding:16px;border-bottom:1px solid var(--g2);">
@@ -3316,7 +3321,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=283"></script>
+<script src="lottolens-data.js?v=284"></script>
 <script>
 
 // ================================================================
@@ -21283,9 +21288,11 @@ function _renderPosSearch(){
   const minHitsEl=document.getElementById('psMinHits');
   const maxHitsEl=document.getElementById('psMaxHits');
   const posLenEl=document.getElementById('psPosLen');
+  const psDrawEl=document.getElementById('psDraw');
   const minHits=minHitsEl?parseInt(minHitsEl.value)||0:0;
   const maxHits=maxHitsEl?parseInt(maxHitsEl.value)||9999:9999;
-  const posLen=posLenEl?parseInt(posLenEl.value)||0:0; // 0=all, 2/3/4=specific
+  const posLen=posLenEl?parseInt(posLenEl.value)||0:0;
+  const psDrawF=psDrawEl?psDrawEl.value:'both'; // both, midday, evening
 
   // Read pattern
   const pat=[];
@@ -21299,6 +21306,7 @@ function _renderPosSearch(){
   let scopeRows=ALL;
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
+  if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
 
   // Build positional combinations counts
   const POS=[0,1,2,3,4];
