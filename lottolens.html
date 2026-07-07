@@ -3338,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=295"></script>
+<script src="lottolens-data.js?v=296"></script>
 <script>
 
 // ================================================================
@@ -8258,6 +8258,35 @@ function toggleExactSearch(){
   runSearch();
 }
 
+
+// Parse sum filter: "22 25,28" -> Set{22,25,28}
+function _parseSumFilter(val){
+  if(!val||!val.trim()) return null;
+  const s=new Set();
+  val.split(/[,\s]+/).forEach(p=>{const n=parseInt(p);if(!isNaN(n)&&n>=0)s.add(n);});
+  return s.size?s:null;
+}
+// Parse contains filter: "0 5 7, 3" -> ["057","3"] each chunk must all appear
+function _parseContainsFilter(val){
+  if(!val||!val.trim()) return null;
+  const chunks=val.split(/[,]+/).map(c=>c.replace(/\D/g,'').split('').join('')).filter(c=>c.length);
+  return chunks.length?chunks:null;
+}
+function _matchSum(num, sumSet){
+  if(!sumSet) return true;
+  const s=num.split('').reduce((a,d)=>a+ +d,0);
+  return sumSet.has(s);
+}
+function _matchContains(num, contChunks){
+  if(!contChunks) return true;
+  // Number must match AT LEAST ONE chunk (OR logic between chunks, AND within chunk)
+  return contChunks.some(chunk=>{
+    const rc={};[...num].forEach(d=>rc[d]=(rc[d]||0)+1);
+    const cc={};[...chunk].forEach(d=>cc[d]=(cc[d]||0)+1);
+    return Object.entries(cc).every(([d,n])=>(rc[d]||0)>=n);
+  });
+}
+
 function runSearch(){
   const q=(document.getElementById('searchInput').value||'').replace(/\D/g,'').trim();
   const c=document.getElementById('searchResults');
@@ -8271,14 +8300,14 @@ function runSearch(){
     const _moRaw=(document.getElementById('searchMonthF')?.value||'').trim();
     const _daySet=_dayRaw?(()=>{const s=new Set();_dayRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>0)s.add(i);}else{const n=parseInt(p);if(n>0)s.add(n);}});return s.size?s:null;})():null;
     const _moSet=_moRaw?(()=>{const s=new Set();_moRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>=1&&i<=12)s.add(i);}else{const n=parseInt(p);if(n>=1&&n<=12)s.add(n);}});return s.size?s:null;})():null;
-    const _srchSum=parseInt((document.getElementById('searchSumF')?.value||'').trim());
-    const _srchCont=(document.getElementById('searchContainsF')?.value||'').replace(/\D/g,'');
+    const _srchSumSet=_parseSumFilter((document.getElementById('searchSumF')?.value||''));
+    const _srchContChunks=_parseContainsFilter((document.getElementById('searchContainsF')?.value||''));
     const matches=ALL.filter(r=>{
       const _sSel=_msfState['searchSt']||new Set();if(_sSel.size>0&&!_sSel.has(r.state))return false;
       if(_daySet&&!_daySet.has(r.day))return false;
       if(_moSet&&!_moSet.has(+r.ym.split('-')[1]))return false;
-      if(!isNaN(_srchSum)&&_srchSum>=0&&r.sum!==_srchSum)return false;
-      if(_srchCont){const rc={};[...r.number].forEach(d=>rc[d]=(rc[d]||0)+1);const cc={};[..._srchCont].forEach(d=>cc[d]=(cc[d]||0)+1);if(!Object.entries(cc).every(([d,n])=>(rc[d]||0)>=n))return false;}
+      if(!_matchSum(r.number,_srchSumSet))return false;
+      if(!_matchContains(r.number,_srchContChunks))return false;
       const numDigits=r.number.split('').sort();
       let rem=[...numDigits];
       for(const d of qDigits){
@@ -8330,14 +8359,14 @@ function runSearch(){
   const _5moRaw=(document.getElementById('searchMonthF')?.value||'').trim();
   const _5daySet=_5dayRaw?(()=>{const s=new Set();_5dayRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>0)s.add(i);}else{const n=parseInt(p);if(n>0)s.add(n);}});return s.size?s:null;})():null;
   const _5moSet=_5moRaw?(()=>{const s=new Set();_5moRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>=1&&i<=12)s.add(i);}else{const n=parseInt(p);if(n>=1&&n<=12)s.add(n);}});return s.size?s:null;})():null;
-  const _5sum=parseInt((document.getElementById('searchSumF')?.value||'').trim());
-  const _5cont=(document.getElementById('searchContainsF')?.value||'').replace(/\D/g,'');
+  const _5sumSet=_parseSumFilter((document.getElementById('searchSumF')?.value||''));
+  const _5contChunks=_parseContainsFilter((document.getElementById('searchContainsF')?.value||''));
   const _stFilter=r=>{
     if(_sSel2.size>0&&!_sSel2.has(r.state))return false;
     if(_5daySet&&!_5daySet.has(r.day))return false;
     if(_5moSet&&!_5moSet.has(+r.ym.split('-')[1]))return false;
-    if(!isNaN(_5sum)&&_5sum>=0&&r.sum!==_5sum)return false;
-    if(_5cont){const rc={};[...r.number].forEach(d=>rc[d]=(rc[d]||0)+1);const cc={};[..._5cont].forEach(d=>cc[d]=(cc[d]||0)+1);if(!Object.entries(cc).every(([d,n])=>(rc[d]||0)>=n))return false;}
+    if(!_matchSum(r.number,_5sumSet))return false;
+    if(!_matchContains(r.number,_5contChunks))return false;
     return true;
   };
   const exact=ALL.filter(r=>r.number===q&&_stFilter(r));
@@ -16899,14 +16928,14 @@ function runDupCheck(){
   if(!tokens.length){container.innerHTML='<div style="color:var(--g5);font-size:.8rem;">No valid numbers found.</div>';filterBar.innerHTML='';return;}
 
   const useNorm = document.getElementById('dupNormalized')?.checked;
-  const _dupSum=parseInt((document.getElementById('dupSumF')?.value||'').trim());
-  const _dupCont=(document.getElementById('dupContainsF')?.value||'').replace(/\D/g,'');
+  const _dupSumSet=_parseSumFilter((document.getElementById('dupSumF')?.value||''));
+  const _dupContChunks=_parseContainsFilter((document.getElementById('dupContainsF')?.value||''));
   const freq = {};
   const normMap = {};
   tokens.forEach(t=>{
     const n = t.padStart(5,'0').slice(-5);
-    if(!isNaN(_dupSum)&&_dupSum>=0){const s=n.split('').reduce((a,d)=>a+ +d,0);if(s!==_dupSum)return;}
-    if(_dupCont){const rc={};[...n].forEach(d=>rc[d]=(rc[d]||0)+1);const cc={};[..._dupCont].forEach(d=>cc[d]=(cc[d]||0)+1);if(!Object.entries(cc).every(([d,x])=>(rc[d]||0)>=x))return;}
+    if(!_matchSum(n,_dupSumSet))return;
+    if(!_matchContains(n,_dupContChunks))return;
     const key = useNorm ? srt(n) : n;
     freq[key] = (freq[key]||0)+1;
     if(!normMap[key]) normMap[key] = n;
