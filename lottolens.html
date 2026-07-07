@@ -413,7 +413,7 @@ tr:hover td{background:var(--b0);}
     </select></div>
   <div class="fg"><label>Month</label>
     <div class="msf-wrap" id="moF-wrap">
-      <div class="msf-btn" id="moF-btn" onclick="toggleMSF('moF')">Month <span class="msf-badge" id="moF-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
+      <div class="msf-btn" id="moF-btn" onclick="toggleMSF('moF')">Jul 2026 <span class="msf-badge" id="moF-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
       <div class="msf-drop" id="moF-drop">
         <div class="msf-item"><label style="font-weight:600;"><input type="checkbox" id="moF-ALL" onchange="msfToggleAll('moF',this)">All History</label></div>
         <div class="msf-acts" style="border-top:none;margin-top:0;padding-bottom:0;">
@@ -3326,7 +3326,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=291"></script>
+<script src="lottolens-data.js?v=292"></script>
 <script>
 
 // ================================================================
@@ -3811,7 +3811,7 @@ function _hdShowExpDelta(expDelta,title){
 // ================================================================
 // MULTI-SELECT FILTER HELPERS
 // ================================================================
-const _msfState = {stF: new Set(), moF: new Set(), dayF: new Set(), mlyS: new Set(), mlyM: new Set(['2026-07']), mlyD: new Set(), ftM: new Set(), ftD: new Set(), palS: new Set(), palM: new Set()};
+const _msfState = {stF: new Set(), moF: new Set(['2026-07']), dayF: new Set(), mlyS: new Set(), mlyM: new Set(['2026-07']), mlyD: new Set(), ftM: new Set(), ftD: new Set(), palS: new Set(), palM: new Set()};
 
 // ── Month filter search ──────────────────────────────────────────
 function _mofSearch(query){
