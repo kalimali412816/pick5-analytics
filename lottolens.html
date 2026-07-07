@@ -1019,6 +1019,12 @@ tr:hover td{background:var(--b0);}
         <input type="text" id="searchMonthF" placeholder="Months e.g. 3,4-6,12"
           style="width:140px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Filter by month — comma separated or ranges e.g. 3,4-6,12">
+        <input type="text" id="searchSumF" placeholder="Sum e.g. 22" maxlength="2"
+          style="width:90px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+          oninput="runSearchDebounced()" title="Filter by digit sum">
+        <input type="text" id="searchContainsF" placeholder="Contains e.g. 057" maxlength="5"
+          style="width:110px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+          oninput="runSearchDebounced()" title="Contains digits (1-5 digits, all must appear)">
         <div class="msf-wrap" id="searchSt-wrap">
           <div class="msf-btn" id="searchSt-btn" onclick="toggleMSF('searchSt')" style="min-width:90px;font-size:.75rem;">All States <span class="msf-badge" id="searchSt-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="searchSt-drop">
@@ -1043,7 +1049,7 @@ tr:hover td{background:var(--b0);}
           Exact: OFF
         </button>
         <button class="btn btn-p" onclick="runSearch()">Search</button>
-        <button class="btn btn-s" onclick="document.getElementById('searchInput').value='';document.getElementById('searchDayF').value='';document.getElementById('searchMonthF').value='';msfSelectAll('searchSt');document.getElementById('searchResults').innerHTML='';" style="padding:7px 14px;">✕ Clear</button>
+        <button class="btn btn-s" onclick="document.getElementById('searchInput').value='';document.getElementById('searchDayF').value='';document.getElementById('searchMonthF').value='';document.getElementById('searchSumF').value='';document.getElementById('searchContainsF').value='';msfSelectAll('searchSt');document.getElementById('searchResults').innerHTML='';" style="padding:7px 14px;">✕ Clear</button>
       </div>
       <div id="searchResults"></div>
     </div>
@@ -1062,8 +1068,14 @@ tr:hover td{background:var(--b0);}
         onfocus="this.style.borderColor='var(--b5)'"
         onblur="this.style.borderColor='var(--g3)'"></textarea>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="dupSumF" placeholder="Sum e.g. 22" maxlength="2"
+          style="width:90px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+          oninput="runDupCheck()" title="Filter by digit sum">
+        <input type="text" id="dupContainsF" placeholder="Contains e.g. 057" maxlength="5"
+          style="width:110px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+          oninput="runDupCheck()" title="Contains digits (1-5 digits, all must appear)">
         <button class="btn btn-p" onclick="runDupCheck()">Check</button>
-        <button class="btn btn-s" onclick="document.getElementById('dupInput').value='';document.getElementById('dupResults').innerHTML='';document.getElementById('dupFilterBar').innerHTML='';_dupPatFilter='ALL';">Clear</button>
+        <button class="btn btn-s" onclick="document.getElementById('dupInput').value='';document.getElementById('dupSumF').value='';document.getElementById('dupContainsF').value='';document.getElementById('dupResults').innerHTML='';document.getElementById('dupFilterBar').innerHTML='';_dupPatFilter='ALL';">Clear</button>
         <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--g7);font-weight:600;cursor:pointer;margin-left:4px;">
           <input type="checkbox" id="dupNormalized" onchange="runDupCheck()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--b5);">
           Match by normalized value
@@ -3326,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=294"></script>
+<script src="lottolens-data.js?v=295"></script>
 <script>
 
 // ================================================================
@@ -8259,10 +8271,14 @@ function runSearch(){
     const _moRaw=(document.getElementById('searchMonthF')?.value||'').trim();
     const _daySet=_dayRaw?(()=>{const s=new Set();_dayRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>0)s.add(i);}else{const n=parseInt(p);if(n>0)s.add(n);}});return s.size?s:null;})():null;
     const _moSet=_moRaw?(()=>{const s=new Set();_moRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>=1&&i<=12)s.add(i);}else{const n=parseInt(p);if(n>=1&&n<=12)s.add(n);}});return s.size?s:null;})():null;
+    const _srchSum=parseInt((document.getElementById('searchSumF')?.value||'').trim());
+    const _srchCont=(document.getElementById('searchContainsF')?.value||'').replace(/\D/g,'');
     const matches=ALL.filter(r=>{
       const _sSel=_msfState['searchSt']||new Set();if(_sSel.size>0&&!_sSel.has(r.state))return false;
       if(_daySet&&!_daySet.has(r.day))return false;
       if(_moSet&&!_moSet.has(+r.ym.split('-')[1]))return false;
+      if(!isNaN(_srchSum)&&_srchSum>=0&&r.sum!==_srchSum)return false;
+      if(_srchCont){const rc={};[...r.number].forEach(d=>rc[d]=(rc[d]||0)+1);const cc={};[..._srchCont].forEach(d=>cc[d]=(cc[d]||0)+1);if(!Object.entries(cc).every(([d,n])=>(rc[d]||0)>=n))return false;}
       const numDigits=r.number.split('').sort();
       let rem=[...numDigits];
       for(const d of qDigits){
@@ -8314,10 +8330,14 @@ function runSearch(){
   const _5moRaw=(document.getElementById('searchMonthF')?.value||'').trim();
   const _5daySet=_5dayRaw?(()=>{const s=new Set();_5dayRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>0)s.add(i);}else{const n=parseInt(p);if(n>0)s.add(n);}});return s.size?s:null;})():null;
   const _5moSet=_5moRaw?(()=>{const s=new Set();_5moRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>=1&&i<=12)s.add(i);}else{const n=parseInt(p);if(n>=1&&n<=12)s.add(n);}});return s.size?s:null;})():null;
+  const _5sum=parseInt((document.getElementById('searchSumF')?.value||'').trim());
+  const _5cont=(document.getElementById('searchContainsF')?.value||'').replace(/\D/g,'');
   const _stFilter=r=>{
     if(_sSel2.size>0&&!_sSel2.has(r.state))return false;
     if(_5daySet&&!_5daySet.has(r.day))return false;
     if(_5moSet&&!_5moSet.has(+r.ym.split('-')[1]))return false;
+    if(!isNaN(_5sum)&&_5sum>=0&&r.sum!==_5sum)return false;
+    if(_5cont){const rc={};[...r.number].forEach(d=>rc[d]=(rc[d]||0)+1);const cc={};[..._5cont].forEach(d=>cc[d]=(cc[d]||0)+1);if(!Object.entries(cc).every(([d,n])=>(rc[d]||0)>=n))return false;}
     return true;
   };
   const exact=ALL.filter(r=>r.number===q&&_stFilter(r));
@@ -16879,11 +16899,14 @@ function runDupCheck(){
   if(!tokens.length){container.innerHTML='<div style="color:var(--g5);font-size:.8rem;">No valid numbers found.</div>';filterBar.innerHTML='';return;}
 
   const useNorm = document.getElementById('dupNormalized')?.checked;
+  const _dupSum=parseInt((document.getElementById('dupSumF')?.value||'').trim());
+  const _dupCont=(document.getElementById('dupContainsF')?.value||'').replace(/\D/g,'');
   const freq = {};
-  // normMap: normalized key -> first raw number seen (for display)
   const normMap = {};
   tokens.forEach(t=>{
     const n = t.padStart(5,'0').slice(-5);
+    if(!isNaN(_dupSum)&&_dupSum>=0){const s=n.split('').reduce((a,d)=>a+ +d,0);if(s!==_dupSum)return;}
+    if(_dupCont){const rc={};[...n].forEach(d=>rc[d]=(rc[d]||0)+1);const cc={};[..._dupCont].forEach(d=>cc[d]=(cc[d]||0)+1);if(!Object.entries(cc).every(([d,x])=>(rc[d]||0)>=x))return;}
     const key = useNorm ? srt(n) : n;
     freq[key] = (freq[key]||0)+1;
     if(!normMap[key]) normMap[key] = n;
