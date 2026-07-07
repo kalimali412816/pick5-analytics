@@ -1019,11 +1019,11 @@ tr:hover td{background:var(--b0);}
         <input type="text" id="searchMonthF" placeholder="Months e.g. 3,4-6,12"
           style="width:140px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Filter by month — comma separated or ranges e.g. 3,4-6,12">
-        <input type="text" id="searchSumF" placeholder="Sum e.g. 22" maxlength="2"
-          style="width:90px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+        <input type="text" id="searchSumF" placeholder="Sum e.g. 22,25 28" maxlength="20"
+          style="width:130px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Filter by digit sum">
-        <input type="text" id="searchContainsF" placeholder="Contains e.g. 057" maxlength="5"
-          style="width:110px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+        <input type="text" id="searchContainsF" placeholder="Contains e.g. 057,13" maxlength="30"
+          style="width:140px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Contains digits (1-5 digits, all must appear)">
         <div class="msf-wrap" id="searchSt-wrap">
           <div class="msf-btn" id="searchSt-btn" onclick="toggleMSF('searchSt')" style="min-width:90px;font-size:.75rem;">All States <span class="msf-badge" id="searchSt-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
@@ -1068,11 +1068,11 @@ tr:hover td{background:var(--b0);}
         onfocus="this.style.borderColor='var(--b5)'"
         onblur="this.style.borderColor='var(--g3)'"></textarea>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;">
-        <input type="text" id="dupSumF" placeholder="Sum e.g. 22" maxlength="2"
-          style="width:90px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+        <input type="text" id="dupSumF" placeholder="Sum e.g. 22,25 28" maxlength="20"
+          style="width:130px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runDupCheck()" title="Filter by digit sum">
-        <input type="text" id="dupContainsF" placeholder="Contains e.g. 057" maxlength="5"
-          style="width:110px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
+        <input type="text" id="dupContainsF" placeholder="Contains e.g. 057,13" maxlength="30"
+          style="width:140px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runDupCheck()" title="Contains digits (1-5 digits, all must appear)">
         <button class="btn btn-p" onclick="runDupCheck()">Check</button>
         <button class="btn btn-s" onclick="document.getElementById('dupInput').value='';document.getElementById('dupSumF').value='';document.getElementById('dupContainsF').value='';document.getElementById('dupResults').innerHTML='';document.getElementById('dupFilterBar').innerHTML='';_dupPatFilter='ALL';">Clear</button>
@@ -3338,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=296"></script>
+<script src="lottolens-data.js?v=297"></script>
 <script>
 
 // ================================================================
