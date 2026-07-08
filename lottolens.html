@@ -3338,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=303"></script>
+<script src="lottolens-data.js?v=305"></script>
 <script>
 
 // ================================================================
@@ -15095,13 +15095,94 @@ function _buildDashboard(el){
 
     const alerts=[];
 
-    // 1. Hot normalized values (drawn 3+ times this year) in today's draws
+    // 1. Hot normalized values — today + prev 2 days side by side
     const yrFreq={};
     curYrDraws.forEach(r=>yrFreq[r.sorted]=(yrFreq[r.sorted]||0)+1);
-    const todayHotNorms=latestDraws.filter(r=>yrFreq[r.sorted]>=3).map(r=>({num:r.number,sorted:r.sorted,cnt:yrFreq[r.sorted],state:r.state,draw:r.draw}));
-    if(todayHotNorms.length){
-      alerts.push({icon:'🔥',label:'Hot Repeaters Today',color:'#92400e',bg:'#fef3c7',border:'#f59e0b',
-        body:todayHotNorms.map(x=>`<span style="font-family:'DM Mono',monospace;font-weight:700;">${x.num}</span> <span style="font-size:.65rem;color:#92400e;">${x.state}/${x.draw.slice(0,3)} · ${x.cnt}x in ${curYr}</span>`).join('<br>')});
+
+    // Get sorted list of unique draw dates descending
+    const allDks=[...new Set(ALL.map(r=>r.dk))].sort((a,b)=>b.localeCompare(a));
+    const latestDkIdx=allDks.indexOf(latestDk);
+    const prevDk1=allDks[latestDkIdx+1]||null;
+    const prevDk2=allDks[latestDkIdx+2]||null;
+
+    function getHotForDk(dk){
+      if(!dk) return [];
+      const dkDraws=ALL.filter(r=>r.dk===dk);
+      return dkDraws.filter(r=>yrFreq[r.sorted]>=3).map(r=>({num:r.number,sorted:r.sorted,cnt:yrFreq[r.sorted],state:r.state,draw:r.draw}));
+    }
+
+    const todayHotNorms=getHotForDk(latestDk);
+    const prev1HotNorms=getHotForDk(prevDk1);
+    const prev2HotNorms=getHotForDk(prevDk2);
+
+    function fmtDkShort(dk){if(!dk)return'';const p=dk.split('-');return p[1]+'/'+p[2];}
+    function hotRepeaterBody(items,color){
+      if(!items.length) return `<span style="font-size:.68rem;color:${color};opacity:.6;">None</span>`;
+      return items.map(x=>`<span style="font-family:'DM Mono',monospace;font-weight:700;">${x.num}</span> <span style="font-size:.65rem;color:${color};">${x.state}/${x.draw.slice(0,3)} · ${x.cnt}x in ${curYr}</span>`).join('<br>');
+    }
+
+    if(todayHotNorms.length||prev1HotNorms.length||prev2HotNorms.length){
+      const col='#92400e',bg='#fef3c7',bdr='#f59e0b';
+      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid #f59e0b;">
+          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:4px;">🔥 Today (${fmtDkShort(latestDk)})</div>
+          ${hotRepeaterBody(todayHotNorms,col)}
+        </div>
+        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid #f59e0b;">
+          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:4px;">Hot Repeaters ${fmtDkShort(prevDk1)}</div>
+          ${hotRepeaterBody(prev1HotNorms,col)}
+        </div>
+        <div style="flex:1;min-width:140px;padding-left:12px;">
+          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:4px;">Hot Repeaters ${fmtDkShort(prevDk2)}</div>
+          ${hotRepeaterBody(prev2HotNorms,col)}
+        </div>
+      </div>`;
+      alerts.push({icon:'🔥',label:'Hot Repeaters',color:col,bg,border:bdr,body});
+    }
+
+    // 1b. Hot Sums — sums appearing 2+ times for that day (today + prev 2 days)
+    function getHotSumsForDk(dk){
+      if(!dk) return [];
+      const dkDraws=ALL.filter(r=>r.dk===dk);
+      const sumFreq={};
+      dkDraws.forEach(r=>sumFreq[r.sum]=(sumFreq[r.sum]||0)+1);
+      return Object.entries(sumFreq).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]).map(([s,c])=>({sum:+s,cnt:c}));
+    }
+
+    const todayHotSums=getHotSumsForDk(latestDk);
+    const prev1HotSums=getHotSumsForDk(prevDk1);
+    const prev2HotSums=getHotSumsForDk(prevDk2);
+
+    function sumPill(s,cnt){
+      return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid #f59e0b;border-radius:8px;padding:4px 10px;margin:2px;min-width:40px;">
+        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#92400e;">${s}</span>
+        <span style="font-size:.6rem;color:#b45309;font-weight:600;">${cnt}x today</span>
+      </span>`;
+    }
+    function sumPillDay(s,cnt,label){
+      return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid #f59e0b;border-radius:8px;padding:4px 10px;margin:2px;min-width:40px;">
+        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#92400e;">${s}</span>
+        <span style="font-size:.6rem;color:#b45309;font-weight:600;">${cnt}x ${label}</span>
+      </span>`;
+    }
+
+    if(todayHotSums.length||prev1HotSums.length||prev2HotSums.length){
+      const col='#92400e',bg='#fef3c7',bdr='#f59e0b';
+      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid #f59e0b;">
+          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:6px;">🔥 Today (${fmtDkShort(latestDk)})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:2px;">${todayHotSums.length?todayHotSums.map(x=>sumPill(x.sum,x.cnt)).join(''):'<span style="font-size:.68rem;color:#92400e;opacity:.6;">None</span>'}</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid #f59e0b;">
+          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:6px;">Hot Sums ${fmtDkShort(prevDk1)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:2px;">${prev1HotSums.length?prev1HotSums.map(x=>sumPillDay(x.sum,x.cnt,'this day')).join(''):'<span style="font-size:.68rem;color:#92400e;opacity:.6;">None</span>'}</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding-left:12px;">
+          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:6px;">Hot Sums ${fmtDkShort(prevDk2)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:2px;">${prev2HotSums.length?prev2HotSums.map(x=>sumPillDay(x.sum,x.cnt,'this day')).join(''):'<span style="font-size:.68rem;color:#92400e;opacity:.6;">None</span>'}</div>
+        </div>
+      </div>`;
+      alerts.push({icon:'Σ',label:'Hot Sums',color:col,bg,border:bdr,body});
     }
 
     // 2. Cross-state same-day sorted matches today
