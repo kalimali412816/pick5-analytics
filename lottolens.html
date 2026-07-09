@@ -3338,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=311"></script>
+<script src="lottolens-data.js?v=313"></script>
 <script>
 
 // ================================================================
@@ -15185,18 +15185,23 @@ function _buildDashboard(el){
       alerts.push({icon:'Σ',label:'Hot Sums',color:col,bg,border:bdr,body});
     }
 
-    // 1c. Hot Top Drawn — sorted values that appeared 2+ times on that specific day
+    // 1c. Hot Top Drawn — frequency BUCKETS that appeared 2+ times on that specific day
+    // (matches how Frequency tab shows 47x, 45x etc — groups by all-time draw count)
+    const _atFreqCache={};
+    ALL.forEach(r=>_atFreqCache[r.sorted]=(_atFreqCache[r.sorted]||0)+1);
+
     function getHotTopDrawnForDk(dk){
       if(!dk) return [];
       const dkDraws=ALL.filter(r=>r.dk===dk);
-      const dayFreq={};
-      dkDraws.forEach(r=>dayFreq[r.sorted]=(dayFreq[r.sorted]||0)+1);
-      // All-time count for display
-      const atFreq={};
-      ALL.forEach(r=>atFreq[r.sorted]=(atFreq[r.sorted]||0)+1);
-      return Object.entries(dayFreq).filter(([,c])=>c>=2)
-        .sort((a,b)=>b[1]-a[1])
-        .map(([s,dayCnt])=>({sorted:s,dayCnt,atCnt:atFreq[s]||0}));
+      // Group by all-time frequency bucket
+      const bucketFreq={};
+      dkDraws.forEach(r=>{
+        const bucket=_atFreqCache[r.sorted]||0;
+        bucketFreq[bucket]=(bucketFreq[bucket]||0)+1;
+      });
+      return Object.entries(bucketFreq).filter(([,c])=>c>=2)
+        .sort((a,b)=>+b[0]-+a[0])
+        .map(([bucket,dayCnt])=>({bucket:+bucket,dayCnt}));
     }
 
     const todayHotTopDrawn=getHotTopDrawnForDk(latestDk);
@@ -15205,9 +15210,8 @@ function _buildDashboard(el){
 
     function topDrawnPill(x,bdr){
       return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid ${bdr};border-radius:8px;padding:4px 10px;margin:2px;min-width:44px;">
-        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#1e40af;">${x.sorted}</span>
-        <span style="font-size:.58rem;color:#1d4ed8;font-weight:600;">${x.atCnt}x all-time</span>
-        <span style="font-size:.58rem;color:#1e40af;font-weight:700;">${x.dayCnt}x this day</span>
+        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#1e40af;">${x.bucket}x</span>
+        <span style="font-size:.6rem;color:#1e40af;font-weight:700;">${x.dayCnt}x this day</span>
       </span>`;
     }
 
