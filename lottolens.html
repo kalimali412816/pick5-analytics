@@ -3338,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=309"></script>
+<script src="lottolens-data.js?v=310"></script>
 <script>
 
 // ================================================================
@@ -15183,6 +15183,149 @@ function _buildDashboard(el){
         </div>
       </div>`;
       alerts.push({icon:'Σ',label:'Hot Sums',color:col,bg,border:bdr,body});
+    }
+
+    // 1c. Hot Top Drawn — sorted values drawn 3+ times all-time that appeared today + prev 2 days
+    function getHotTopDrawnForDk(dk){
+      if(!dk) return [];
+      const dkDraws=ALL.filter(r=>r.dk===dk);
+      // Count all-time sorted freq
+      const atFreq={};
+      ALL.forEach(r=>atFreq[r.sorted]=(atFreq[r.sorted]||0)+1);
+      return dkDraws.filter(r=>atFreq[r.sorted]>=3)
+        .map(r=>({num:r.number,sorted:r.sorted,cnt:atFreq[r.sorted],state:r.state,draw:r.draw}))
+        .sort((a,b)=>b.cnt-a.cnt);
+    }
+
+    const todayHotTopDrawn=getHotTopDrawnForDk(latestDk);
+    const prev1HotTopDrawn=getHotTopDrawnForDk(prevDk1);
+    const prev2HotTopDrawn=getHotTopDrawnForDk(prevDk2);
+
+    function hotTopDrawnBody(items,color){
+      if(!items.length) return `<span style="font-size:.68rem;color:${color};opacity:.6;">None</span>`;
+      return items.map(x=>`<span style="font-family:'DM Mono',monospace;font-weight:700;">${x.num}</span> <span style="font-size:.65rem;color:${color};">${x.state}/${x.draw.slice(0,3)} · ${x.cnt}x all-time</span>`).join('<br>');
+    }
+
+    if(todayHotTopDrawn.length||prev1HotTopDrawn.length||prev2HotTopDrawn.length){
+      const col='#1e40af',bg='#dbeafe',bdr='#93c5fd';
+      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid ${bdr};">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">📊 Today (${fmtDkShort(latestDk)})</div>
+          ${hotTopDrawnBody(todayHotTopDrawn,col)}
+        </div>
+        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid ${bdr};">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Top Drawn ${fmtDkShort(prevDk1)}</div>
+          ${hotTopDrawnBody(prev1HotTopDrawn,col)}
+        </div>
+        <div style="flex:1;min-width:140px;padding-left:12px;">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Top Drawn ${fmtDkShort(prevDk2)}</div>
+          ${hotTopDrawnBody(prev2HotTopDrawn,col)}
+        </div>
+      </div>`;
+      alerts.push({icon:'📊',label:'Hot Top Drawn',color:col,bg,border:bdr,body});
+    }
+
+    // 1d. Hot Delta Sums — draws where |sum - all-time draw count| <= 2 today + prev 2 days
+    function getHotDeltaForDk(dk){
+      if(!dk) return [];
+      const dkDraws=ALL.filter(r=>r.dk===dk);
+      const atFreq={};
+      ALL.forEach(r=>atFreq[r.sorted]=(atFreq[r.sorted]||0)+1);
+      return dkDraws.filter(r=>{
+        const cnt=atFreq[r.sorted]||0;
+        return cnt>=2 && Math.abs(r.sum-cnt)<=2;
+      }).map(r=>({num:r.number,sorted:r.sorted,cnt:atFreq[r.sorted],sum:r.sum,delta:Math.abs(r.sum-atFreq[r.sorted]),state:r.state,draw:r.draw}))
+        .sort((a,b)=>a.delta-b.delta);
+    }
+
+    const todayHotDelta=getHotDeltaForDk(latestDk);
+    const prev1HotDelta=getHotDeltaForDk(prevDk1);
+    const prev2HotDelta=getHotDeltaForDk(prevDk2);
+
+    function hotDeltaBody(items,color){
+      if(!items.length) return `<span style="font-size:.68rem;color:${color};opacity:.6;">None</span>`;
+      return items.map(x=>`<span style="font-family:'DM Mono',monospace;font-weight:700;">${x.num}</span> <span style="font-size:.65rem;color:${color};">${x.state}/${x.draw.slice(0,3)} · Σ${x.sum} cnt:${x.cnt} Δ${x.delta}</span>`).join('<br>');
+    }
+
+    if(todayHotDelta.length||prev1HotDelta.length||prev2HotDelta.length){
+      const col='#065f46',bg='#d1fae5',bdr='#6ee7b7';
+      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid ${bdr};">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Δ Today (${fmtDkShort(latestDk)})</div>
+          ${hotDeltaBody(todayHotDelta,col)}
+        </div>
+        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid ${bdr};">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Delta Sums ${fmtDkShort(prevDk1)}</div>
+          ${hotDeltaBody(prev1HotDelta,col)}
+        </div>
+        <div style="flex:1;min-width:140px;padding-left:12px;">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Delta Sums ${fmtDkShort(prevDk2)}</div>
+          ${hotDeltaBody(prev2HotDelta,col)}
+        </div>
+      </div>`;
+      alerts.push({icon:'Δ',label:'Hot Delta Sums',color:col,bg,border:bdr,body});
+    }
+
+    // 1e. Hot Digits — top 2/3/4 digit combos appearing in today's draws + prev 2 days
+    function getHotDigitsForDk(dk){
+      if(!dk) return {d2:[],d3:[],d4:[]};
+      const dkDraws=ALL.filter(r=>r.dk===dk);
+      // Count year-to-date digit combos for context
+      const atD2={},atD3={},atD4={};
+      ALL.forEach(r=>{
+        const n=r.number;
+        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++){var k=[n[a],n[b]].sort().join('');atD2[k]=(atD2[k]||0)+1;}
+        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++){var k=[n[a],n[b],n[c]].sort().join('');atD3[k]=(atD3[k]||0)+1;}
+        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var d=c+1;d<5;d++){var k=[n[a],n[b],n[c],n[d]].sort().join('');atD4[k]=(atD4[k]||0)+1;}
+      });
+      // Get all digit combos from today's draws, sorted by all-time freq
+      const seen2=new Set(),seen3=new Set(),seen4=new Set();
+      const d2=[],d3=[],d4=[];
+      dkDraws.forEach(r=>{
+        const n=r.number;
+        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++){var k=[n[a],n[b]].sort().join('');if(!seen2.has(k)){seen2.add(k);d2.push({combo:k,cnt:atD2[k]||0});}}
+        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++){var k=[n[a],n[b],n[c]].sort().join('');if(!seen3.has(k)){seen3.add(k);d3.push({combo:k,cnt:atD3[k]||0});}}
+        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var d=c+1;d<5;d++){var k=[n[a],n[b],n[c],n[d]].sort().join('');if(!seen4.has(k)){seen4.add(k);d4.push({combo:k,cnt:atD4[k]||0});}}
+      });
+      d2.sort((a,b)=>b.cnt-a.cnt); d3.sort((a,b)=>b.cnt-a.cnt); d4.sort((a,b)=>b.cnt-a.cnt);
+      return {d2:d2.slice(0,3),d3:d3.slice(0,3),d4:d4.slice(0,3)};
+    }
+
+    function hotDigitsSection(data,col){
+      if(!data.d2.length&&!data.d3.length&&!data.d4.length) return `<span style="font-size:.68rem;color:${col};opacity:.6;">None</span>`;
+      let h='';
+      function pills(arr,label){
+        if(!arr.length) return '';
+        return `<div style="margin-bottom:4px;"><span style="font-size:.6rem;font-weight:700;color:${col};text-transform:uppercase;margin-right:4px;">${label}</span>`+
+          arr.map(x=>`<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:1.5px solid ${col};border-radius:6px;padding:2px 7px;margin:1px;"><span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.78rem;color:${col};">${x.combo}</span><span style="font-size:.55rem;color:${col};opacity:.8;">${x.cnt}x</span></span>`).join('')+'</div>';
+      }
+      h+=pills(data.d2,'2-digit');
+      h+=pills(data.d3,'3-digit');
+      h+=pills(data.d4,'4-digit');
+      return h;
+    }
+
+    const todayHotDigits=getHotDigitsForDk(latestDk);
+    const prev1HotDigits=getHotDigitsForDk(prevDk1);
+    const prev2HotDigits=getHotDigitsForDk(prevDk2);
+
+    {
+      const col='#6b21a8',bg='#ede9fe',bdr='#c4b5fd';
+      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;padding-right:12px;border-right:1px solid ${bdr};">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">🔢 Today (${fmtDkShort(latestDk)})</div>
+          ${hotDigitsSection(todayHotDigits,col)}
+        </div>
+        <div style="flex:1;min-width:160px;padding:0 12px;border-right:1px solid ${bdr};">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Top Digits ${fmtDkShort(prevDk1)}</div>
+          ${hotDigitsSection(prev1HotDigits,col)}
+        </div>
+        <div style="flex:1;min-width:160px;padding-left:12px;">
+          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Top Digits ${fmtDkShort(prevDk2)}</div>
+          ${hotDigitsSection(prev2HotDigits,col)}
+        </div>
+      </div>`;
+      alerts.push({icon:'🔢',label:'Hot Digits (2·3·4)',color:col,bg,border:bdr,body});
     }
 
     // 2. Cross-state same-day sorted matches today
