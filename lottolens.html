@@ -37,7 +37,7 @@ main{max-width:1600px;margin:0 auto;padding:18px;}
 .msf-btn{background:var(--g1);border:1.5px solid var(--g3);border-radius:7px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--g9);cursor:pointer;min-width:120px;display:flex;align-items:center;justify-content:space-between;gap:5px;white-space:nowrap;user-select:none;transition:border .2s;}
 .msf-btn:hover,.msf-btn.open{border-color:var(--b5);background:var(--b0);}
 .msf-badge{background:var(--b5);color:#fff;border-radius:10px;padding:0 6px;font-size:.68rem;font-weight:700;margin-left:3px;}
-.msf-drop{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:600;background:#fff;border:1.5px solid var(--b4);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);min-width:110px;max-height:360px;overflow-y:auto;padding:1px 0;}
+.msf-drop{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:1200;background:#fff;border:1.5px solid var(--b4);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);min-width:110px;max-height:360px;overflow-y:auto;padding:1px 0;}
 .msf-drop.open{display:block;}
 .msf-hdr{font-size:.62rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.5px;padding:2px 5px 1px;margin-top:1px;}
 .msf-item{display:block;padding:1px 4px;line-height:1.4;}
@@ -1411,7 +1411,7 @@ tr:hover td{background:var(--b0);}
 </div>
 
 <!-- MONTHLY -->
-<div id="panel-monthly" class="panel">
+<div id="panel-monthly" class="panel" style="position:relative;z-index:1;">
   <div class="card">
     <div class="ch">
       <h3>📆 Monthly Summary</h3>
@@ -3338,7 +3338,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=307"></script>
+<script src="lottolens-data.js?v=309"></script>
 <script>
 
 // ================================================================
