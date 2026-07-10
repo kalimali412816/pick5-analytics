@@ -817,6 +817,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('posConverge',this)">🎯 Position Convergence</div>
   <div class="tab" onclick="switchTab('posRepeat',this)">📅 Pos Day Repeat</div>
   <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
+  <div class="tab" onclick="switchTab('sameDayPerm',this)">♊ Same-Day Doubles</div>
 </div>
 
 <!-- RESULTS -->
@@ -3100,6 +3101,25 @@ tr:hover td{background:var(--b0);}
     <div id="dsResults" style="padding:16px;"></div>
   </div>
 </div>
+<div id="panel-sameDayPerm" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>♊ Same-Day Double Permutations</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Cases where the same permutation hit 2+ times on the same day — tracking 3rd hit</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="sdpYear" onchange="_renderSameDayPerm()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="all">All Years</option>
+        </select>
+      </div>
+    </div>
+    <div id="sdpSummary" style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--g2);flex-wrap:wrap;"></div>
+    <div id="sdpBody" style="overflow-x:auto;"></div>
+  </div>
+</div>
 <div id="panel-posFilter" class="panel">
   <div class="card">
     <div class="ch">
@@ -3338,7 +3358,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=315"></script>
+<script src="lottolens-data.js?v=316"></script>
 <script>
 
 // ================================================================
@@ -10448,7 +10468,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','posFilter','posConverge','posRepeat'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','posFilter','posConverge','posRepeat'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -10482,6 +10502,7 @@ function renderCur(){
   else if(curTab==='permMatcher'){_renderPermMatcher();}
   else if(curTab==='posTrips'){_renderPosTrips();}
   else if(curTab==='digitSearch'){_renderDigitSearch();}
+  else if(curTab==='sameDayPerm'){_renderSameDayPerm();}
   else if(curTab==='posFilter'){_renderPosFilter();}
   else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='posRepeat'){_renderPosRepeat();}
@@ -20820,6 +20841,130 @@ function _buildFreqMaps(src){
   window._freqD3Nums=d3recs;
   window._freqD4Nums=d4recs;
 }
+
+function _renderSameDayPerm(){
+  const scope=document.getElementById('sdpYear')?.value||'2026';
+  const summary=document.getElementById('sdpSummary');
+  const body=document.getElementById('sdpBody');
+  if(!summary||!body) return;
+
+  const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+
+  function getPat(n){
+    var f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    var v=Object.values(f).sort(function(a,b){return b-a;});
+    if(v[0]===5)return 'Qu';if(v[0]===4)return 'Q';if(v[0]===3&&v[1]===2)return 'TD';
+    if(v[0]===3)return 'T';if(v[0]===2&&v[1]===2)return 'DD';if(v[0]===2)return 'D';return 'S';
+  }
+
+  function occSpan(o){
+    var p=getPat(o.number);
+    var bc=PAT_COLOR[p]||'#374151';var bg=PAT_BG[p]||'#f3f4f6';
+    var dbg=o.draw==='midday'?'#fef3c7':'#dbeafe';var dtc=o.draw==='midday'?'#92400e':'#1e40af';
+    return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#f8f8f8;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;margin:1px;">'+
+      '<b>'+o.state+'</b> <span style="font-family:monospace;font-weight:700;">'+o.number+'</span>'+
+      '<span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+p+'</span>'+
+      '<span style="padding:1px 3px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+(o.draw==='midday'?'M':'E')+'</span></span>';
+  }
+
+  // Build double-day cases from ALL
+  var src=ALL;
+  if(scope!=='all') src=src.filter(function(r){return r.dk.startsWith(scope);});
+
+  var byDateSorted={};
+  src.forEach(function(r){
+    var k=r.dk+'|'+r.sorted;
+    if(!byDateSorted[k]) byDateSorted[k]={dk:r.dk,sorted:r.sorted,occs:[]};
+    byDateSorted[k].occs.push(r);
+  });
+
+  var doubles=Object.values(byDateSorted).filter(function(x){return x.occs.length>=2;});
+  doubles.sort(function(a,b){return a.dk.localeCompare(b.dk);});
+
+  // For each double, find 3rd hit in ALL (not just scope)
+  var allByDate={};
+  ALL.forEach(function(r){
+    if(!allByDate[r.dk]) allByDate[r.dk]=[];
+    allByDate[r.dk].push(r);
+  });
+
+  var allDks=Object.keys(allByDate).sort();
+  var cutoff=allDks[allDks.length-1];
+
+  var rows=doubles.map(function(x){
+    var dt=new Date(x.dk+'T12:00:00Z');
+    var hit=null;
+    for(var delta=1;delta<=400;delta++){
+      var nd=new Date(dt); nd.setUTCDate(nd.getUTCDate()+delta);
+      var ndk=nd.toISOString().slice(0,10);
+      if(ndk>cutoff) break;
+      var matches=(allByDate[ndk]||[]).filter(function(r){return r.sorted===x.sorted;});
+      if(matches.length){hit={dk:ndk,delta:delta,draw:matches[0]};break;}
+    }
+    var daysWaiting=Math.round((new Date(cutoff)-dt)/(86400000));
+    return {dk:x.dk,sorted:x.sorted,occs:x.occs,hit:hit,daysWaiting:daysWaiting};
+  });
+
+  var found=rows.filter(function(r){return r.hit;}).length;
+  var pct=rows.length?Math.round(found/rows.length*100):0;
+
+  summary.innerHTML=
+    '<div style="background:#f3f4f6;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;">'+rows.length+'</b>Total doubles</div>'+
+    '<div style="background:#f0fdf4;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;color:#16a34a;">'+found+'</b>3rd hit found</div>'+
+    '<div style="background:#fff9f9;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;color:#dc2626;">'+(rows.length-found)+'</b>Still waiting</div>'+
+    '<div style="background:#ede9fe;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;color:#5b21b6;">'+pct+'%</b>Hit rate</div>';
+
+  // Build table with month headers
+  var curMonth='';
+  var trows='';
+  rows.forEach(function(r,i){
+    var month=r.dk.slice(0,7);
+    if(month!==curMonth){
+      curMonth=month;
+      var parts=month.split('-');
+      var mnames=['','January','February','March','April','May','June','July','August','September','October','November','December'];
+      trows+='<tr><td colspan="7" style="padding:7px 10px;background:#1e1b4b;color:#fff;font-weight:700;font-size:.78rem;">'+mnames[+parts[1]]+' '+parts[0]+'</td></tr>';
+    }
+    var occsHtml=r.occs.map(occSpan).join('');
+    var deltaCell,thirdCell,rowBg;
+    if(r.hit){
+      var d=r.hit.draw;var p=getPat(d.number);
+      var bc=PAT_COLOR[p]||'#374151';var bg=PAT_BG[p]||'#f3f4f6';
+      var dbg=d.draw==='midday'?'#fef3c7':'#dbeafe';var dtc=d.draw==='midday'?'#92400e':'#1e40af';
+      var thirdHtml='<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:5px;padding:2px 6px;">'+
+        '<b>'+d.state+'</b> <span style="font-family:monospace;font-weight:700;">'+d.number+'</span>'+
+        '<span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+p+'</span>'+
+        '<span style="padding:1px 3px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+(d.draw==='midday'?'M':'E')+'</span></span>';
+      deltaCell='<td style="padding:6px 10px;text-align:center;font-weight:700;color:#16a34a;">+'+r.hit.delta+'d</td>';
+      thirdCell='<td style="padding:6px 10px;">'+r.hit.dk+'<br>'+thirdHtml+'</td>';
+      rowBg='#fff';
+    } else {
+      deltaCell='<td style="padding:6px 10px;text-align:center;color:#dc2626;font-weight:700;">'+r.daysWaiting+'d 🕐</td>';
+      thirdCell='<td style="padding:6px 10px;color:#dc2626;font-weight:600;">Not yet</td>';
+      rowBg='#fff9f9';
+    }
+    trows+='<tr style="background:'+rowBg+';border-bottom:1px solid #f3f4f6;">'+
+      '<td style="padding:6px 10px;text-align:center;font-weight:800;color:#6b7280;">'+(i+1)+'</td>'+
+      '<td style="padding:6px 10px;font-size:12px;">'+r.dk+'</td>'+
+      '<td style="padding:6px 10px;font-family:monospace;font-weight:800;font-size:14px;color:#5b21b6;">'+r.sorted+'</td>'+
+      '<td style="padding:6px 10px;">'+occsHtml+'</td>'+
+      deltaCell+thirdCell+
+      '<td style="padding:6px 10px;text-align:center;">'+(r.hit?'✅':'⏳')+'</td></tr>';
+  });
+
+  body.innerHTML='<table style="border-collapse:collapse;width:100%;font-size:13px;">'+
+    '<thead><tr style="background:#1e1b4b;color:#fff;">'+
+    '<th style="padding:8px 10px;text-align:center;">#</th>'+
+    '<th style="padding:8px 10px;">Double Date</th>'+
+    '<th style="padding:8px 10px;">Sorted</th>'+
+    '<th style="padding:8px 10px;">Same-Day Draws</th>'+
+    '<th style="padding:8px 10px;text-align:center;">Days to 3rd</th>'+
+    '<th style="padding:8px 10px;">3rd Hit</th>'+
+    '<th style="padding:8px 10px;text-align:center;">Status</th></tr></thead>'+
+    '<tbody>'+trows+'</tbody></table>';
+}
+
 
 function _renderDigitSearch(){
   const input=document.getElementById('dsInput');
