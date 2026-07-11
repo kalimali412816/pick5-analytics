@@ -3199,6 +3199,20 @@ tr:hover td{background:var(--b0);}
             <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
           </select>
         </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Draw</label>
+          <select id="pfDraw" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
+            <option value="both">All Draws</option>
+            <option value="midday">Midday Only</option>
+            <option value="evening">Evening Only</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Sum</label>
+          <input type="text" id="pfSum" placeholder="e.g. 22,25 28" maxlength="20"
+            oninput="_renderPosFilter()"
+            style="width:120px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);">
+        </div>
       </div>
       <!-- Date filter -->
       <div style="background:var(--g0);border:1.5px solid var(--g2);border-radius:10px;padding:12px 14px;">
@@ -3389,7 +3403,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=322"></script>
+<script src="lottolens-data.js?v=326"></script>
 <script>
 
 // ================================================================
@@ -21057,9 +21071,13 @@ function _renderTriplePredictor(){
 
   // WATCH NUMBERS
   html+='<div style="margin-bottom:20px;">';
-  html+='<div style="font-weight:800;font-size:.85rem;color:var(--g8);margin-bottom:10px;">👀 Numbers to Watch</div>';
+  var watchStr=watchNums.join(' ');
+  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
+    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);">👀 Numbers to Watch</div>'+
+    '<button data-copy="'+watchStr+'" onclick="_copyToClipboard(this.getAttribute('data-copy'),this)" style="padding:4px 12px;background:#1e1b4b;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>'+
+  '</div>';
   html+='<div style="font-size:.72rem;color:var(--g5);margin-bottom:8px;">Generated from top predicted digits × top T sums — sorted by digit combo</div>';
-  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;" id="tpWatchNums">';
   watchNums.forEach(function(n){
     var s=n.split('').reduce(function(a,d){return a+ +d;},0);
     html+='<span style="font-family:monospace;font-weight:800;font-size:1rem;background:#1e1b4b;color:#fff;padding:6px 14px;border-radius:8px;">'+n+' <span style="font-size:.65rem;opacity:.7;">Σ'+s+'</span></span>';
@@ -21319,6 +21337,8 @@ function _renderPosFilter(){
   const minHits=parseInt(document.getElementById('pfMinHits').value);
   const scope=document.getElementById('pfScope').value;
   const stF=document.getElementById('pfState').value;
+  const pfDrawF=document.getElementById('pfDraw')?.value||'both';
+  const pfSumSet=_parseSumFilter(document.getElementById('pfSum')?.value||'');
   const dayF=document.getElementById('pfDay').value.trim();
   const monthF=document.getElementById('pfMonth').value;
   const yearF=document.getElementById('pfYear').value;
@@ -21332,6 +21352,8 @@ function _renderPosFilter(){
   // Build full scope rows (for hit counts)
   let allRows=ALL;
   if(stF!=='ALL') allRows=allRows.filter(r=>r.state===stF);
+  if(pfDrawF!=='both') allRows=allRows.filter(r=>r.draw===pfDrawF);
+  if(pfSumSet) allRows=allRows.filter(r=>_matchSum(r.number,pfSumSet));
   if(scope!=='ALL') allRows=allRows.filter(r=>r.dk.startsWith(scope));
 
   // Build date-filtered rows (must have hit on this date criteria)
