@@ -3403,7 +3403,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=326"></script>
+<script src="lottolens-data.js?v=327"></script>
 <script>
 
 // ================================================================
@@ -21074,7 +21074,7 @@ function _renderTriplePredictor(){
   var watchStr=watchNums.join(' ');
   html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
     '<div style="font-weight:800;font-size:.85rem;color:var(--g8);">👀 Numbers to Watch</div>'+
-    '<button data-copy="'+watchStr+'" onclick="_copyToClipboard(this.getAttribute('data-copy'),this)" style="padding:4px 12px;background:#1e1b4b;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>'+
+    '<button id="tpCopyWatchBtn" style="padding:4px 12px;background:#1e1b4b;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>'+
   '</div>';
   html+='<div style="font-size:.72rem;color:var(--g5);margin-bottom:8px;">Generated from top predicted digits × top T sums — sorted by digit combo</div>';
   html+='<div style="display:flex;flex-wrap:wrap;gap:6px;" id="tpWatchNums">';
@@ -21132,6 +21132,8 @@ function _renderTriplePredictor(){
 
   html+='</div>';
   body.innerHTML=html;
+  var cpBtn=document.getElementById('tpCopyWatchBtn');
+  if(cpBtn) cpBtn.addEventListener('click',function(){_copyToClipboard(watchNums.join(' '),this);});
 }
 
 
