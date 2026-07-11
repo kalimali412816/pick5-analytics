@@ -818,6 +818,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('posRepeat',this)">📅 Pos Day Repeat</div>
   <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
   <div class="tab" onclick="switchTab('sameDayPerm',this)">♊ Same-Day Doubles</div>
+  <div class="tab" onclick="switchTab('triplePredictor',this)">🎯 T Predictor</div>
 </div>
 
 <!-- RESULTS -->
@@ -3120,6 +3121,36 @@ tr:hover td{background:var(--b0);}
     <div id="sdpBody" style="overflow-x:auto;"></div>
   </div>
 </div>
+<div id="panel-triplePredictor" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>🎯 Triple Tendency Predictor</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Algorithm-based analysis to predict when & how the next T will hit</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="tpState" onchange="_renderTriplePredictor()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="OH">Ohio</option>
+          <option value="GA">Georgia</option>
+          <option value="FL">Florida</option>
+          <option value="DE">Delaware</option>
+          <option value="MD">Maryland</option>
+          <option value="PA">Pennsylvania</option>
+          <option value="VA">Virginia</option>
+          <option value="DC">DC</option>
+          <option value="LA">Louisiana</option>
+        </select>
+        <select id="tpWindow" onchange="_renderTriplePredictor()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="90">Last 90 days</option>
+          <option value="180">Last 180 days</option>
+          <option value="365">Last 365 days</option>
+          <option value="0">All Time</option>
+        </select>
+      </div>
+    </div>
+    <div id="tpBody" style="padding:16px;"></div>
+  </div>
+</div>
 <div id="panel-posFilter" class="panel">
   <div class="card">
     <div class="ch">
@@ -3358,7 +3389,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=318"></script>
+<script src="lottolens-data.js?v=320"></script>
 <script>
 
 // ================================================================
@@ -10468,7 +10499,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','posFilter','posConverge','posRepeat'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','posFilter','posConverge','posRepeat'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -10503,6 +10534,7 @@ function renderCur(){
   else if(curTab==='posTrips'){_renderPosTrips();}
   else if(curTab==='digitSearch'){_renderDigitSearch();}
   else if(curTab==='sameDayPerm'){_renderSameDayPerm();}
+  else if(curTab==='triplePredictor'){_renderTriplePredictor();}
   else if(curTab==='posFilter'){_renderPosFilter();}
   else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='posRepeat'){_renderPosRepeat();}
@@ -20841,6 +20873,205 @@ function _buildFreqMaps(src){
   window._freqD3Nums=d3recs;
   window._freqD4Nums=d4recs;
 }
+
+function _renderTriplePredictor(){
+  const st=document.getElementById('tpState')?.value||'OH';
+  const winDays=parseInt(document.getElementById('tpWindow')?.value||'90');
+  const body=document.getElementById('tpBody');
+  if(!body) return;
+
+  function getPat(n){
+    var f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    var v=Object.values(f).sort(function(a,b){return b-a;});
+    if(v[0]===3&&v[1]&&v[1]===2)return 'TD';
+    if(v[0]===3)return 'T';
+    if(v[0]===4)return 'Q';
+    if(v[0]===5)return 'Qu';
+    if(v[0]===2&&v[1]===2)return 'DD';
+    if(v[0]===2)return 'D';
+    return 'S';
+  }
+
+  var stDraws=ALL.filter(function(r){return r.state===st;});
+  if(!stDraws.length){body.innerHTML='<div class="es">No data for this state.</div>';return;}
+
+  // Sort descending
+  stDraws.sort(function(a,b){return b.dk.localeCompare(a.dk)||b.draw.localeCompare(a.draw);});
+  var latestDk=stDraws[0].dk;
+  var latestDt=new Date(latestDk+'T12:00:00Z');
+
+  // Window filter
+  var windowDraws=winDays>0?stDraws.filter(function(r){
+    var dt=new Date(r.dk+'T12:00:00Z');
+    return (latestDt-dt)/(86400000)<=winDays;
+  }):stDraws;
+
+  // All T hits (regular T only)
+  var allT=stDraws.filter(function(r){return getPat(r.number)==='T';});
+  var winT=windowDraws.filter(function(r){return getPat(r.number)==='T';});
+
+  // Last T
+  var lastT=allT[0]||null;
+  var daysSince=lastT?Math.round((latestDt-new Date(lastT.dk+'T12:00:00Z'))/86400000):999;
+
+  // === 1. DROUGHT PRESSURE ===
+  var allGaps=[];
+  for(var i=1;i<allT.length;i++){
+    var d1=new Date(allT[i].dk+'T12:00:00Z');
+    var d2=new Date(allT[i-1].dk+'T12:00:00Z');
+    allGaps.push(Math.round((d2-d1)/86400000));
+  }
+  allGaps.sort(function(a,b){return a-b;});
+  var pctRank=allGaps.length?Math.round(allGaps.filter(function(g){return g<=daysSince;}).length/allGaps.length*100):50;
+  var pressureScore=Math.min(100,pctRank);
+
+  // === 2. SLOT TENDENCY ===
+  var midT=winT.filter(function(r){return r.draw==='midday';}).length;
+  var eveT=winT.filter(function(r){return r.draw==='evening';}).length;
+  var totalT=midT+eveT;
+  var midPct=totalT?Math.round(midT/totalT*100):50;
+  var evePct=100-midPct;
+  var slotRec=midPct>=evePct?'Midday':'Evening';
+  var slotConf=Math.max(midPct,evePct);
+  // Mirror pattern check
+  var mirrorSlot=lastT?lastT.draw==='midday'?'Midday':'Evening':'Unknown';
+
+  // === 3. DAY OF MONTH TENDENCY ===
+  var dayOfMonthT={};
+  allT.forEach(function(r){
+    var d=+r.dk.slice(8,10);
+    dayOfMonthT[d]=(dayOfMonthT[d]||0)+1;
+  });
+  var today=+latestDk.slice(8,10);
+  // Next 7 days scores
+  var upcomingDays=[];
+  for(var i=1;i<=7;i++){
+    var dayNum=((today-1+i)%31)+1;
+    upcomingDays.push({day:dayNum,hits:dayOfMonthT[dayNum]||0});
+  }
+  upcomingDays.sort(function(a,b){return b.hits-a.hits;});
+
+  // === 4. HOT DIGITS (recent DD draws = near misses) ===
+  var recent30=stDraws.filter(function(r){
+    return (latestDt-new Date(r.dk+'T12:00:00Z'))/86400000<=30;
+  });
+  var digitFreq={};
+  recent30.forEach(function(r){
+    r.number.split('').forEach(function(d){digitFreq[d]=(digitFreq[d]||0)+1;});
+  });
+  var hotDigits=Object.entries(digitFreq).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+
+  // Near misses (DDs in last 14 days)
+  var nearMisses=stDraws.filter(function(r){
+    return getPat(r.number)==='DD'&&(latestDt-new Date(r.dk+'T12:00:00Z'))/86400000<=14;
+  });
+  // Which digits are doubling
+  var ddDigits={};
+  nearMisses.forEach(function(r){
+    var f={};r.number.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    Object.entries(f).filter(function(e){return e[1]>=2;}).forEach(function(e){
+      ddDigits[e[0]]=(ddDigits[e[0]]||0)+1;
+    });
+  });
+  var hotDD=Object.entries(ddDigits).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+
+  // === 5. SUM TENDENCY ===
+  var sumFreqT={};
+  allT.forEach(function(r){sumFreqT[r.sum]=(sumFreqT[r.sum]||0)+1;});
+  var topSums=Object.entries(sumFreqT).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+
+  // === 6. POSITION TENDENCY ===
+  var posFreqT={0:0,1:0,2:0,3:0,4:0};
+  allT.forEach(function(r){
+    var f={};r.number.split('').forEach(function(d,i){f[d]=(f[d]||0)+1;});
+    var tripleDigit=Object.entries(f).find(function(e){return e[1]>=3;})?.[0];
+    if(tripleDigit) r.number.split('').forEach(function(d,i){if(d===tripleDigit)posFreqT[i]++;});
+  });
+  var topPos=Object.entries(posFreqT).sort(function(a,b){return b[1]-a[1];}).slice(0,3);
+
+  // === RENDER ===
+  function gauge(val,label,color){
+    return '<div style="margin-bottom:16px;">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
+      '<span style="font-size:.78rem;font-weight:700;color:var(--g7);">'+label+'</span>'+
+      '<span style="font-size:.78rem;font-weight:800;color:'+color+';">'+val+'%</span></div>'+
+      '<div style="background:#e5e7eb;border-radius:99px;height:10px;overflow:hidden;">'+
+      '<div style="width:'+val+'%;height:100%;background:'+color+';border-radius:99px;transition:width .4s;"></div></div></div>';
+  }
+
+  function pill(label,val,bg,color){
+    return '<span style="display:inline-flex;flex-direction:column;align-items:center;background:'+bg+';border-radius:8px;padding:6px 12px;margin:3px;min-width:48px;">'+
+      '<span style="font-weight:800;font-size:.95rem;color:'+color+';">'+label+'</span>'+
+      '<span style="font-size:.62rem;color:'+color+';opacity:.8;">'+val+'</span></span>';
+  }
+
+  var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">';
+
+  // Card 1: Drought Pressure
+  var pressColor=pressureScore>=90?'#dc2626':pressureScore>=70?'#d97706':'#16a34a';
+  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;">'+
+    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);margin-bottom:12px;">⏱ Drought Pressure</div>'+
+    gauge(pressureScore,'Percentile rank among all historical gaps',pressColor)+
+    '<div style="font-size:.75rem;color:var(--g6);margin-top:8px;">'+
+    '<b>Days since last T:</b> '+daysSince+(lastT?' ('+lastT.dk+' '+lastT.number+' '+lastT.draw.slice(0,3)+')':', never')+
+    '<br><b>Avg gap:</b> '+(allGaps.length?Math.round(allGaps.reduce(function(a,b){return a+b;},0)/allGaps.length):'-')+'d &nbsp;'+
+    '<b>Max gap:</b> '+(allGaps.length?Math.max.apply(null,allGaps):'-')+'d</div></div>';
+
+  // Card 2: Slot Recommendation
+  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;">'+
+    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);margin-bottom:12px;">🎰 Slot Tendency</div>'+
+    gauge(midPct,'Midday T rate (window)','#f59e0b')+
+    gauge(evePct,'Evening T rate (window)','#3b82f6')+
+    '<div style="margin-top:8px;padding:8px;background:'+(slotRec==='Midday'?'#fef3c7':'#dbeafe')+';border-radius:8px;text-align:center;">'+
+    '<span style="font-weight:800;font-size:.82rem;color:'+(slotRec==='Midday'?'#92400e':'#1e40af')+';">'+
+    'Stat recommendation: '+slotRec+' ('+slotConf+'%)</span></div>'+
+    '<div style="margin-top:8px;padding:8px;background:#f0fdf4;border-radius:8px;text-align:center;">'+
+    '<span style="font-weight:800;font-size:.82rem;color:#166534;">Mirror pattern: '+mirrorSlot+'</span></div></div>';
+
+  // Card 3: Hot Digits & Near Misses
+  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;">'+
+    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);margin-bottom:8px;">🔥 Hot Digits (last 30d)</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:12px;">'+
+    hotDigits.map(function(e){return pill(e[0],e[1]+'x','#fef3c7','#92400e');}).join('')+'</div>'+
+    '<div style="font-weight:700;font-size:.78rem;color:var(--g7);margin-bottom:6px;">⚡ Near Misses — DD digits (last 14d)</div>'+
+    (hotDD.length?'<div style="display:flex;flex-wrap:wrap;gap:2px;">'+
+    hotDD.map(function(e){return pill(e[0],e[1]+'x DD','#dcfce7','#166534');}).join('')+'</div>':
+    '<span style="font-size:.72rem;color:var(--g5);">None in last 14 days</span>')+
+    '</div>';
+
+  // Card 4: Top Sums for T
+  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;">'+
+    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);margin-bottom:8px;">Σ Top Sums for T (all-time)</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:12px;">'+
+    topSums.map(function(e){return pill(e[0],e[1]+'x T','#ede9fe','#5b21b6');}).join('')+'</div>'+
+    '<div style="font-weight:700;font-size:.78rem;color:var(--g7);margin-bottom:6px;">📍 Triple digit positions (all-time)</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:2px;">'+
+    topPos.map(function(e){return pill('P'+e[0],e[1]+'x','#dbeafe','#1e40af');}).join('')+'</div></div>';
+
+  // Card 5: Day of Month Heatmap
+  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;grid-column:1/-1;">'+
+    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);margin-bottom:10px;">📅 Day-of-Month T Heatmap (all-time) — Next 7 upcoming days highlighted</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+
+  var maxHits=Math.max.apply(null,Object.values(dayOfMonthT).concat([1]));
+  for(var d=1;d<=31;d++){
+    var hits=dayOfMonthT[d]||0;
+    var isUpcoming=upcomingDays.slice(0,7).some(function(x){return x.day===d;});
+    var intensity=Math.round(hits/maxHits*100);
+    var bg=hits===0?'#f3f4f6':'rgba(124,58,237,'+(.15+intensity*.0085)+')';
+    var border=isUpcoming?'2px solid #f59e0b':'1.5px solid #e5e7eb';
+    var textColor=hits>0?'#5b21b6':'#9ca3af';
+    html+='<div style="width:38px;text-align:center;border:'+border+';border-radius:7px;padding:4px 2px;background:'+bg+';">'+
+      '<div style="font-size:.68rem;font-weight:800;color:'+textColor+';">'+d+'</div>'+
+      '<div style="font-size:.6rem;color:'+textColor+';">'+hits+'x</div></div>';
+  }
+  html+='</div>'+
+    '<div style="margin-top:8px;font-size:.68rem;color:var(--g5);">🟡 highlighted = upcoming 7 days · darker purple = more T hits historically</div></div>';
+
+  html+='</div>';
+  body.innerHTML=html;
+}
+
 
 function _renderSameDayPerm(){
   const scope=document.getElementById('sdpYear')?.value||'2026';
