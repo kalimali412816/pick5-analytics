@@ -3403,7 +3403,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=327"></script>
+<script src="lottolens-data.js?v=329"></script>
 <script>
 
 // ================================================================
@@ -22743,7 +22743,114 @@ function _sdcrSetScope(scope){
     h+=`</div>`;
   }
 
+  // ===== 4-DIGIT SECTION =====
+  h+=`<div style="margin-top:28px;border-top:2px solid var(--g2);padding-top:20px;">`;
+  h+=`<div style="font-size:.82rem;font-weight:800;color:var(--g8);margin-bottom:12px;">📅 Same-Day Cross-Month Repeats — 4-Digit Sequences</div>`;
+
+  function get4seqs(num){
+    const seqs=new Set();
+    for(let i=0;i<=num.length-4;i++) seqs.add(num.slice(i,i+4));
+    return seqs;
+  }
+
+  const dayData4={};
+  for(let day=1;day<=31;day++){
+    const dayDraws=src.filter(r=>r.day===day);
+    const seqMap4={};
+    dayDraws.forEach(r=>{
+      const seenThisDraw=new Set();
+      get4seqs(r.number).forEach(seq=>{
+        if(seenThisDraw.has(seq))return;
+        seenThisDraw.add(seq);
+        if(!seqMap4[seq])seqMap4[seq]=[];
+        seqMap4[seq].push(r);
+      });
+    });
+    const hits4=Object.entries(seqMap4)
+      .filter(([,insts])=>new Set(insts.map(r=>r.ym)).size>=2)
+      .map(([seq,insts])=>({seq,insts:insts.sort((a,b)=>a.ym.localeCompare(b.ym)),months:new Set(insts.map(r=>r.ym)).size}))
+      .sort((a,b)=>b.months-a.months||b.insts.length-a.insts.length);
+    dayData4[day]={hits:hits4,total:dayDraws.length};
+  }
+
+  const maxHits4=Math.max(...Object.values(dayData4).map(d=>d.hits.length),1);
+  const totalCases4=Object.values(dayData4).reduce((s,d)=>s+d.hits.length,0);
+  const hotDay4=Object.entries(dayData4).sort((a,b)=>b[1].hits.length-a[1].hits.length)[0];
+
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">`;
+  h+=`<div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--b7);">${totalCases4}</div><div style="font-size:.62rem;color:var(--g5);">Total 4-digit sequence repeats</div></div>`;
+  h+=`<div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--b7);">Day ${hotDay4[0]}</div><div style="font-size:.62rem;color:var(--g5);">Hottest day (${hotDay4[1].hits.length} seqs)</div></div>`;
+  h+=`</div>`;
+
+  h+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px;">`;
+  for(let day=1;day<=31;day++){
+    const d=dayData4[day];
+    const cnt=d.hits.length;
+    const hasHit=cnt>0;
+    const intensity=hasHit?Math.max(0.1,cnt/maxHits4):0;
+    const bg=hasHit?'rgba(124,58,237,'+(intensity*0.2+0.06)+')':'var(--g0)';
+    const border=hasHit?'2px solid rgba(124,58,237,'+(intensity*0.6+0.2)+')':'1.5px solid var(--g2)';
+    const col=hasHit?'var(--pur)':'var(--g4)';
+    const topSeq=hasHit?d.hits[0].seq:'';
+    h+=`<div onclick="${hasHit?'_showSdcrDay4('+day+',\''+scope+'\')' :'void(0)'}" style="background:${bg};border:${border};border-radius:9px;padding:8px 4px;text-align:center;cursor:${hasHit?'pointer':'default'};height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;">`;
+    h+=`<div style="font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;color:${col};">${day}</div>`;
+    h+=`<div style="font-size:.65rem;font-weight:700;color:${col};margin-top:2px;">${hasHit?cnt+'x':'—'}</div>`;
+    if(hasHit) h+=`<div style="font-size:.48rem;color:var(--pur);margin-top:1px;font-family:'DM Mono',monospace;">${topSeq}</div>`;
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+  h+=`<div style="font-size:.65rem;color:var(--g5);margin-bottom:16px;">Count = 4-digit sequences (consecutive from drawn number) that appeared on that calendar day in 2+ different months. Click any tile for details.</div>`;
+
+  const daysWithHits4=Object.entries(dayData4).filter(([,d])=>d.hits.length>0).sort((a,b)=>b[1].hits.length-a[1].hits.length);
+  if(daysWithHits4.length){
+    h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Top Days</div>`;
+    h+=`<div style="display:flex;flex-direction:column;gap:6px;">`;
+    daysWithHits4.slice(0,5).forEach(([day,d])=>{
+      h+=`<div style="background:var(--g0);border:1.5px solid #c4b5fd;border-radius:9px;padding:10px 13px;cursor:pointer;" onclick="_showSdcrDay4(${day},'${scope}')">`;
+      h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`;
+      h+=`<span style="font-size:.82rem;font-weight:700;color:var(--pur);">Day ${day}</span>`;
+      h+=`<span style="font-size:.68rem;color:var(--g5);">${d.hits.length} 4-digit sequence${d.hits.length>1?'s':''} repeated across months</span>`;
+      h+=`</div>`;
+      h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+      d.hits.slice(0,5).forEach(r=>{
+        const sameState=r.insts.length>1&&r.insts[0].state===r.insts[r.insts.length-1].state?[r.insts[0].state]:null;
+        h+=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:.68rem;background:var(--g1);border-radius:5px;padding:2px 7px;">`;
+        h+=`<span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--pur);">${r.seq}</span>`;
+        h+=`<span style="color:var(--g5);">${r.insts.slice(0,3).map(i=>mn[+i.ym.slice(5,7)]+(scope==='all'?' '+i.ym.slice(0,4):'')+' '+i.number+'('+i.state+')').join(' · ')}</span>`;
+        if(sameState) h+=`<span style="color:#92400e;font-weight:700;">⭐${sameState[0]}</span>`;
+        h+=`</span>`;
+      });
+      if(d.hits.length>5) h+=`<span style="font-size:.65rem;color:var(--g5);align-self:center;">+${d.hits.length-5} more</span>`;
+      h+=`</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  window._sdcrDayData4=dayData4;
+
   container.innerHTML=h;
+}
+
+function _showSdcrDay4(day, scope){
+  const data=window._sdcrDayData4;
+  if(!data||!data[day]) return;
+  const d=data[day];
+  if(!d.hits.length) return;
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let h=`<div style="font-size:.8rem;font-weight:700;color:var(--pur);margin-bottom:10px;">Day ${day} — ${d.hits.length} 4-digit sequence${d.hits.length>1?'s':''} repeated across months</div>`;
+  h+=`<div style="display:flex;flex-direction:column;gap:8px;">`;
+  d.hits.forEach(r=>{
+    h+=`<div style="background:var(--g0);border:1.5px solid #c4b5fd;border-radius:8px;padding:8px 12px;">`;
+    h+=`<div style="font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;color:var(--pur);margin-bottom:4px;">${r.seq} <span style="font-size:.65rem;color:var(--g5);font-weight:400;">${r.months} months · ${r.insts.length} draws</span></div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+    r.insts.forEach(i=>{
+      h+=`<span style="font-size:.68rem;background:#ede9fe;border-radius:4px;padding:2px 7px;color:var(--pur);">${mn[+i.ym.slice(5,7)]}${scope==='all'?' '+i.ym.slice(0,4):''} <b>${i.number}</b> (${i.state})</span>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  omod(`Day ${day} — 4-Digit Sequences`,h);
 }
 
 // ── Unseen Singles ────────────────────────────────────────────────
