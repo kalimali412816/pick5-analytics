@@ -3403,7 +3403,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=335"></script>
+<script src="lottolens-data.js?v=336"></script>
 <script>
 
 // ================================================================
@@ -20916,7 +20916,9 @@ function _renderTriplePredictor(){
     return (drawOrder[b.draw]||0)-(drawOrder[a.draw]||0);
   });
 
-  var latestDk=stDraws[0].dk;
+  // Use the most recent draw date across ALL data (not filtered)
+  var allDksForState=[...new Set(stDraws.map(function(r){return r.dk;}))].sort();
+  var latestDk=allDksForState[allDksForState.length-1];
   var latestDt=new Date(latestDk+'T12:00:00Z');
   var todayDayNum=+latestDk.slice(8,10);
 
