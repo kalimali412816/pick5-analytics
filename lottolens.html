@@ -2084,7 +2084,11 @@ tr:hover td{background:var(--b0);}
         <div style="display:flex;border:1px solid rgba(255,255,255,.3);border-radius:6px;overflow:hidden;">
           <button id="poMode1" onclick="setPOMode('from')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.9);color:#1e1b4b;border:none;cursor:pointer;">Results FROM State</button>
           <button id="poMode2" onclick="setPOMode('to')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);color:#fff;border:none;cursor:pointer;">State Results FROM...</button>
+          <button id="poMode3" onclick="setPOMode('both')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);color:#fff;border:none;cursor:pointer;">Both</button>
         </div>
+        <select id="poStateF2" onchange="renderPatternOrigin()" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">2nd State: All</option>
+        </select>
         <div style="position:relative;display:inline-block;">
           <span id="poInfoBtn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;" onclick="var t=document.getElementById('poInfoTip');t.style.display=t.style.display==='block'?'none':'block'">i</span>
           <div id="poInfoTip" style="display:none;position:absolute;top:24px;right:0;z-index:600;background:#fff;border:1.5px solid var(--g3);border-radius:10px;padding:12px 14px;width:290px;box-shadow:0 4px 16px rgba(0,0,0,.12);font-size:.75rem;color:var(--g7);line-height:1.6;">
@@ -3407,7 +3411,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=344"></script>
+<script src="lottolens-data.js?v=345"></script>
 <script>
 
 // ================================================================
@@ -4459,23 +4463,24 @@ function getSumCombos(targetSum){
 // ================================================================
 // PATTERN ORIGIN TAB
 // ================================================================
-var _poMode='from'; // 'from' = Way 1 (who pulls from state X), 'to' = Way 2 (state X pulls from who)
+var _poMode='from'; // 'from' = Way 1, 'to' = Way 2, 'both' = both
 function setPOMode(mode){
   _poMode=mode;
   var b1=document.getElementById('poMode1');
   var b2=document.getElementById('poMode2');
-  if(b1&&b2){
-    b1.style.background=mode==='from'?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)';
-    b1.style.color=mode==='from'?'#1e1b4b':'#fff';
-    b2.style.background=mode==='to'?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)';
-    b2.style.color=mode==='to'?'#1e1b4b':'#fff';
-  }
+  var b3=document.getElementById('poMode3');
+  var sf2=document.getElementById('poStateF2');
+  [b1,b2,b3].forEach(function(b){if(b){b.style.background='rgba(255,255,255,.15)';b.style.color='#fff';}});
+  var active=mode==='from'?b1:mode==='to'?b2:b3;
+  if(active){active.style.background='rgba(255,255,255,.9)';active.style.color='#1e1b4b';}
+  if(sf2) sf2.style.display=mode==='both'?'':'none';
   renderPatternOrigin();
 }
 
 function renderPatternOrigin(){
   const pat = document.getElementById('poPatF')?.value || 'DD';
   const stF = document.getElementById('poStateF')?.value || 'ALL';
+  const stF2 = document.getElementById('poStateF2')?.value || 'ALL';
 
   // Populate state dropdown once
   const stEl = document.getElementById('poStateF');
@@ -4484,6 +4489,16 @@ function renderPatternOrigin(){
       const o=document.createElement('option');
       o.value=s; o.textContent=(RD[s]?.name||s);
       stEl.appendChild(o);
+    });
+  }
+
+  // Populate 2nd state picker once
+  const sf2=document.getElementById('poStateF2');
+  if(sf2&&sf2.options.length<=1){
+    ['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE'].forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s; o.textContent=s;
+      sf2.appendChild(o);
     });
   }
 
@@ -4509,18 +4524,195 @@ function renderPatternOrigin(){
   window._poStF=stF;
 
   if(_poMode==='to' && stF!=='ALL'){
-    // Way 2: Show which historical draws (from ANY state) match the selected state's FILT draws
     _poShowYearsReverse(stF, pat, _patKey);
+  } else if(_poMode==='both' && stF!=='ALL'){
+    _poShowYearsBoth(stF, stF2, pat, _patKey);
   } else {
     _poShowYears();
   }
 }
 
-function _poShowYearsReverse(stF, pat, _patKey){
+function _poShowYearsBoth(stF, stF2, pat, patKey){
+  // Both modes: show historical draws that satisfy BOTH:
+  // Way 1: draws from stF2 that FILT (stF) pulls from
+  // Way 2: stF's FILT draws that appeared historically in stF2
+  // = intersection: historical stF2 draws whose sorted value appears in stF's FILT AND stF's FILT draws whose sorted value appears in stF2's history
   const el=document.getElementById('poContent');
   if(!el) return;
 
-  // Get the selected state's draws from FILT
+  const stFLabel=stF==='ALL'?'All States':stF;
+  const stF2Label=stF2==='ALL'?'All States':stF2;
+
+  // FILT draws for stF (Way 1 scope)
+  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
+  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
+
+  // Historical draws for stF2 (source state)
+  const hist=ALL.filter(function(r){
+    if(stF2!=='ALL'&&r.state!==stF2) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return filtSorteds.has(r.sorted);
+  });
+
+  if(!hist.length){
+    el.innerHTML='<div class="es">No draws found where '+stFLabel+' (FILT) and '+stF2Label+' (historical) share sorted values.</div>';
+    return;
+  }
+
+  // Group by year
+  const byYear={};
+  hist.forEach(function(r){
+    const yr=r.dk.slice(0,4);
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push(r);
+  });
+
+  const years=Object.keys(byYear).sort(function(a,b){return +b-+a;});
+
+  let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">
+    <b>${stF2Label}</b> historical draws that match <b>${stFLabel}</b>'s current filter — <b>${hist.length}</b> total · click year to drill down
+  </div>`;
+
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  const maxCnt=Math.max(...years.map(function(y){return byYear[y].length;}));
+  years.forEach(function(yr){
+    const cnt=byYear[yr].length;
+    const intensity=cnt/maxCnt;
+    const bg=`rgba(5,150,105,${0.08+intensity*0.22})`;
+    const border=`rgba(5,150,105,${0.3+intensity*0.5})`;
+    h+=`<div onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey||''}')"
+      style="cursor:pointer;background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;text-align:center;min-width:70px;">
+      <div style="font-size:1.1rem;font-weight:800;color:#065f46;">${yr}</div>
+      <div style="font-size:.65rem;color:#047857;margin-top:2px;">${cnt}x</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+function _poBothYearClick(yr,stF,stF2,pat,patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
+  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
+  const hist=ALL.filter(function(r){
+    if(stF2!=='ALL'&&r.state!==stF2) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return filtSorteds.has(r.sorted)&&r.dk.startsWith(yr);
+  });
+  const byMonth={};
+  hist.forEach(function(r){const mo=r.dk.slice(0,7);if(!byMonth[mo])byMonth[mo]=[];byMonth[mo].push(r);});
+  const months=Object.keys(byMonth).sort();
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${yr} — ${hist.length} matches</span>
+  </div><div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  months.forEach(function(mo){
+    const cnt=byMonth[mo].length;
+    const moNum=+mo.slice(5,7);
+    h+=`<div onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')"
+      style="cursor:pointer;background:rgba(5,150,105,.1);border:2px solid rgba(5,150,105,.4);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;">
+      <div style="font-size:.9rem;font-weight:800;color:#065f46;">${mn[moNum]}</div>
+      <div style="font-size:.65rem;color:#047857;">${cnt}x</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+function _poBothMonthClick(yr,mo,stF,stF2,pat,patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
+  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
+  const hist=ALL.filter(function(r){
+    if(stF2!=='ALL'&&r.state!==stF2) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return filtSorteds.has(r.sorted)&&r.dk.startsWith(mo);
+  });
+  const byDay={};
+  hist.forEach(function(r){const d=+r.dk.slice(8,10);if(!byDay[d])byDay[d]=[];byDay[d].push(r);});
+  const days=Object.keys(byDay).map(Number).sort(function(a,b){return a-b;});
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const moNum=+mo.slice(5,7);
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
+    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${yr} — ${hist.length} matches</span>
+  </div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+  days.forEach(function(day){
+    h+=`<div onclick="_poBothDayClick('${mo}',${day},'${stF}','${stF2}','${pat}','${patKey}')"
+      style="cursor:pointer;background:rgba(5,150,105,.1);border:2px solid rgba(5,150,105,.4);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
+      <div style="font-size:.9rem;font-weight:800;color:#065f46;">${day}</div>
+      <div style="font-size:.6rem;color:#047857;">${byDay[day].length}x</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+function _poBothDayClick(mo,day,stF,stF2,pat,patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
+  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
+  const dk=mo+'-'+String(day).padStart(2,'0');
+  const hist=ALL.filter(function(r){
+    if(stF2!=='ALL'&&r.state!==stF2) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return filtSorteds.has(r.sorted)&&r.dk===dk;
+  });
+  const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+  function gp(n){const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});const v=Object.values(f).sort(function(a,b){return b-a;});if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';}
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const moNum=+mo.slice(5,7); const yr=mo.slice(0,4);
+  const stFLabel=stF==='ALL'?'All':stF; const stF2Label=stF2==='ALL'?'All':stF2;
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
+    <button onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← ${mn[moNum]}</button>
+    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${day}, ${yr}</span>
+  </div>
+  <div style="font-size:.72rem;color:var(--g5);margin-bottom:10px;">${stF2Label} historical draws on ${dk} that match ${stFLabel}'s current filter:</div>`;
+  hist.forEach(function(r){
+    const p=gp(r.number);const bc=PAT_COLOR[p]||'#374151';const bg=PAT_BG[p]||'#f3f4f6';
+    const dbg=r.draw==='midday'?'#fef3c7':'#dbeafe';const dtc=r.draw==='midday'?'#92400e':'#1e40af';
+    const filtMatches=filtSt.filter(function(f){return f.sorted===r.sorted;});
+    h+=`<div style="background:#f9fafb;border:1.5px solid #6ee7b7;border-radius:10px;padding:12px;margin-bottom:8px;">`;
+    h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">`;
+    h+=`<span style="font-size:.65rem;color:var(--g5);">${stF2Label} historical →</span>`;
+    h+=`<b style="color:var(--g8);">${r.state}</b>`;
+    h+=`<span style="font-family:monospace;font-weight:800;">${r.number}</span>`;
+    h+=`<span style="padding:1px 5px;border-radius:3px;background:${bg};color:${bc};font-size:.65rem;font-weight:700;">${p}</span>`;
+    h+=`<span style="padding:1px 4px;border-radius:3px;background:${dbg};color:${dtc};font-size:.65rem;font-weight:700;">${r.draw==='midday'?'M':'E'}</span>`;
+    h+=`<span style="font-size:.65rem;color:var(--g5);">${r.dk}</span>`;
+    h+=`</div>`;
+    h+=`<div style="font-size:.65rem;color:var(--g5);margin-bottom:4px;">Matched by ${stFLabel}:</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+    filtMatches.forEach(function(fm){
+      const fp=gp(fm.number);const fbc=PAT_COLOR[fp]||'#374151';const fbg=PAT_BG[fp]||'#f3f4f6';
+      const fdbg=fm.draw==='midday'?'#fef3c7':'#dbeafe';const fdtc=fm.draw==='midday'?'#92400e':'#1e40af';
+      h+=`<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#d1fae5;border:1px solid #6ee7b7;border-radius:5px;padding:2px 6px;">`;
+      h+=`<span style="font-family:monospace;font-weight:700;">${fm.number}</span>`;
+      h+=`<span style="padding:1px 3px;border-radius:3px;background:${fbg};color:${fbc};font-size:9px;font-weight:700;">${fp}</span>`;
+      h+=`<span style="padding:1px 3px;border-radius:3px;background:${fdbg};color:${fdtc};font-size:9px;font-weight:700;">${fm.draw==='midday'?'M':'E'}</span>`;
+      h+=`<span style="font-size:9px;color:#6b7280;">${fm.dk}</span>`;
+      h+=`</span>`;
+    });
+    h+=`</div></div>`;
+  });
+  el.innerHTML=h;
+}
+
+
+function _poShowYearsReverse(stF, pat, _patKey){
+  // Way 2: state X's FILT draws → group historical sources by year tile, same drill-down as Way 1
+  const el=document.getElementById('poContent');
+  if(!el) return;
+
+  // Get selected state's FILT draws
   const stateFiltDraws=FILT.filter(r=>r.state===stF);
   if(!stateFiltDraws.length){
     el.innerHTML='<div class="es">No draws for '+stF+' in current filter.</div>';
@@ -4528,78 +4720,203 @@ function _poShowYearsReverse(stF, pat, _patKey){
   }
   const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
 
-  // Find ALL historical draws (any state) whose sorted value matches
-  const matches=ALL.filter(r=>{
-    if(r.state===stF) return false; // exclude own state
+  // Find ALL historical draws (any other state) matching selected state's sorted values
+  const histMatches=ALL.filter(r=>{
+    if(r.state===stF) return false;
     if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==_patKey) return false;
     return stateSorteds.has(r.sorted);
   });
 
-  if(!matches.length){
+  if(!histMatches.length){
     el.innerHTML='<div class="es">No historical matches found for '+stF+' draws in current filter.</div>';
     return;
   }
 
-  // Group by sorted value → show which FILT draw it matches + all historical appearances
-  const bySort={};
-  stateFiltDraws.forEach(r=>{
-    if(!bySort[r.sorted]) bySort[r.sorted]={filtDraw:r,history:[]};
-  });
-  matches.forEach(r=>{
-    if(bySort[r.sorted]) bySort[r.sorted].history.push(r);
+  // Group by year
+  const byYear={};
+  histMatches.forEach(r=>{
+    const yr=r.dk.slice(0,4);
+    if(!byYear[yr]) byYear[yr]=[];
+    byYear[yr].push(r);
   });
 
-  // Only show sorted values that have history matches
-  const entries=Object.values(bySort).filter(x=>x.history.length>0)
-    .sort((a,b)=>b.history.length-a.history.length);
+  const years=Object.keys(byYear).sort((a,b)=>+b-+a);
+  const total=histMatches.length;
 
-  if(!entries.length){
-    el.innerHTML='<div class="es">No historical matches found.</div>';
-    return;
-  }
+  let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">
+    <b>${stF}</b>'s current draws found in <b>${total}</b> historical draws across other states — click a year to drill down
+  </div>`;
+
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  years.forEach(yr=>{
+    const cnt=byYear[yr].length;
+    const maxCnt=Math.max(...years.map(y=>byYear[y].length));
+    const intensity=cnt/maxCnt;
+    const bg=`rgba(124,58,237,${0.08+intensity*0.25})`;
+    const border=`rgba(124,58,237,${0.3+intensity*0.5})`;
+    h+=`<div onclick="_poRevYearClick('${yr}','${stF}','${pat}','${_patKey||''}')"
+      style="cursor:pointer;background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;text-align:center;min-width:70px;transition:transform .1s;">
+      <div style="font-size:1.1rem;font-weight:800;color:var(--pur);">${yr}</div>
+      <div style="font-size:.65rem;color:var(--pur);margin-top:2px;">${cnt}x</div>
+    </div>`;
+  });
+  h+=`</div>`;
+
+  el.innerHTML=h;
+}
+
+function _poRevYearClick(yr, stF, pat, patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+
+  const stateFiltDraws=FILT.filter(r=>r.state===stF);
+  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
+
+  const histMatches=ALL.filter(r=>{
+    if(r.state===stF) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return stateSorteds.has(r.sorted)&&r.dk.startsWith(yr);
+  });
+
+  // Group by month
+  const byMonth={};
+  histMatches.forEach(r=>{
+    const mo=r.dk.slice(0,7);
+    if(!byMonth[mo]) byMonth[mo]=[];
+    byMonth[mo].push(r);
+  });
+
+  const months=Object.keys(byMonth).sort((a,b)=>a.localeCompare(b));
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')"
+      style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${yr} — ${histMatches.length} matches from other states</span>
+  </div>`;
+
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  months.forEach(mo=>{
+    const cnt=byMonth[mo].length;
+    const moNum=+mo.slice(5,7);
+    h+=`<div onclick="_poRevMonthClick('${yr}','${mo}','${stF}','${pat}','${patKey}')"
+      style="cursor:pointer;background:rgba(124,58,237,.1);border:2px solid rgba(124,58,237,.4);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;">
+      <div style="font-size:.9rem;font-weight:800;color:var(--pur);">${mn[moNum]}</div>
+      <div style="font-size:.65rem;color:var(--pur);">${cnt}x</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+function _poRevMonthClick(yr, mo, stF, pat, patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+
+  const stateFiltDraws=FILT.filter(r=>r.state===stF);
+  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
+
+  const histMatches=ALL.filter(r=>{
+    if(r.state===stF) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return stateSorteds.has(r.sorted)&&r.dk.startsWith(mo);
+  });
+
+  // Group by day
+  const byDay={};
+  histMatches.forEach(r=>{
+    const day=+r.dk.slice(8,10);
+    if(!byDay[day]) byDay[day]=[];
+    byDay[day].push(r);
+  });
+
+  const days=Object.keys(byDay).map(Number).sort((a,b)=>a-b);
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const moNum=+mo.slice(5,7);
+
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')"
+      style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')"
+      style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
+    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${yr} — ${histMatches.length} matches</span>
+  </div>`;
+
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">`;
+  days.forEach(day=>{
+    const cnt=byDay[day].length;
+    h+=`<div onclick="_poRevDayClick('${mo}',${day},'${stF}','${pat}','${patKey}')"
+      style="cursor:pointer;background:rgba(124,58,237,.1);border:2px solid rgba(124,58,237,.4);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
+      <div style="font-size:.9rem;font-weight:800;color:var(--pur);">${day}</div>
+      <div style="font-size:.6rem;color:var(--pur);">${cnt}x</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+function _poRevDayClick(mo, day, stF, pat, patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+
+  const stateFiltDraws=FILT.filter(r=>r.state===stF);
+  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
+  const dk=mo+'-'+String(day).padStart(2,'0');
+
+  const histMatches=ALL.filter(r=>{
+    if(r.state===stF) return false;
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
+    return stateSorteds.has(r.sorted)&&r.dk===dk;
+  });
 
   const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
   const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+  function getPat(n){const f={};n.split('').forEach(d=>f[d]=(f[d]||0)+1);const v=Object.values(f).sort((a,b)=>b-a);if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';}
 
-  function getPat(n){
-    const f={};n.split('').forEach(d=>f[d]=(f[d]||0)+1);
-    const v=Object.values(f).sort((a,b)=>b-a);
-    if(v[0]===5)return'Qu';if(v[0]===4)return'Q';
-    if(v[0]===3&&v[1]===2)return'TD';if(v[0]===3)return'T';
-    if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';
-  }
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const moNum=+mo.slice(5,7); const yr=mo.slice(0,4);
 
-  function drawBadge(r){
-    const p=getPat(r.number);
-    const bc=PAT_COLOR[p]||'#374151',bg=PAT_BG[p]||'#f3f4f6';
-    const dbg=r.draw==='midday'?'#fef3c7':'#dbeafe';
-    const dtc=r.draw==='midday'?'#92400e':'#1e40af';
-    return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#f8f8f8;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;margin:1px;">
-      <b>${r.state}</b> <span style="font-family:monospace;font-weight:700;">${r.number}</span>
-      <span style="padding:1px 3px;border-radius:3px;background:${bg};color:${bc};font-size:9px;font-weight:700;">${p}</span>
-      <span style="padding:1px 3px;border-radius:3px;background:${dbg};color:${dtc};font-size:9px;font-weight:700;">${r.draw==='midday'?'M':'E'}</span>
-      <span style="font-size:9px;color:#6b7280;">${r.dk}</span>
-    </span>`;
-  }
-
-  let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">
-    Showing <b>${entries.length}</b> of <b>${stF}</b>'s current draws that appeared historically in other states
+  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
+    <button onclick="_poRevMonthClick('${yr}','${mo}','${stF}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${mn[moNum]}</button>
+    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${day}, ${yr}</span>
   </div>`;
 
-  entries.forEach(x=>{
-    const fd=x.filtDraw;
-    const p=getPat(fd.number);
-    const bc=PAT_COLOR[p]||'#374151',bg=PAT_BG[p]||'#f3f4f6';
-    h+=`<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;">`;
-    h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">`;
-    h+=`<span style="font-family:monospace;font-weight:800;font-size:1rem;color:var(--g9);">${fd.number}</span>`;
-    h+=`<span style="padding:2px 6px;border-radius:4px;background:${bg};color:${bc};font-size:.7rem;font-weight:700;">${p}</span>`;
-    h+=`<span style="font-size:.7rem;color:var(--g5);">${fd.dk} · ${fd.draw==='midday'?'Mid':'Eve'}</span>`;
-    h+=`<span style="font-size:.7rem;color:var(--g5);margin-left:auto;">${x.history.length} historical match${x.history.length>1?'es':''} in other states</span>`;
+  h+=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:10px;">${stF}'s current draws that match historical draws from ${dk}:</div>`;
+
+  histMatches.forEach(histR=>{
+    const hp=getPat(histR.number);
+    const hbc=PAT_COLOR[hp]||'#374151',hbg=PAT_BG[hp]||'#f3f4f6';
+    const hdbg=histR.draw==='midday'?'#fef3c7':'#dbeafe';
+    const hdtc=histR.draw==='midday'?'#92400e':'#1e40af';
+
+    // Find matching FILT draws for this sorted value
+    const filtMatches=stateFiltDraws.filter(r=>r.sorted===histR.sorted);
+
+    h+=`<div style="background:#f9fafb;border:1.5px solid #c4b5fd;border-radius:10px;padding:12px;margin-bottom:8px;">`;
+    h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">`;
+    h+=`<span style="font-size:.65rem;color:var(--g5);">Historical →</span>`;
+    h+=`<b style="color:var(--g8);">${histR.state}</b>`;
+    h+=`<span style="font-family:monospace;font-weight:800;">${histR.number}</span>`;
+    h+=`<span style="padding:1px 5px;border-radius:3px;background:${hbg};color:${hbc};font-size:.65rem;font-weight:700;">${hp}</span>`;
+    h+=`<span style="padding:1px 4px;border-radius:3px;background:${hdbg};color:${hdtc};font-size:.65rem;font-weight:700;">${histR.draw==='midday'?'M':'E'}</span>`;
+    h+=`<span style="font-size:.65rem;color:var(--g5);">${histR.dk}</span>`;
     h+=`</div>`;
+    h+=`<div style="font-size:.65rem;color:var(--g5);margin-bottom:4px;">Matched by ${stF}:</div>`;
     h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
-    x.history.sort((a,b)=>b.dk.localeCompare(a.dk)).slice(0,20).forEach(r=>{ h+=drawBadge(r); });
-    if(x.history.length>20) h+=`<span style="font-size:.65rem;color:var(--g5);align-self:center;">+${x.history.length-20} more</span>`;
+    filtMatches.forEach(fr=>{
+      const fp=getPat(fr.number);
+      const fbc=PAT_COLOR[fp]||'#374151',fbg=PAT_BG[fp]||'#f3f4f6';
+      const fdbg=fr.draw==='midday'?'#fef3c7':'#dbeafe';
+      const fdtc=fr.draw==='midday'?'#92400e':'#1e40af';
+      h+=`<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#ede9fe;border:1px solid #c4b5fd;border-radius:5px;padding:2px 6px;">`;
+      h+=`<span style="font-family:monospace;font-weight:700;">${fr.number}</span>`;
+      h+=`<span style="padding:1px 3px;border-radius:3px;background:${fbg};color:${fbc};font-size:9px;font-weight:700;">${fp}</span>`;
+      h+=`<span style="padding:1px 3px;border-radius:3px;background:${fdbg};color:${fdtc};font-size:9px;font-weight:700;">${fr.draw==='midday'?'M':'E'}</span>`;
+      h+=`<span style="font-size:9px;color:#6b7280;">${fr.dk}</span>`;
+      h+=`</span>`;
+    });
     h+=`</div></div>`;
   });
 
