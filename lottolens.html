@@ -2081,6 +2081,10 @@ tr:hover td{background:var(--b0);}
         <select id="poStateF" onchange="renderPatternOrigin()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All States</option>
         </select>
+        <div style="display:flex;border:1px solid rgba(255,255,255,.3);border-radius:6px;overflow:hidden;">
+          <button id="poMode1" onclick="setPOMode('from')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.9);color:#1e1b4b;border:none;cursor:pointer;">Results FROM State</button>
+          <button id="poMode2" onclick="setPOMode('to')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);color:#fff;border:none;cursor:pointer;">State Results FROM...</button>
+        </div>
         <div style="position:relative;display:inline-block;">
           <span id="poInfoBtn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;" onclick="var t=document.getElementById('poInfoTip');t.style.display=t.style.display==='block'?'none':'block'">i</span>
           <div id="poInfoTip" style="display:none;position:absolute;top:24px;right:0;z-index:600;background:#fff;border:1.5px solid var(--g3);border-radius:10px;padding:12px 14px;width:290px;box-shadow:0 4px 16px rgba(0,0,0,.12);font-size:.75rem;color:var(--g7);line-height:1.6;">
@@ -3403,7 +3407,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=342"></script>
+<script src="lottolens-data.js?v=344"></script>
 <script>
 
 // ================================================================
@@ -4455,6 +4459,20 @@ function getSumCombos(targetSum){
 // ================================================================
 // PATTERN ORIGIN TAB
 // ================================================================
+var _poMode='from'; // 'from' = Way 1 (who pulls from state X), 'to' = Way 2 (state X pulls from who)
+function setPOMode(mode){
+  _poMode=mode;
+  var b1=document.getElementById('poMode1');
+  var b2=document.getElementById('poMode2');
+  if(b1&&b2){
+    b1.style.background=mode==='from'?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)';
+    b1.style.color=mode==='from'?'#1e1b4b':'#fff';
+    b2.style.background=mode==='to'?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)';
+    b2.style.color=mode==='to'?'#1e1b4b':'#fff';
+  }
+  renderPatternOrigin();
+}
+
 function renderPatternOrigin(){
   const pat = document.getElementById('poPatF')?.value || 'DD';
   const stF = document.getElementById('poStateF')?.value || 'ALL';
@@ -4490,7 +4508,102 @@ function renderPatternOrigin(){
   window._poPatKey=_patKey;
   window._poStF=stF;
 
-  _poShowYears();
+  if(_poMode==='to' && stF!=='ALL'){
+    // Way 2: Show which historical draws (from ANY state) match the selected state's FILT draws
+    _poShowYearsReverse(stF, pat, _patKey);
+  } else {
+    _poShowYears();
+  }
+}
+
+function _poShowYearsReverse(stF, pat, _patKey){
+  const el=document.getElementById('poContent');
+  if(!el) return;
+
+  // Get the selected state's draws from FILT
+  const stateFiltDraws=FILT.filter(r=>r.state===stF);
+  if(!stateFiltDraws.length){
+    el.innerHTML='<div class="es">No draws for '+stF+' in current filter.</div>';
+    return;
+  }
+  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
+
+  // Find ALL historical draws (any state) whose sorted value matches
+  const matches=ALL.filter(r=>{
+    if(r.state===stF) return false; // exclude own state
+    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==_patKey) return false;
+    return stateSorteds.has(r.sorted);
+  });
+
+  if(!matches.length){
+    el.innerHTML='<div class="es">No historical matches found for '+stF+' draws in current filter.</div>';
+    return;
+  }
+
+  // Group by sorted value → show which FILT draw it matches + all historical appearances
+  const bySort={};
+  stateFiltDraws.forEach(r=>{
+    if(!bySort[r.sorted]) bySort[r.sorted]={filtDraw:r,history:[]};
+  });
+  matches.forEach(r=>{
+    if(bySort[r.sorted]) bySort[r.sorted].history.push(r);
+  });
+
+  // Only show sorted values that have history matches
+  const entries=Object.values(bySort).filter(x=>x.history.length>0)
+    .sort((a,b)=>b.history.length-a.history.length);
+
+  if(!entries.length){
+    el.innerHTML='<div class="es">No historical matches found.</div>';
+    return;
+  }
+
+  const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+
+  function getPat(n){
+    const f={};n.split('').forEach(d=>f[d]=(f[d]||0)+1);
+    const v=Object.values(f).sort((a,b)=>b-a);
+    if(v[0]===5)return'Qu';if(v[0]===4)return'Q';
+    if(v[0]===3&&v[1]===2)return'TD';if(v[0]===3)return'T';
+    if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';
+  }
+
+  function drawBadge(r){
+    const p=getPat(r.number);
+    const bc=PAT_COLOR[p]||'#374151',bg=PAT_BG[p]||'#f3f4f6';
+    const dbg=r.draw==='midday'?'#fef3c7':'#dbeafe';
+    const dtc=r.draw==='midday'?'#92400e':'#1e40af';
+    return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#f8f8f8;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;margin:1px;">
+      <b>${r.state}</b> <span style="font-family:monospace;font-weight:700;">${r.number}</span>
+      <span style="padding:1px 3px;border-radius:3px;background:${bg};color:${bc};font-size:9px;font-weight:700;">${p}</span>
+      <span style="padding:1px 3px;border-radius:3px;background:${dbg};color:${dtc};font-size:9px;font-weight:700;">${r.draw==='midday'?'M':'E'}</span>
+      <span style="font-size:9px;color:#6b7280;">${r.dk}</span>
+    </span>`;
+  }
+
+  let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">
+    Showing <b>${entries.length}</b> of <b>${stF}</b>'s current draws that appeared historically in other states
+  </div>`;
+
+  entries.forEach(x=>{
+    const fd=x.filtDraw;
+    const p=getPat(fd.number);
+    const bc=PAT_COLOR[p]||'#374151',bg=PAT_BG[p]||'#f3f4f6';
+    h+=`<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;">`;
+    h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">`;
+    h+=`<span style="font-family:monospace;font-weight:800;font-size:1rem;color:var(--g9);">${fd.number}</span>`;
+    h+=`<span style="padding:2px 6px;border-radius:4px;background:${bg};color:${bc};font-size:.7rem;font-weight:700;">${p}</span>`;
+    h+=`<span style="font-size:.7rem;color:var(--g5);">${fd.dk} · ${fd.draw==='midday'?'Mid':'Eve'}</span>`;
+    h+=`<span style="font-size:.7rem;color:var(--g5);margin-left:auto;">${x.history.length} historical match${x.history.length>1?'es':''} in other states</span>`;
+    h+=`</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+    x.history.sort((a,b)=>b.dk.localeCompare(a.dk)).slice(0,20).forEach(r=>{ h+=drawBadge(r); });
+    if(x.history.length>20) h+=`<span style="font-size:.65rem;color:var(--g5);align-self:center;">+${x.history.length-20} more</span>`;
+    h+=`</div></div>`;
+  });
+
+  el.innerHTML=h;
 }
 
 function _poFiltMatchCount(recs){
