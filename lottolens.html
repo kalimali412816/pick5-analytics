@@ -3411,7 +3411,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=350"></script>
+<script src="lottolens-data.js?v=351"></script>
 <script>
 
 // ================================================================
@@ -21479,13 +21479,12 @@ function _renderTriplePredictor(){
 
   // Generate watch numbers: for each top digit, generate numbers with 3 of that digit
   // in the top sum ranges, using other hot digits to fill
-  function genWatchNums(tripleDigit,sums,fillDigits){
+  function genWatchNums(tripleDigit,sums){
     var nums=[];
-    sums.slice(0,3).forEach(function(targetSum){
+    sums.slice(0,5).forEach(function(targetSum){
       var tripleSum=+tripleDigit*3;
       var remaining=targetSum-tripleSum;
       if(remaining<0||remaining>18) return;
-      // Find pairs of fill digits that sum to remaining
       for(var a=0;a<=9;a++){
         for(var b=a;b<=9;b++){
           if(a+b===remaining){
@@ -21496,13 +21495,14 @@ function _renderTriplePredictor(){
         }
       }
     });
-    return nums.slice(0,4);
+    return nums.slice(0,6);
   }
 
   var watchNums=[];
   topPredDigits.forEach(function(d){
-    genWatchNums(d,topSums,[]).forEach(function(n){if(!watchNums.includes(n))watchNums.push(n);});
+    genWatchNums(d,topSums).forEach(function(n){if(!watchNums.includes(n))watchNums.push(n);});
   });
+  // If first digit produced nothing, pad with next digits
   watchNums=watchNums.slice(0,12);
 
   // === RENDER ===
