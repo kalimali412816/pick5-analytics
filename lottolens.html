@@ -3411,7 +3411,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=348"></script>
+<script src="lottolens-data.js?v=350"></script>
 <script>
 
 // ================================================================
@@ -4604,27 +4604,37 @@ function _poBothYearClick(yr,stF,stF2,pat,patKey){
   const el=document.getElementById('poContent');
   if(!el) return;
   const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
-  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
+  const filtSortedArr=filtSt.map(function(r){return r.sorted;});
+  const filtSorteds=new Set(filtSortedArr);
   const hist=ALL.filter(function(r){
     if(stF2!=='ALL'&&r.state!==stF2) return false;
     if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
     return filtSorteds.has(r.sorted)&&r.dk.startsWith(yr);
   });
-  const byMonth={};
-  hist.forEach(function(r){const mo=r.dk.slice(0,7);if(!byMonth[mo])byMonth[mo]=[];byMonth[mo].push(r);});
-  const months=Object.keys(byMonth).sort();
+  const byYm={};
+  hist.forEach(function(r){const mo=r.dk.slice(0,7);if(!byYm[mo])byYm[mo]={recs:[]};byYm[mo].recs.push(r);});
+  Object.keys(byYm).forEach(function(mo){
+    byYm[mo].matchCount=byYm[mo].recs.reduce(function(acc,r){return acc+filtSortedArr.filter(function(s){return s===r.sorted;}).length;},0);
+  });
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
-    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${yr} — ${hist.length} matches</span>
-  </div><div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  months.forEach(function(mo){
-    const cnt=byMonth[mo].length;
+  const yms=Object.keys(byYm).filter(function(mo){return byYm[mo].matchCount>0;}).sort(function(a,b){return byYm[b].matchCount-byYm[a].matchCount;});
+  const maxCnt=Math.max.apply(null,yms.map(function(m){return byYm[m].matchCount;}),1);
+  let h=`<button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;margin-bottom:14px;">◀ Back to Years</button>`;
+  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${yr}</strong> — Click a month to drill down</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  yms.forEach(function(mo){
+    const cnt=byYm[mo].matchCount;
+    const heat=Math.round(cnt/maxCnt*100);
+    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
+    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
+    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
     const moNum=+mo.slice(5,7);
     h+=`<div onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')"
-      style="cursor:pointer;background:var(--b0);border:2px solid var(--b3);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;">
-      <div style="font-size:.9rem;font-weight:800;color:#065f46;">${mn[moNum]}</div>
-      <div style="font-size:.65rem;color:#047857;">${cnt}x</div>
+      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:80px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${mn[moNum]}</div>
+      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYm[mo].recs.length} draw${byYm[mo].recs.length!==1?'s':''}</div>
+      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
     </div>`;
   });
   h+=`</div>`;
@@ -4635,27 +4645,40 @@ function _poBothMonthClick(yr,mo,stF,stF2,pat,patKey){
   const el=document.getElementById('poContent');
   if(!el) return;
   const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
-  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
+  const filtSortedArr=filtSt.map(function(r){return r.sorted;});
+  const filtSorteds=new Set(filtSortedArr);
   const hist=ALL.filter(function(r){
     if(stF2!=='ALL'&&r.state!==stF2) return false;
     if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
     return filtSorteds.has(r.sorted)&&r.dk.startsWith(mo);
   });
-  const byDay={};
-  hist.forEach(function(r){const d=+r.dk.slice(8,10);if(!byDay[d])byDay[d]=[];byDay[d].push(r);});
-  const days=Object.keys(byDay).map(Number).sort(function(a,b){return a-b;});
+  const byDk={};
+  hist.forEach(function(r){if(!byDk[r.dk])byDk[r.dk]={recs:[]};byDk[r.dk].recs.push(r);});
+  Object.keys(byDk).forEach(function(dk){
+    byDk[dk].matchCount=byDk[dk].recs.reduce(function(acc,r){return acc+filtSortedArr.filter(function(s){return s===r.sorted;}).length;},0);
+  });
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const moNum=+mo.slice(5,7);
-  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
-    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>
-    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${yr} — ${hist.length} matches</span>
-  </div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
-  days.forEach(function(day){
+  const dks=Object.keys(byDk).filter(function(dk){return byDk[dk].matchCount>0;}).sort(function(a,b){return byDk[b].matchCount-byDk[a].matchCount;});
+  const maxCnt=Math.max.apply(null,dks.map(function(dk){return byDk[dk].matchCount;}),1);
+  let h=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">`;
+  h+=`<button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Years</button>`;
+  h+=`<button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>`;
+  h+=`</div>`;
+  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${mn[moNum]} ${yr}</strong> — Click a day to drill down</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  dks.forEach(function(dk){
+    const day=+dk.slice(8,10);
+    const cnt=byDk[dk].matchCount;
+    const heat=Math.round(cnt/maxCnt*100);
+    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
+    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
+    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
     h+=`<div onclick="_poBothDayClick('${mo}',${day},'${stF}','${stF2}','${pat}','${patKey}')"
-      style="cursor:pointer;background:var(--b0);border:2px solid var(--b3);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
-      <div style="font-size:.9rem;font-weight:800;color:#065f46;">${day}</div>
-      <div style="font-size:.6rem;color:#047857;">${byDay[day].length}x</div>
+      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:60px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${day}</div>
+      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
     </div>`;
   });
   h+=`</div>`;
@@ -4833,43 +4856,42 @@ function _poRevYearClick(yr, stF, pat, patKey){
 function _poRevMonthClick(yr, mo, stF, pat, patKey){
   const el=document.getElementById('poContent');
   if(!el) return;
-
   const stateFiltDraws=FILT.filter(r=>r.state===stF);
-  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
-
+  const filtSortedArr=stateFiltDraws.map(r=>r.sorted);
+  const stateSorteds=new Set(filtSortedArr);
   const histMatches=ALL.filter(r=>{
     if(r.state===stF) return false;
     if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
     return stateSorteds.has(r.sorted)&&r.dk.startsWith(mo);
   });
-
-  // Group by day
-  const byDay={};
-  histMatches.forEach(r=>{
-    const day=+r.dk.slice(8,10);
-    if(!byDay[day]) byDay[day]=[];
-    byDay[day].push(r);
+  const byDk={};
+  histMatches.forEach(r=>{if(!byDk[r.dk])byDk[r.dk]={recs:[]};byDk[r.dk].recs.push(r);});
+  Object.keys(byDk).forEach(dk=>{
+    byDk[dk].matchCount=byDk[dk].recs.reduce((acc,r)=>acc+filtSortedArr.filter(s=>s===r.sorted).length,0);
   });
-
-  const days=Object.keys(byDay).map(Number).sort((a,b)=>a-b);
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const moNum=+mo.slice(5,7);
+  const dks=Object.keys(byDk).filter(dk=>byDk[dk].matchCount>0).sort((a,b)=>byDk[b].matchCount-byDk[a].matchCount);
+  const maxCnt=Math.max(...dks.map(dk=>byDk[dk].matchCount),1);
 
-  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')"
-      style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
-    <button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')"
-      style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
-    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${yr} — ${histMatches.length} matches</span>
-  </div>`;
-
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">`;
-  days.forEach(day=>{
-    const cnt=byDay[day].length;
+  let h=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">`;
+  h+=`<button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Years</button>`;
+  h+=`<button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>`;
+  h+=`</div>`;
+  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${mn[moNum]} ${yr}</strong> — Click a day to drill down</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  dks.forEach(dk=>{
+    const day=+dk.slice(8,10);
+    const cnt=byDk[dk].matchCount;
+    const heat=Math.round(cnt/maxCnt*100);
+    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
+    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
+    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
     h+=`<div onclick="_poRevDayClick('${mo}',${day},'${stF}','${pat}','${patKey}')"
-      style="cursor:pointer;background:var(--b0);border:2px solid var(--b3);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
-      <div style="font-size:.9rem;font-weight:800;color:var(--pur);">${day}</div>
-      <div style="font-size:.6rem;color:var(--pur);">${cnt}x</div>
+      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:60px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${day}</div>
+      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
     </div>`;
   });
   h+=`</div>`;
