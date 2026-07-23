@@ -3411,7 +3411,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=346"></script>
+<script src="lottolens-data.js?v=348"></script>
 <script>
 
 // ================================================================
@@ -4569,21 +4569,31 @@ function _poShowYearsBoth(stF, stF2, pat, patKey){
 
   const years=Object.keys(byYear).sort(function(a,b){return +b-+a;});
 
-  let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">
-    <b>${stF2Label}</b> historical draws that match <b>${stFLabel}</b>'s current filter — <b>${hist.length}</b> total · click year to drill down
+  // Compute match counts and sort descending like Way 1
+  const filtSortedsBoth=FILT.filter(function(r){return stF==='ALL'||r.state===stF;}).map(function(r){return r.sorted;});
+  Object.keys(byYear).forEach(function(yr){
+    byYear[yr].matchCount=byYear[yr].reduce(function(acc,r){return acc+filtSortedsBoth.filter(function(s){return s===r.sorted;}).length;},0);
+  });
+  years.sort(function(a,b){return byYear[b].matchCount-byYear[a].matchCount;});
+  const maxCntBoth=Math.max.apply(null,years.map(function(y){return byYear[y].matchCount;}));
+
+  let h=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;">
+    <b>${stF2Label}</b> historical draws that match <b>${stFLabel}</b>'s current filter — <b>${hist.length}</b> total · Click a year to drill down
   </div>`;
 
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
-  const maxCnt=Math.max(...years.map(function(y){return byYear[y].length;}));
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
   years.forEach(function(yr){
-    const cnt=byYear[yr].length;
-    const intensity=cnt/maxCnt;
-    const bg=`rgba(5,150,105,${0.08+intensity*0.22})`;
-    const border=`rgba(5,150,105,${0.3+intensity*0.5})`;
+    const cnt=byYear[yr].matchCount;
+    const heat=Math.round(cnt/maxCntBoth*100);
+    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
+    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
+    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
     h+=`<div onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey||''}')"
-      style="cursor:pointer;background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;text-align:center;min-width:70px;">
-      <div style="font-size:1.1rem;font-weight:800;color:#065f46;">${yr}</div>
-      <div style="font-size:.65rem;color:#047857;margin-top:2px;">${cnt}x</div>
+      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:90px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1.1rem;color:${numCol};">${yr}</div>
+      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYear[yr].length} draw${byYear[yr].length!==1?'s':''}</div>
+      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:1px;">${cnt}x</div>
     </div>`;
   });
   h+=`</div>`;
@@ -4605,14 +4615,14 @@ function _poBothYearClick(yr,stF,stF2,pat,patKey){
   const months=Object.keys(byMonth).sort();
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
     <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${yr} — ${hist.length} matches</span>
   </div><div style="display:flex;flex-wrap:wrap;gap:8px;">`;
   months.forEach(function(mo){
     const cnt=byMonth[mo].length;
     const moNum=+mo.slice(5,7);
     h+=`<div onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')"
-      style="cursor:pointer;background:rgba(5,150,105,.1);border:2px solid rgba(5,150,105,.4);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;">
+      style="cursor:pointer;background:var(--b0);border:2px solid var(--b3);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;">
       <div style="font-size:.9rem;font-weight:800;color:#065f46;">${mn[moNum]}</div>
       <div style="font-size:.65rem;color:#047857;">${cnt}x</div>
     </div>`;
@@ -4637,13 +4647,13 @@ function _poBothMonthClick(yr,mo,stF,stF2,pat,patKey){
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const moNum=+mo.slice(5,7);
   let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
-    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
+    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
+    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>
     <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${yr} — ${hist.length} matches</span>
   </div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
   days.forEach(function(day){
     h+=`<div onclick="_poBothDayClick('${mo}',${day},'${stF}','${stF2}','${pat}','${patKey}')"
-      style="cursor:pointer;background:rgba(5,150,105,.1);border:2px solid rgba(5,150,105,.4);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
+      style="cursor:pointer;background:var(--b0);border:2px solid var(--b3);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
       <div style="font-size:.9rem;font-weight:800;color:#065f46;">${day}</div>
       <div style="font-size:.6rem;color:#047857;">${byDay[day].length}x</div>
     </div>`;
@@ -4670,9 +4680,9 @@ function _poBothDayClick(mo,day,stF,stF2,pat,patKey){
   const moNum=+mo.slice(5,7); const yr=mo.slice(0,4);
   const stFLabel=stF==='ALL'?'All':stF; const stF2Label=stF2==='ALL'?'All':stF2;
   let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
-    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
-    <button onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid #065f46;border-radius:6px;background:#fff;color:#065f46;font-size:.75rem;font-weight:700;cursor:pointer;">← ${mn[moNum]}</button>
+    <button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
+    <button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>
+    <button onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${mn[moNum]}</button>
     <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${day}, ${yr}</span>
   </div>
   <div style="font-size:.72rem;color:var(--g5);margin-bottom:10px;">${stF2Label} historical draws on ${dk} that match ${stFLabel}'s current filter:</div>`;
@@ -4743,66 +4753,77 @@ function _poShowYearsReverse(stF, pat, _patKey){
   const years=Object.keys(byYear).sort((a,b)=>+b-+a);
   const total=histMatches.length;
 
-  let h=`<div style="font-size:.72rem;color:var(--g5);margin-bottom:12px;">
-    <b>${stF}</b>'s current draws found in <b>${total}</b> historical draws across other states — click a year to drill down
+  // Sort by match count descending (same as Way 1)
+  const filtSorteds2=FILT.filter(r=>r.state===stF).map(r=>r.sorted);
+  Object.keys(byYear).forEach(yr=>{
+    byYear[yr].matchCount=byYear[yr].reduce((acc,r)=>acc+filtSorteds2.filter(s=>s===r.sorted).length,0);
+  });
+  years.sort((a,b)=>byYear[b].matchCount-byYear[a].matchCount);
+  const maxCnt2=Math.max(...years.map(y=>byYear[y].matchCount),1);
+
+  let h=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;">
+    <b>${stF}</b>'s current draws found in <b>${total}</b> historical draws across other states · Click a year to drill down
   </div>`;
 
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
   years.forEach(yr=>{
-    const cnt=byYear[yr].length;
-    const maxCnt=Math.max(...years.map(y=>byYear[y].length));
-    const intensity=cnt/maxCnt;
-    const bg=`rgba(124,58,237,${0.08+intensity*0.25})`;
-    const border=`rgba(124,58,237,${0.3+intensity*0.5})`;
+    const cnt=byYear[yr].matchCount;
+    const heat=Math.round(cnt/maxCnt2*100);
+    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
+    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
+    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
     h+=`<div onclick="_poRevYearClick('${yr}','${stF}','${pat}','${_patKey||''}')"
-      style="cursor:pointer;background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;text-align:center;min-width:70px;transition:transform .1s;">
-      <div style="font-size:1.1rem;font-weight:800;color:var(--pur);">${yr}</div>
-      <div style="font-size:.65rem;color:var(--pur);margin-top:2px;">${cnt}x</div>
+      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:90px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1.1rem;color:${numCol};">${yr}</div>
+      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYear[yr].length} draw${byYear[yr].length!==1?'s':''}</div>
+      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:1px;">${cnt}x</div>
     </div>`;
   });
   h+=`</div>`;
-
   el.innerHTML=h;
 }
 
 function _poRevYearClick(yr, stF, pat, patKey){
   const el=document.getElementById('poContent');
   if(!el) return;
-
   const stateFiltDraws=FILT.filter(r=>r.state===stF);
   const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
-
+  const filtSorteds=stateFiltDraws.map(r=>r.sorted);
   const histMatches=ALL.filter(r=>{
     if(r.state===stF) return false;
     if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
     return stateSorteds.has(r.sorted)&&r.dk.startsWith(yr);
   });
-
-  // Group by month
-  const byMonth={};
+  const byYm={};
   histMatches.forEach(r=>{
     const mo=r.dk.slice(0,7);
-    if(!byMonth[mo]) byMonth[mo]=[];
-    byMonth[mo].push(r);
+    if(!byYm[mo]) byYm[mo]={recs:[]};
+    byYm[mo].recs.push(r);
   });
-
-  const months=Object.keys(byMonth).sort((a,b)=>a.localeCompare(b));
+  Object.keys(byYm).forEach(mo=>{
+    byYm[mo].matchCount=byYm[mo].recs.reduce((acc,r)=>acc+filtSorteds.filter(s=>s===r.sorted).length,0);
+  });
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const yms=Object.keys(byYm).filter(mo=>byYm[mo].matchCount>0).sort((a,b)=>byYm[b].matchCount-byYm[a].matchCount);
+  const maxCnt=Math.max(...yms.map(m=>byYm[m].matchCount),1);
 
-  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')"
-      style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
-    <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${yr} — ${histMatches.length} matches from other states</span>
-  </div>`;
-
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
-  months.forEach(mo=>{
-    const cnt=byMonth[mo].length;
+  let h=`<button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;margin-bottom:14px;">◀ Back to Years</button>`;
+  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${yr}</strong> — Click a month to drill down</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  yms.forEach(mo=>{
+    const cnt=byYm[mo].matchCount;
+    const heat=Math.round(cnt/maxCnt*100);
+    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
+    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
+    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
     const moNum=+mo.slice(5,7);
     h+=`<div onclick="_poRevMonthClick('${yr}','${mo}','${stF}','${pat}','${patKey}')"
-      style="cursor:pointer;background:rgba(124,58,237,.1);border:2px solid rgba(124,58,237,.4);border-radius:10px;padding:10px 14px;text-align:center;min-width:60px;">
-      <div style="font-size:.9rem;font-weight:800;color:var(--pur);">${mn[moNum]}</div>
-      <div style="font-size:.65rem;color:var(--pur);">${cnt}x</div>
+      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:80px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${mn[moNum]}</div>
+      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYm[mo].recs.length} draw${byYm[mo].recs.length!==1?'s':''}</div>
+      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
     </div>`;
   });
   h+=`</div>`;
@@ -4836,7 +4857,7 @@ function _poRevMonthClick(yr, mo, stF, pat, patKey){
 
   let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
     <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')"
-      style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+      style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
     <button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')"
       style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
     <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${yr} — ${histMatches.length} matches</span>
@@ -4846,7 +4867,7 @@ function _poRevMonthClick(yr, mo, stF, pat, patKey){
   days.forEach(day=>{
     const cnt=byDay[day].length;
     h+=`<div onclick="_poRevDayClick('${mo}',${day},'${stF}','${pat}','${patKey}')"
-      style="cursor:pointer;background:rgba(124,58,237,.1);border:2px solid rgba(124,58,237,.4);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
+      style="cursor:pointer;background:var(--b0);border:2px solid var(--b3);border-radius:8px;padding:8px 10px;text-align:center;min-width:44px;">
       <div style="font-size:.9rem;font-weight:800;color:var(--pur);">${day}</div>
       <div style="font-size:.6rem;color:var(--pur);">${cnt}x</div>
     </div>`;
@@ -4877,7 +4898,7 @@ function _poRevDayClick(mo, day, stF, pat, patKey){
   const moNum=+mo.slice(5,7); const yr=mo.slice(0,4);
 
   let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← Years</button>
+    <button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Back to Years</button>
     <button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${yr}</button>
     <button onclick="_poRevMonthClick('${yr}','${mo}','${stF}','${pat}','${patKey}')" style="padding:4px 10px;border:1.5px solid var(--pur);border-radius:6px;background:#fff;color:var(--pur);font-size:.75rem;font-weight:700;cursor:pointer;">← ${mn[moNum]}</button>
     <span style="font-size:.8rem;font-weight:700;color:var(--g8);">${mn[moNum]} ${day}, ${yr}</span>
