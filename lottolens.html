@@ -3413,7 +3413,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=353"></script>
+<script src="lottolens-data.js?v=354"></script>
 <script>
 
 // ================================================================
@@ -7998,7 +7998,7 @@ function renderResults(buildPatterns=true){
         return`<span style="font-size:.75rem;white-space:nowrap;"><span class="sb" onclick="navigateToDeltaValue(${_delta},[],null)" title="Δ=${_delta} — click to see all combos with this delta">Δ${_delta}</span> <span class="sb" style="font-size:.68rem;background:var(--pur);color:#fff;border:none;padding:1px 5px;border-radius:4px;cursor:pointer;" onclick="navigateToExpDeltaValue(${_delta})" title="E${_delta} — click to see combos that will land at delta ${_delta} next draw">E${_delta}↗</span></span>`;
       })()}</td>
       <td style="font-size:.75rem;text-align:center;">${(()=>{
-        const _prior=FILT.filter(x=>x.sorted===r.sorted&&x.dk<r.dk);
+        const _prior=ALL.filter(x=>x.sorted===r.sorted&&x.dk<r.dk);
         if(!_prior.length) return '<span style="color:var(--g4);font-size:.7rem;">—</span>';
         const _lastDk=_prior.reduce((a,b)=>a.dk>b.dk?a:b).dk;
         const _days=Math.round((new Date(r.dk+'T12:00:00Z')-new Date(_lastDk+'T12:00:00Z'))/86400000);
@@ -8006,7 +8006,7 @@ function renderResults(buildPatterns=true){
         return`<span style="font-weight:700;color:${_col};">${_days}d</span>`;
       })()}</td>
       <td style="font-size:.75rem;text-align:center;">${(()=>{
-        const _priorEx=FILT.filter(x=>x.number===r.number&&x.dk<r.dk);
+        const _priorEx=ALL.filter(x=>x.number===r.number&&x.dk<r.dk);
         if(!_priorEx.length) return '<span style="color:var(--g4);font-size:.7rem;">—</span>';
         const _lastExDk=_priorEx.reduce((a,b)=>a.dk>b.dk?a:b).dk;
         const _daysEx=Math.round((new Date(r.dk+'T12:00:00Z')-new Date(_lastExDk+'T12:00:00Z'))/86400000);
