@@ -413,7 +413,7 @@ tr:hover td{background:var(--b0);}
     </select></div>
   <div class="fg"><label>Month</label>
     <div class="msf-wrap" id="moF-wrap">
-      <div class="msf-btn" id="moF-btn" onclick="toggleMSF('moF')">Jul 2026 <span class="msf-badge" id="moF-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
+      <div class="msf-btn" id="moF-btn" onclick="toggleMSF('moF')">Aug 2026 <span class="msf-badge" id="moF-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
       <div class="msf-drop" id="moF-drop">
         <div class="msf-item"><label style="font-weight:600;"><input type="checkbox" id="moF-ALL" onchange="msfToggleAll('moF',this)">All History</label></div>
         <div class="msf-acts" style="border-top:none;margin-top:0;padding-bottom:0;">
@@ -431,8 +431,9 @@ tr:hover td{background:var(--b0);}
               style="background:var(--g1);border:1.5px solid var(--g3);border-radius:5px;padding:4px 6px;font-size:.68rem;cursor:pointer;">✕</button>
           </div>
         </div>
-        <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">2026 <button class="msf-yr" onclick="msfSelectYear('moF',2026,['2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
-        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-07" onchange="msfChange('moF')" checked>Jul 2026</label></div>
+        <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">2026 <button class="msf-yr" onclick="msfSelectYear('moF',2026,['2026-08','2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
+        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-08" onchange="msfChange('moF')" checked>Aug 2026</label></div>
+        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-07" onchange="msfChange('moF')">Jul 2026</label></div>
         <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-06" onchange="msfChange('moF')">Jun 2026</label></div>
         <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-05" onchange="msfChange('moF')">May 2026</label></div>
         <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-04" onchange="msfChange('moF')">Apr 2026</label></div>
@@ -1343,6 +1344,7 @@ tr:hover td{background:var(--b0);}
           <button class="tb2" onclick="setTM('2026-02',this)">Feb</button>
           <button class="tb2" onclick="setTM('2026-03',this)">Mar</button>
           <button class="tb2" onclick="setTM('2026-05',this)">May</button>
+          <button class="tb2" onclick="setTM('2026-08',this)">Aug</button>
           <button class="tb2" onclick="setTM('2026-07',this)">Jul</button>
           <button class="tb2" onclick="setTM('2026-06',this)">Jun</button>
         </div>
@@ -1442,10 +1444,11 @@ tr:hover td{background:var(--b0);}
         <select id="monthlyS" style="display:none"><option value="ALL">All States</option></select>
         <!-- Month multi-select -->
         <div class="msf-wrap" id="mlyM-wrap">
-          <div class="msf-btn" id="mlyM-btn" onclick="toggleMSF('mlyM')" style="min-width:90px;font-size:.75rem;">Jul 2026 <span class="msf-badge" id="mlyM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
+          <div class="msf-btn" id="mlyM-btn" onclick="toggleMSF('mlyM')" style="min-width:90px;font-size:.75rem;">Aug 2026 <span class="msf-badge" id="mlyM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="mlyM-drop" style="max-height:300px;">
-          <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('mlyM',2026,['2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
-          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-07" onchange="msfChange('mlyM')" checked>Jul 2026</label></div>
+          <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('mlyM',2026,['2026-08','2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
+          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-08" onchange="msfChange('mlyM')" checked>Aug 2026</label></div>
+          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-07" onchange="msfChange('mlyM')">Jul 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-06" onchange="msfChange('mlyM')">Jun 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-05" onchange="msfChange('mlyM')">May 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-04" onchange="msfChange('mlyM')">Apr 2026</label></div>
@@ -2381,6 +2384,7 @@ tr:hover td{background:var(--b0);}
           <div class="msf-drop" id="palM-drop" style="max-height:300px;overflow-y:auto;">
             <div class="msf-item"><label style="font-weight:600;"><input type="checkbox" id="palM-ALL" onchange="msfToggleAll('palM',this)" checked>All Time</label></div>
             <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('palM',2026,['2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])">2026</button></div>
+            <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-08" onchange="msfChange('palM')">Aug 2026</label></div>
             <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-07" onchange="msfChange('palM')">Jul 2026</label></div>
             <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-06" onchange="msfChange('palM')">Jun 2026</label></div>
             <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-05" onchange="msfChange('palM')">May 2026</label></div>
@@ -2494,7 +2498,8 @@ tr:hover td{background:var(--b0);}
           <div class="msf-btn" id="ftM-btn" onclick="toggleMSF('ftM')" style="min-width:100px;font-size:.75rem;">All Months <span class="msf-badge" id="ftM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="ftM-drop" style="max-height:260px;min-width:180px;">
           <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('ftM',2026,['2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
-          <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-07" onchange="msfChange('ftM')" checked>Jul 2026</label></div>
+          <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-08" onchange="msfChange('ftM')" checked>Aug 2026</label></div>
+          <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-07" onchange="msfChange('ftM')">Jul 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-06" onchange="msfChange('ftM')">Jun 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-05" onchange="msfChange('ftM')">May 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-04" checked onchange="msfChange('ftM')">Apr 2026</label></div>
@@ -3413,7 +3418,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=356"></script>
+<script src="lottolens-data.js?v=359"></script>
 <script>
 
 // ================================================================
@@ -3898,7 +3903,7 @@ function _hdShowExpDelta(expDelta,title){
 // ================================================================
 // MULTI-SELECT FILTER HELPERS
 // ================================================================
-const _msfState = {stF: new Set(), moF: new Set(['2026-07']), dayF: new Set(), mlyS: new Set(), mlyM: new Set(['2026-07']), mlyD: new Set(), ftM: new Set(), ftD: new Set(), palS: new Set(), palM: new Set()};
+const _msfState = {stF: new Set(), moF: new Set(['2026-08']), dayF: new Set(), mlyS: new Set(), mlyM: new Set(['2026-08']), mlyD: new Set(), ftM: new Set(), ftD: new Set(), palS: new Set(), palM: new Set()};
 
 // ── Month filter search ──────────────────────────────────────────
 function _mofSearch(query){
