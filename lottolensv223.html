@@ -37,7 +37,7 @@ main{max-width:1600px;margin:0 auto;padding:18px;}
 .msf-btn{background:var(--g1);border:1.5px solid var(--g3);border-radius:7px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--g9);cursor:pointer;min-width:120px;display:flex;align-items:center;justify-content:space-between;gap:5px;white-space:nowrap;user-select:none;transition:border .2s;}
 .msf-btn:hover,.msf-btn.open{border-color:var(--b5);background:var(--b0);}
 .msf-badge{background:var(--b5);color:#fff;border-radius:10px;padding:0 6px;font-size:.68rem;font-weight:700;margin-left:3px;}
-.msf-drop{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:1200;background:#fff;border:1.5px solid var(--b4);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);min-width:110px;max-height:360px;overflow-y:auto;padding:1px 0;}
+.msf-drop{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:600;background:#fff;border:1.5px solid var(--b4);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);min-width:110px;max-height:360px;overflow-y:auto;padding:1px 0;}
 .msf-drop.open{display:block;}
 .msf-hdr{font-size:.62rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.5px;padding:2px 5px 1px;margin-top:1px;}
 .msf-item{display:block;padding:1px 4px;line-height:1.4;}
@@ -413,7 +413,7 @@ tr:hover td{background:var(--b0);}
     </select></div>
   <div class="fg"><label>Month</label>
     <div class="msf-wrap" id="moF-wrap">
-      <div class="msf-btn" id="moF-btn" onclick="toggleMSF('moF')">Aug 2026 <span class="msf-badge" id="moF-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
+      <div class="msf-btn" id="moF-btn" onclick="toggleMSF('moF')">Jun 2026 <span class="msf-badge" id="moF-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
       <div class="msf-drop" id="moF-drop">
         <div class="msf-item"><label style="font-weight:600;"><input type="checkbox" id="moF-ALL" onchange="msfToggleAll('moF',this)">All History</label></div>
         <div class="msf-acts" style="border-top:none;margin-top:0;padding-bottom:0;">
@@ -431,10 +431,8 @@ tr:hover td{background:var(--b0);}
               style="background:var(--g1);border:1.5px solid var(--g3);border-radius:5px;padding:4px 6px;font-size:.68rem;cursor:pointer;">✕</button>
           </div>
         </div>
-        <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">2026 <button class="msf-yr" onclick="msfSelectYear('moF',2026,['2026-08','2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
-        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-08" onchange="msfChange('moF')" checked>Aug 2026</label></div>
-        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-07" onchange="msfChange('moF')">Jul 2026</label></div>
-        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-06" onchange="msfChange('moF')">Jun 2026</label></div>
+        <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">2026 <button class="msf-yr" onclick="msfSelectYear('moF',2026,['2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
+        <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-06" onchange="msfChange('moF')" checked>Jun 2026</label></div>
         <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-05" onchange="msfChange('moF')">May 2026</label></div>
         <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-04" onchange="msfChange('moF')">Apr 2026</label></div>
         <div class="msf-item"><label><input type="checkbox" class="moF-cb" value="2026-03" onchange="msfChange('moF')">Mar 2026</label></div>
@@ -816,10 +814,6 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
   <div class="tab" onclick="switchTab('posFilter',this)">🔎 Position Search</div>
   <div class="tab" onclick="switchTab('posConverge',this)">🎯 Position Convergence</div>
-  <div class="tab" onclick="switchTab('posRepeat',this)">📅 Pos Day Repeat</div>
-  <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
-  <div class="tab" onclick="switchTab('sameDayPerm',this)">♊ Same-Day Doubles</div>
-  <div class="tab" onclick="switchTab('triplePredictor',this)">🎯 T Predictor</div>
 </div>
 
 <!-- RESULTS -->
@@ -847,8 +841,6 @@ tr:hover td{background:var(--b0);}
       <th onclick="sortTable('results','sum')">Sum<span class="sort-arrow"></span></th>
       <th onclick="sortTable('results','td')" title="Total times this sorted value has been drawn all-time">TD<span class="sort-arrow"></span></th>
       <th onclick="sortTable('results','delta')" title="Delta (|Sum - Times Drawn|)">Δ<span class="sort-arrow"></span></th>
-      <th title="Days since this sorted value last appeared (any state in filter)">Last Seen<span class="sort-arrow"></span></th>
-      <th title="Days since this exact number last appeared (any state in filter)">Last Exact<span class="sort-arrow"></span></th>
       <th onclick="sortTable('results','pattern')">Pattern Match<span class="sort-arrow"></span></th>
     </tr></thead><tbody id="rBody"></tbody></table></div>
   </div>
@@ -1024,12 +1016,6 @@ tr:hover td{background:var(--b0);}
         <input type="text" id="searchMonthF" placeholder="Months e.g. 3,4-6,12"
           style="width:140px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Filter by month — comma separated or ranges e.g. 3,4-6,12">
-        <input type="text" id="searchSumF" placeholder="Sum e.g. 22,25 28" maxlength="20"
-          style="width:130px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
-          oninput="runSearchDebounced()" title="Filter by digit sum">
-        <input type="text" id="searchContainsF" placeholder="Contains e.g. 057,13" maxlength="30"
-          style="width:140px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
-          oninput="runSearchDebounced()" title="Contains digits (1-5 digits, all must appear)">
         <div class="msf-wrap" id="searchSt-wrap">
           <div class="msf-btn" id="searchSt-btn" onclick="toggleMSF('searchSt')" style="min-width:90px;font-size:.75rem;">All States <span class="msf-badge" id="searchSt-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="searchSt-drop">
@@ -1054,7 +1040,7 @@ tr:hover td{background:var(--b0);}
           Exact: OFF
         </button>
         <button class="btn btn-p" onclick="runSearch()">Search</button>
-        <button class="btn btn-s" onclick="document.getElementById('searchInput').value='';document.getElementById('searchDayF').value='';document.getElementById('searchMonthF').value='';document.getElementById('searchSumF').value='';document.getElementById('searchContainsF').value='';msfSelectAll('searchSt');document.getElementById('searchResults').innerHTML='';" style="padding:7px 14px;">✕ Clear</button>
+        <button class="btn btn-s" onclick="document.getElementById('searchInput').value='';document.getElementById('searchDayF').value='';document.getElementById('searchMonthF').value='';msfSelectAll('searchSt');document.getElementById('searchResults').innerHTML='';" style="padding:7px 14px;">✕ Clear</button>
       </div>
       <div id="searchResults"></div>
     </div>
@@ -1073,14 +1059,8 @@ tr:hover td{background:var(--b0);}
         onfocus="this.style.borderColor='var(--b5)'"
         onblur="this.style.borderColor='var(--g3)'"></textarea>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;">
-        <input type="text" id="dupSumF" placeholder="Sum e.g. 22,25 28" maxlength="20"
-          style="width:130px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
-          oninput="runDupCheck()" title="Filter by digit sum">
-        <input type="text" id="dupContainsF" placeholder="Contains e.g. 057,13" maxlength="30"
-          style="width:140px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
-          oninput="runDupCheck()" title="Contains digits (1-5 digits, all must appear)">
         <button class="btn btn-p" onclick="runDupCheck()">Check</button>
-        <button class="btn btn-s" onclick="document.getElementById('dupInput').value='';document.getElementById('dupSumF').value='';document.getElementById('dupContainsF').value='';document.getElementById('dupResults').innerHTML='';document.getElementById('dupFilterBar').innerHTML='';_dupPatFilter='ALL';">Clear</button>
+        <button class="btn btn-s" onclick="document.getElementById('dupInput').value='';document.getElementById('dupResults').innerHTML='';document.getElementById('dupFilterBar').innerHTML='';_dupPatFilter='ALL';">Clear</button>
         <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--g7);font-weight:600;cursor:pointer;margin-left:4px;">
           <input type="checkbox" id="dupNormalized" onchange="runDupCheck()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--b5);">
           Match by normalized value
@@ -1216,29 +1196,6 @@ tr:hover td{background:var(--b0);}
           <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
         </select>
         <select id="psYear" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;"></select>
-        <select id="psPosLen" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="0">All Pos Types</option>
-          <option value="2">2-Digit</option>
-          <option value="3">3-Digit</option>
-          <option value="4">4-Digit</option>
-        </select>
-        <select id="psMinHits" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="0">Min Hits: Any</option>
-          <option value="2">Min 2</option><option value="3">Min 3</option><option value="4">Min 4</option>
-          <option value="5">Min 5</option><option value="6">Min 6</option><option value="7">Min 7</option>
-          <option value="8">Min 8</option><option value="10">Min 10</option>
-        </select>
-        <select id="psMaxHits" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="9999">Max Hits: Any</option>
-          <option value="2">Max 2</option><option value="3">Max 3</option><option value="4">Max 4</option>
-          <option value="5">Max 5</option><option value="6">Max 6</option><option value="7">Max 7</option>
-          <option value="8">Max 8</option><option value="10">Max 10</option>
-        </select>
-        <select id="psDraw" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="both">Mid + Eve</option>
-          <option value="midday">Midday Only</option>
-          <option value="evening">Evening Only</option>
-        </select>
       </div>
     </div>
     <div style="padding:16px;border-bottom:1px solid var(--g2);">
@@ -1344,8 +1301,6 @@ tr:hover td{background:var(--b0);}
           <button class="tb2" onclick="setTM('2026-02',this)">Feb</button>
           <button class="tb2" onclick="setTM('2026-03',this)">Mar</button>
           <button class="tb2" onclick="setTM('2026-05',this)">May</button>
-          <button class="tb2" onclick="setTM('2026-08',this)">Aug</button>
-          <button class="tb2" onclick="setTM('2026-07',this)">Jul</button>
           <button class="tb2" onclick="setTM('2026-06',this)">Jun</button>
         </div>
       </div>
@@ -1417,9 +1372,9 @@ tr:hover td{background:var(--b0);}
 </div>
 
 <!-- MONTHLY -->
-<div id="panel-monthly" class="panel" style="position:relative;z-index:1;overflow:visible;">
-  <div class="card" style="overflow:visible;">
-    <div class="ch" style="overflow:visible;">
+<div id="panel-monthly" class="panel">
+  <div class="card">
+    <div class="ch">
       <h3>📆 Monthly Summary</h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <!-- State multi-select -->
@@ -1444,14 +1399,12 @@ tr:hover td{background:var(--b0);}
         <select id="monthlyS" style="display:none"><option value="ALL">All States</option></select>
         <!-- Month multi-select -->
         <div class="msf-wrap" id="mlyM-wrap">
-          <div class="msf-btn" id="mlyM-btn" onclick="toggleMSF('mlyM')" style="min-width:90px;font-size:.75rem;">Aug 2026 <span class="msf-badge" id="mlyM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
+          <div class="msf-btn" id="mlyM-btn" onclick="toggleMSF('mlyM')" style="min-width:90px;font-size:.75rem;">Jun 2026 <span class="msf-badge" id="mlyM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="mlyM-drop" style="max-height:300px;">
-          <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('mlyM',2026,['2026-08','2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
-          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-08" onchange="msfChange('mlyM')" checked>Aug 2026</label></div>
-          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-07" onchange="msfChange('mlyM')">Jul 2026</label></div>
-          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-06" onchange="msfChange('mlyM')">Jun 2026</label></div>
+          <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('mlyM',2026,['2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
+          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-06" onchange="msfChange('mlyM')" checked>Jun 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-05" onchange="msfChange('mlyM')">May 2026</label></div>
-          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-04" onchange="msfChange('mlyM')">Apr 2026</label></div>
+          <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-04" checked onchange="msfChange('mlyM')">Apr 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-03" onchange="msfChange('mlyM')">Mar 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-02" onchange="msfChange('mlyM')">Feb 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="mlyM-cb" value="2026-01" onchange="msfChange('mlyM')">Jan 2026</label></div>
@@ -2034,13 +1987,7 @@ tr:hover td{background:var(--b0);}
       <h3>🎯 Triple Digit Hot Days</h3>
       <div style="display:flex;gap:6px;align-items:center;">
         <select id="tripleScope" onchange="_renderTripleHotDays()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-          <option value="2022">2022</option>
-          <option value="2021">2021</option>
-          <option value="2020">2020</option>
+          <option value="2026">2026 Only</option>
           <option value="all">All Time</option>
         </select>
       </div>
@@ -2085,14 +2032,6 @@ tr:hover td{background:var(--b0);}
         </select>
         <select id="poStateF" onchange="renderPatternOrigin()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All States</option>
-        </select>
-        <div style="display:flex;border:1px solid rgba(255,255,255,.3);border-radius:6px;overflow:hidden;">
-          <button id="poMode1" onclick="setPOMode('from')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.9);color:#1e1b4b;border:none;cursor:pointer;">Results FROM State</button>
-          <button id="poMode2" onclick="setPOMode('to')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);color:#fff;border:none;cursor:pointer;">State Results FROM...</button>
-          <button id="poMode3" onclick="setPOMode('both')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);color:#fff;border:none;cursor:pointer;">Both</button>
-        </div>
-        <select id="poStateF2" onchange="renderPatternOrigin()" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">2nd State: All</option>
         </select>
         <div style="position:relative;display:inline-block;">
           <span id="poInfoBtn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;" onclick="var t=document.getElementById('poInfoTip');t.style.display=t.style.display==='block'?'none':'block'">i</span>
@@ -2383,9 +2322,7 @@ tr:hover td{background:var(--b0);}
           <div class="msf-btn" id="palM-btn" onclick="toggleMSF('palM')" style="min-width:90px;font-size:.75rem;">All Time <span class="msf-badge" id="palM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="palM-drop" style="max-height:300px;overflow-y:auto;">
             <div class="msf-item"><label style="font-weight:600;"><input type="checkbox" id="palM-ALL" onchange="msfToggleAll('palM',this)" checked>All Time</label></div>
-            <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('palM',2026,['2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])">2026</button></div>
-            <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-08" onchange="msfChange('palM')">Aug 2026</label></div>
-            <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-07" onchange="msfChange('palM')">Jul 2026</label></div>
+            <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('palM',2026,['2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])">2026</button></div>
             <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-06" onchange="msfChange('palM')">Jun 2026</label></div>
             <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-05" onchange="msfChange('palM')">May 2026</label></div>
             <div class="msf-item"><label><input type="checkbox" class="palM-cb" value="2026-04" onchange="msfChange('palM')">Apr 2026</label></div>
@@ -2497,9 +2434,7 @@ tr:hover td{background:var(--b0);}
         <div class="msf-wrap" id="ftM-wrap">
           <div class="msf-btn" id="ftM-btn" onclick="toggleMSF('ftM')" style="min-width:100px;font-size:.75rem;">All Months <span class="msf-badge" id="ftM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
           <div class="msf-drop" id="ftM-drop" style="max-height:260px;min-width:180px;">
-          <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('ftM',2026,['2026-07','2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
-          <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-08" onchange="msfChange('ftM')" checked>Aug 2026</label></div>
-          <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-07" onchange="msfChange('ftM')">Jul 2026</label></div>
+          <div class="msf-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:6px;">2026 <button class="msf-yr" onclick="msfSelectYear('ftM',2026,['2026-06','2026-05','2026-04','2026-03','2026-02','2026-01'])" title="Select all 2026">2026</button></div>
           <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-06" onchange="msfChange('ftM')">Jun 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-05" onchange="msfChange('ftM')">May 2026</label></div>
           <div class="msf-item"><label><input type="checkbox" class="ftM-cb" value="2026-04" checked onchange="msfChange('ftM')">Apr 2026</label></div>
@@ -2999,50 +2934,6 @@ tr:hover td{background:var(--b0);}
     <div id="trackerContent" style="padding:16px;"></div>
   </div>
 </div>
-<div id="panel-posRepeat" class="panel">
-  <div class="card">
-    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div>
-        <h3>📅 Pos Day Repeat</h3>
-        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">4-digit position combos that hit 2+ times on the same day-of-month</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <select id="prScope" onchange="_renderPosRepeat()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
-          <option value="2026" selected>2026</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-          <option value="ALL">All Time</option>
-        </select>
-        <select id="prState" onchange="_renderPosRepeat()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
-          <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
-          <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
-        </select>
-      </div>
-    </div>
-    <div style="padding:10px 16px;border-bottom:1px solid var(--g2);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="prSearch" placeholder="Filter by pos, digits, day, state, pattern..." oninput="_renderPosRepeat()" style="padding:5px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;width:280px;">
-      <span id="prCount" style="font-size:.72rem;color:var(--g5);"></span>
-      <button onclick="navigator.clipboard.writeText((window._prResults||[]).map(function(r){return 'Day '+r.day+' '+r.pos+'|'+r.dig+' '+r.hits+'x: '+r.occs.map(function(o){return o.d+' '+o.st+' '+o.num+'['+o.pat+']['+o.draw+']';}).join(' → ');}).join('
-')).then(function(){alert('Copied!');})" style="padding:5px 12px;background:var(--ac1);color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>
-    </div>
-    <div style="overflow-x:auto;max-height:70vh;overflow-y:auto;">
-      <table style="border-collapse:collapse;width:100%;font-size:12px;">
-        <thead style="position:sticky;top:0;z-index:1;">
-          <tr style="background:var(--g1);">
-            <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Day</th>
-            <th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Pattern</th>
-            <th style="padding:7px 10px;text-align:center;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Hits</th>
-            <th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--g6);border-bottom:2px solid var(--g2);">Occurrences (earliest → latest)</th>
-          </tr>
-        </thead>
-        <tbody id="prTbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 <div id="panel-posConverge" class="panel">
   <div class="card">
     <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
@@ -3096,76 +2987,6 @@ tr:hover td{background:var(--b0);}
     <div id="pcContent" style="padding:16px;"></div>
   </div>
 </div>
-<div id="panel-digitSearch" class="panel">
-  <div class="card">
-    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div>
-        <h3>🔢 Digit Search</h3>
-        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Search 2, 3, or 4 digit combos — see what's been drawn and what hasn't</div>
-      </div>
-    </div>
-    <div style="padding:14px 16px;border-bottom:1px solid var(--g2);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="dsInput" maxlength="4" placeholder="e.g. 0027 or 259" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4);" onkeydown="if(event.key==='Enter')_renderDigitSearch();" style="width:130px;padding:7px 12px;border:2px solid var(--pur);border-radius:8px;font-size:1rem;font-family:'DM Mono',monospace;letter-spacing:3px;font-weight:700;">
-      <button onclick="_renderDigitSearch();" style="padding:7px 18px;background:var(--pur);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;">Search</button>
-      <button onclick="document.getElementById('dsInput').value='';document.getElementById('dsResults').innerHTML='';document.getElementById('dsMsg').textContent='';" style="padding:7px 12px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
-      <span id="dsMsg" style="font-size:.78rem;color:var(--g5);"></span>
-    </div>
-    <div style="padding:14px 16px;border-bottom:1px solid var(--g2);">
-      <div style="font-size:.72rem;color:var(--g5);margin-bottom:8px;">— OR BROWSE TOP COMBOS BELOW (respects global filters) —</div>
-      <div id="dsTopCombos" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-    </div>
-    <div id="dsResults" style="padding:16px;"></div>
-  </div>
-</div>
-<div id="panel-sameDayPerm" class="panel">
-  <div class="card">
-    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div>
-        <h3>♊ Same-Day Double Permutations</h3>
-        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Cases where the same permutation hit 2+ times on the same day — tracking 3rd hit</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="sdpYear" onchange="_renderSameDayPerm()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
-          <option value="all">All Years</option>
-        </select>
-      </div>
-    </div>
-    <div id="sdpSummary" style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--g2);flex-wrap:wrap;"></div>
-    <div id="sdpBody" style="overflow-x:auto;"></div>
-  </div>
-</div>
-<div id="panel-triplePredictor" class="panel">
-  <div class="card">
-    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div>
-        <h3>🎯 Triple Tendency Predictor</h3>
-        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Algorithm-based analysis to predict when & how the next T will hit</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="tpState" onchange="_renderTriplePredictor()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="OH">Ohio</option>
-          <option value="GA">Georgia</option>
-          <option value="FL">Florida</option>
-          <option value="DE">Delaware</option>
-          <option value="MD">Maryland</option>
-          <option value="PA">Pennsylvania</option>
-          <option value="VA">Virginia</option>
-          <option value="DC">DC</option>
-          <option value="LA">Louisiana</option>
-        </select>
-        <select id="tpWindow" onchange="_renderTriplePredictor()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="90">Last 90 days</option>
-          <option value="180">Last 180 days</option>
-          <option value="365">Last 365 days</option>
-          <option value="0">All Time</option>
-        </select>
-      </div>
-    </div>
-    <div id="tpBody" style="padding:16px;"></div>
-  </div>
-</div>
 <div id="panel-posFilter" class="panel">
   <div class="card">
     <div class="ch">
@@ -3214,20 +3035,6 @@ tr:hover td{background:var(--b0);}
             <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option>
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Draw</label>
-          <select id="pfDraw" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
-            <option value="both">All Draws</option>
-            <option value="midday">Midday Only</option>
-            <option value="evening">Evening Only</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Sum</label>
-          <input type="text" id="pfSum" placeholder="e.g. 22,25 28" maxlength="20"
-            oninput="_renderPosFilter()"
-            style="width:120px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);">
-        </div>
       </div>
       <!-- Date filter -->
       <div style="background:var(--g0);border:1.5px solid var(--g2);border-radius:10px;padding:12px 14px;">
@@ -3262,17 +3069,7 @@ tr:hover td{background:var(--b0);}
           <button onclick="document.getElementById('pfDay').value='';document.getElementById('pfMonth').value='';document.getElementById('pfYear').value='';_renderPosFilter();" style="padding:6px 12px;border:1.5px solid var(--g3);border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;color:var(--g7);">Clear Date</button>
         </div>
       </div>
-      <!-- Number lookup -->
-      <div style="background:var(--g0);border:1.5px solid var(--ac1);border-radius:10px;padding:12px 14px;margin-top:8px;">
-        <div style="font-size:.7rem;font-weight:700;color:var(--ac1);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">🔍 Number Lookup — find matching position combos</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="text" id="pfLookup" maxlength="5" placeholder="e.g. 277 or 0277 or 01722" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,5);" onkeydown="if(event.key==='Enter')_pfHighlight();" style="width:180px;padding:6px 10px;border:1.5px solid var(--ac1);border-radius:7px;font-size:.9rem;font-family:'DM Mono',monospace;letter-spacing:3px;font-weight:700;">
-          <button onclick="_pfHighlight();" style="padding:6px 14px;background:#5b21b6;color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;display:inline-block;">Search</button>
-          <button onclick="document.getElementById('pfLookup').value='';document.getElementById('pfLookupMsg').innerHTML='';document.querySelectorAll('#pfResults [data-poskey]').forEach(function(r){r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';});" style="padding:6px 10px;border:1px solid var(--g3);border-radius:6px;font-size:.72rem;cursor:pointer;background:#fff;color:var(--g6);">Clear</button>
-        </div>
-        <div id="pfLookupMsg" style="margin-top:8px;font-size:.78rem;line-height:1.6;"></div>
-      </div>
-      <div id="pfResults" style="margin-top:8px;"></div>
+      <div id="pfResults" style="margin-top:4px;"></div>
     </div>
   </div>
 </div>
@@ -3418,7 +3215,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=375"></script>
+<script src="lottolens-data.js?v=223"></script>
 <script>
 
 // ================================================================
@@ -3903,7 +3700,7 @@ function _hdShowExpDelta(expDelta,title){
 // ================================================================
 // MULTI-SELECT FILTER HELPERS
 // ================================================================
-const _msfState = {stF: new Set(), moF: new Set(['2026-08']), dayF: new Set(), mlyS: new Set(), mlyM: new Set(['2026-08']), mlyD: new Set(), ftM: new Set(), ftD: new Set(), palS: new Set(), palM: new Set()};
+const _msfState = {stF: new Set(), moF: new Set(['2026-06']), dayF: new Set(), mlyS: new Set(), mlyM: new Set(['2026-06']), mlyD: new Set(), ftM: new Set(), ftD: new Set(), palS: new Set(), palM: new Set()};
 
 // ── Month filter search ──────────────────────────────────────────
 function _mofSearch(query){
@@ -4470,24 +4267,9 @@ function getSumCombos(targetSum){
 // ================================================================
 // PATTERN ORIGIN TAB
 // ================================================================
-var _poMode='from'; // 'from' = Way 1, 'to' = Way 2, 'both' = both
-function setPOMode(mode){
-  _poMode=mode;
-  var b1=document.getElementById('poMode1');
-  var b2=document.getElementById('poMode2');
-  var b3=document.getElementById('poMode3');
-  var sf2=document.getElementById('poStateF2');
-  [b1,b2,b3].forEach(function(b){if(b){b.style.background='rgba(255,255,255,.15)';b.style.color='#fff';}});
-  var active=mode==='from'?b1:mode==='to'?b2:b3;
-  if(active){active.style.background='rgba(255,255,255,.9)';active.style.color='#1e1b4b';}
-  if(sf2) sf2.style.display=mode==='both'?'':'none';
-  renderPatternOrigin();
-}
-
 function renderPatternOrigin(){
   const pat = document.getElementById('poPatF')?.value || 'DD';
   const stF = document.getElementById('poStateF')?.value || 'ALL';
-  const stF2 = document.getElementById('poStateF2')?.value || 'ALL';
 
   // Populate state dropdown once
   const stEl = document.getElementById('poStateF');
@@ -4496,16 +4278,6 @@ function renderPatternOrigin(){
       const o=document.createElement('option');
       o.value=s; o.textContent=(RD[s]?.name||s);
       stEl.appendChild(o);
-    });
-  }
-
-  // Populate 2nd state picker once
-  const sf2=document.getElementById('poStateF2');
-  if(sf2&&sf2.options.length<=1){
-    ['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE'].forEach(s=>{
-      const o=document.createElement('option');
-      o.value=s; o.textContent=s;
-      sf2.appendChild(o);
     });
   }
 
@@ -4530,449 +4302,7 @@ function renderPatternOrigin(){
   window._poPatKey=_patKey;
   window._poStF=stF;
 
-  if(_poMode==='to' && stF!=='ALL'){
-    _poShowYearsReverse(stF, pat, _patKey);
-  } else if(_poMode==='both' && stF!=='ALL'){
-    _poShowYearsBoth(stF, stF2, pat, _patKey);
-  } else {
-    _poShowYears();
-  }
-}
-
-function _poShowYearsBoth(stF, stF2, pat, patKey){
-  // Both modes: show historical draws that satisfy BOTH:
-  // Way 1: draws from stF2 that FILT (stF) pulls from
-  // Way 2: stF's FILT draws that appeared historically in stF2
-  // = intersection: historical stF2 draws whose sorted value appears in stF's FILT AND stF's FILT draws whose sorted value appears in stF2's history
-  const el=document.getElementById('poContent');
-  if(!el) return;
-
-  const stFLabel=stF==='ALL'?'All States':stF;
-  const stF2Label=stF2==='ALL'?'All States':stF2;
-
-  // FILT draws for stF (Way 1 scope)
-  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
-  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
-
-  // Historical draws for stF2 (source state)
-  const hist=ALL.filter(function(r){
-    if(stF2!=='ALL'&&r.state!==stF2) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return filtSorteds.has(r.sorted);
-  });
-
-  if(!hist.length){
-    el.innerHTML='<div class="es">No draws found where '+stFLabel+' (FILT) and '+stF2Label+' (historical) share sorted values.</div>';
-    return;
-  }
-
-  // Group by year
-  const byYear={};
-  hist.forEach(function(r){
-    const yr=r.dk.slice(0,4);
-    if(!byYear[yr]) byYear[yr]=[];
-    byYear[yr].push(r);
-  });
-
-  const years=Object.keys(byYear).sort(function(a,b){return +b-+a;});
-
-  // Compute match counts and sort descending like Way 1
-  const filtSortedsBoth=FILT.filter(function(r){return stF==='ALL'||r.state===stF;}).map(function(r){return r.sorted;});
-  Object.keys(byYear).forEach(function(yr){
-    byYear[yr].matchCount=byYear[yr].reduce(function(acc,r){return acc+filtSortedsBoth.filter(function(s){return s===r.sorted;}).length;},0);
-  });
-  years.sort(function(a,b){return byYear[b].matchCount-byYear[a].matchCount;});
-  const maxCntBoth=Math.max.apply(null,years.map(function(y){return byYear[y].matchCount;}));
-
-  let h=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;">
-    <b>${stF2Label}</b> historical draws that match <b>${stFLabel}</b>'s current filter — <b>${hist.length}</b> total · Click a year to drill down
-  </div>`;
-
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  years.forEach(function(yr){
-    const cnt=byYear[yr].matchCount;
-    const heat=Math.round(cnt/maxCntBoth*100);
-    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
-    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
-    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
-    h+=`<div onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey||''}')"
-      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:90px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1.1rem;color:${numCol};">${yr}</div>
-      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYear[yr].length} draw${byYear[yr].length!==1?'s':''}</div>
-      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:1px;">${cnt}x</div>
-    </div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-function _poBothYearClick(yr,stF,stF2,pat,patKey){
-  const el=document.getElementById('poContent');
-  if(!el) return;
-  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
-  const filtSortedArr=filtSt.map(function(r){return r.sorted;});
-  const filtSorteds=new Set(filtSortedArr);
-  const hist=ALL.filter(function(r){
-    if(stF2!=='ALL'&&r.state!==stF2) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return filtSorteds.has(r.sorted)&&r.dk.startsWith(yr);
-  });
-  const byYm={};
-  hist.forEach(function(r){const mo=r.dk.slice(0,7);if(!byYm[mo])byYm[mo]={recs:[]};byYm[mo].recs.push(r);});
-  Object.keys(byYm).forEach(function(mo){
-    byYm[mo].matchCount=byYm[mo].recs.reduce(function(acc,r){return acc+filtSortedArr.filter(function(s){return s===r.sorted;}).length;},0);
-  });
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const yms=Object.keys(byYm).filter(function(mo){return byYm[mo].matchCount>0;}).sort(function(a,b){return byYm[b].matchCount-byYm[a].matchCount;});
-  const maxCnt=Math.max.apply(null,yms.map(function(m){return byYm[m].matchCount;}),1);
-  let h=`<button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;margin-bottom:14px;">◀ Back to Years</button>`;
-  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${yr}</strong> — Click a month to drill down</div>`;
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  yms.forEach(function(mo){
-    const cnt=byYm[mo].matchCount;
-    const heat=Math.round(cnt/maxCnt*100);
-    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
-    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
-    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
-    const moNum=+mo.slice(5,7);
-    h+=`<div onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')"
-      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:80px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${mn[moNum]}</div>
-      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYm[mo].recs.length} draw${byYm[mo].recs.length!==1?'s':''}</div>
-      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
-    </div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-function _poBothMonthClick(yr,mo,stF,stF2,pat,patKey){
-  const el=document.getElementById('poContent');
-  if(!el) return;
-  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
-  const filtSortedArr=filtSt.map(function(r){return r.sorted;});
-  const filtSorteds=new Set(filtSortedArr);
-  const hist=ALL.filter(function(r){
-    if(stF2!=='ALL'&&r.state!==stF2) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return filtSorteds.has(r.sorted)&&r.dk.startsWith(mo);
-  });
-  const byDk={};
-  hist.forEach(function(r){if(!byDk[r.dk])byDk[r.dk]={recs:[]};byDk[r.dk].recs.push(r);});
-  Object.keys(byDk).forEach(function(dk){
-    byDk[dk].matchCount=byDk[dk].recs.reduce(function(acc,r){return acc+filtSortedArr.filter(function(s){return s===r.sorted;}).length;},0);
-  });
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const moNum=+mo.slice(5,7);
-  const dks=Object.keys(byDk).filter(function(dk){return byDk[dk].matchCount>0;}).sort(function(a,b){return byDk[b].matchCount-byDk[a].matchCount;});
-  const maxCnt=Math.max.apply(null,dks.map(function(dk){return byDk[dk].matchCount;}),1);
-  let h=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">`;
-  h+=`<button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Years</button>`;
-  h+=`<button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>`;
-  h+=`</div>`;
-  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${mn[moNum]} ${yr}</strong> — Click a day to drill down</div>`;
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  dks.forEach(function(dk){
-    const day=+dk.slice(8,10);
-    const cnt=byDk[dk].matchCount;
-    const heat=Math.round(cnt/maxCnt*100);
-    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
-    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
-    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
-    h+=`<div onclick="_poBothDayClick('${mo}',${day},'${stF}','${stF2}','${pat}','${patKey}')"
-      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:60px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${day}</div>
-      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
-    </div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-function _poBothDayClick(mo,day,stF,stF2,pat,patKey){
-  const el=document.getElementById('poContent');
-  if(!el) return;
-  const filtSt=FILT.filter(function(r){return stF==='ALL'||r.state===stF;});
-  const filtSorteds=new Set(filtSt.map(function(r){return r.sorted;}));
-  const dk=mo+'-'+String(day).padStart(2,'0');
-  const hist=ALL.filter(function(r){
-    if(stF2!=='ALL'&&r.state!==stF2) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return filtSorteds.has(r.sorted)&&r.dk===dk;
-  });
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const moNum=+mo.slice(5,7); const yr=mo.slice(0,4);
-  const stFLabel=stF==='ALL'?'All':stF; const stF2Label=stF2==='ALL'?'All':stF2;
-  const dayLabel=mn[moNum]+' '+day+' '+yr;
-  const _nextDk=(function(){const d=new Date(dk+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10);})();
-  const _nextRecs=ALL.filter(function(r){return r.dk===_nextDk;});
-  const _nextBtn=_nextRecs.length?`<span style="cursor:pointer;color:var(--b5);text-decoration:underline;margin-left:10px;" onclick="cmod();_poShowNextDay('${dk}','${_nextDk}')">📅 Next day →</span>`:'';
-
-  let h=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">`;
-  h+=`<button onclick="_poShowYearsBoth('${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Years</button>`;
-  h+=`<button onclick="_poBothYearClick('${yr}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>`;
-  h+=`<button onclick="_poBothMonthClick('${yr}','${mo}','${stF}','${stF2}','${pat}','${patKey}')" style="background:var(--b4);color:var(--b8);border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${mn[moNum]} ${yr}</button>`;
-  h+=`</div>`;
-  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:12px;"><strong>${dayLabel}</strong> — <strong>${hist.length}</strong> match${hist.length!==1?'es':''} · <span style="cursor:pointer;color:var(--b5);text-decoration:underline;" onclick="cmod();showDayAllDraws('${dk}')">See all draws this day</span>${_nextBtn}</div>`;
-
-  if(!hist.length){el.innerHTML=h+`<div class="es">No matches on ${dayLabel}.</div>`;return;}
-
-  const filtBySorted={};
-  filtSt.forEach(function(f){if(!filtBySorted[f.sorted])filtBySorted[f.sorted]=[];filtBySorted[f.sorted].push(f);});
-
-  h+=`<div style="border:1px solid var(--g2);border-radius:8px;overflow:hidden;">`;
-  hist.forEach(function(r,i){
-    const bdr=i<hist.length-1?'border-bottom:1px solid var(--g2);':'';
-    const filtHits=filtBySorted[r.sorted]||[];
-    const stBg='background:var(--b6);color:#fff;';
-    const drawCol=r.draw==='midday'?'color:var(--red);':'color:var(--b5);';
-    h+=`<div style="${bdr}padding:8px 12px;">`;
-    h+=`<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:4px;">`;
-    h+=`<span style="font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:4px;${stBg}">${r.state}</span>`;
-    h+=`<span style="font-size:.76rem;font-weight:700;${drawCol}">${r.draw==='midday'?'midday':'evening'}</span>`;
-    h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.95rem;">${r.number}</span>`;
-    h+=`<span style="font-size:.7rem;color:var(--g5);">(${r.sorted})</span>`;
-    h+=`</div>`;
-    filtHits.forEach(function(fm){
-      const fDrawCol=fm.draw==='midday'?'color:var(--red);':'color:var(--b5);';
-      h+=`<div style="display:flex;align-items:baseline;gap:5px;padding-left:12px;margin-top:3px;">`;
-      h+=`<span style="color:var(--g4);font-size:.8rem;">→</span>`;
-      h+=`<span style="font-size:.7rem;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--b6);color:#fff;">${fm.state}</span>`;
-      h+=`<span style="font-size:.76rem;font-weight:700;${fDrawCol}">${fm.draw}</span>`;
-      h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;color:var(--b5);">${fm.number}</span>`;
-      h+=`<span style="font-size:.7rem;color:var(--g5);">(${fm.sorted})</span>`;
-      h+=`<span style="font-size:.7rem;color:var(--g5);">${fm.dk}</span>`;
-      h+=`</div>`;
-    });
-    h+=`</div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-
-function _poShowYearsReverse(stF, pat, _patKey){
-  // Way 2: state X's FILT draws → group historical sources by year tile, same drill-down as Way 1
-  const el=document.getElementById('poContent');
-  if(!el) return;
-
-  // Get selected state's FILT draws
-  const stateFiltDraws=FILT.filter(r=>r.state===stF);
-  if(!stateFiltDraws.length){
-    el.innerHTML='<div class="es">No draws for '+stF+' in current filter.</div>';
-    return;
-  }
-  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
-
-  // Find ALL historical draws (any other state) matching selected state's sorted values
-  const histMatches=ALL.filter(r=>{
-    if(r.state===stF) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==_patKey) return false;
-    return stateSorteds.has(r.sorted);
-  });
-
-  if(!histMatches.length){
-    el.innerHTML='<div class="es">No historical matches found for '+stF+' draws in current filter.</div>';
-    return;
-  }
-
-  // Group by year
-  const byYear={};
-  histMatches.forEach(r=>{
-    const yr=r.dk.slice(0,4);
-    if(!byYear[yr]) byYear[yr]=[];
-    byYear[yr].push(r);
-  });
-
-  const years=Object.keys(byYear).sort((a,b)=>+b-+a);
-  const total=histMatches.length;
-
-  // Sort by match count descending (same as Way 1)
-  const filtSorteds2=FILT.filter(r=>r.state===stF).map(r=>r.sorted);
-  Object.keys(byYear).forEach(yr=>{
-    byYear[yr].matchCount=byYear[yr].reduce((acc,r)=>acc+filtSorteds2.filter(s=>s===r.sorted).length,0);
-  });
-  years.sort((a,b)=>byYear[b].matchCount-byYear[a].matchCount);
-  const maxCnt2=Math.max(...years.map(y=>byYear[y].matchCount),1);
-
-  let h=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;">
-    <b>${stF}</b>'s current draws found in <b>${total}</b> historical draws across other states · Click a year to drill down
-  </div>`;
-
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  years.forEach(yr=>{
-    const cnt=byYear[yr].matchCount;
-    const heat=Math.round(cnt/maxCnt2*100);
-    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
-    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
-    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
-    h+=`<div onclick="_poRevYearClick('${yr}','${stF}','${pat}','${_patKey||''}')"
-      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:90px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1.1rem;color:${numCol};">${yr}</div>
-      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYear[yr].length} draw${byYear[yr].length!==1?'s':''}</div>
-      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:1px;">${cnt}x</div>
-    </div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-function _poRevYearClick(yr, stF, pat, patKey){
-  const el=document.getElementById('poContent');
-  if(!el) return;
-  const stateFiltDraws=FILT.filter(r=>r.state===stF);
-  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
-  const filtSorteds=stateFiltDraws.map(r=>r.sorted);
-  const histMatches=ALL.filter(r=>{
-    if(r.state===stF) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return stateSorteds.has(r.sorted)&&r.dk.startsWith(yr);
-  });
-  const byYm={};
-  histMatches.forEach(r=>{
-    const mo=r.dk.slice(0,7);
-    if(!byYm[mo]) byYm[mo]={recs:[]};
-    byYm[mo].recs.push(r);
-  });
-  Object.keys(byYm).forEach(mo=>{
-    byYm[mo].matchCount=byYm[mo].recs.reduce((acc,r)=>acc+filtSorteds.filter(s=>s===r.sorted).length,0);
-  });
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const yms=Object.keys(byYm).filter(mo=>byYm[mo].matchCount>0).sort((a,b)=>byYm[b].matchCount-byYm[a].matchCount);
-  const maxCnt=Math.max(...yms.map(m=>byYm[m].matchCount),1);
-
-  let h=`<button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;margin-bottom:14px;">◀ Back to Years</button>`;
-  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${yr}</strong> — Click a month to drill down</div>`;
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  yms.forEach(mo=>{
-    const cnt=byYm[mo].matchCount;
-    const heat=Math.round(cnt/maxCnt*100);
-    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
-    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
-    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
-    const moNum=+mo.slice(5,7);
-    h+=`<div onclick="_poRevMonthClick('${yr}','${mo}','${stF}','${pat}','${patKey}')"
-      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:80px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${mn[moNum]}</div>
-      <div style="font-size:.68rem;color:var(--g5);margin-top:3px;">${byYm[mo].recs.length} draw${byYm[mo].recs.length!==1?'s':''}</div>
-      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
-    </div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-function _poRevMonthClick(yr, mo, stF, pat, patKey){
-  const el=document.getElementById('poContent');
-  if(!el) return;
-  const stateFiltDraws=FILT.filter(r=>r.state===stF);
-  const filtSortedArr=stateFiltDraws.map(r=>r.sorted);
-  const stateSorteds=new Set(filtSortedArr);
-  const histMatches=ALL.filter(r=>{
-    if(r.state===stF) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return stateSorteds.has(r.sorted)&&r.dk.startsWith(mo);
-  });
-  const byDk={};
-  histMatches.forEach(r=>{if(!byDk[r.dk])byDk[r.dk]={recs:[]};byDk[r.dk].recs.push(r);});
-  Object.keys(byDk).forEach(dk=>{
-    byDk[dk].matchCount=byDk[dk].recs.reduce((acc,r)=>acc+filtSortedArr.filter(s=>s===r.sorted).length,0);
-  });
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const moNum=+mo.slice(5,7);
-  const dks=Object.keys(byDk).filter(dk=>byDk[dk].matchCount>0).sort((a,b)=>byDk[b].matchCount-byDk[a].matchCount);
-  const maxCnt=Math.max(...dks.map(dk=>byDk[dk].matchCount),1);
-
-  let h=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">`;
-  h+=`<button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Years</button>`;
-  h+=`<button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>`;
-  h+=`</div>`;
-  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:14px;"><strong>${mn[moNum]} ${yr}</strong> — Click a day to drill down</div>`;
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-  dks.forEach(dk=>{
-    const day=+dk.slice(8,10);
-    const cnt=byDk[dk].matchCount;
-    const heat=Math.round(cnt/maxCnt*100);
-    const bg=heat>=80?'var(--b1)':heat>=50?'var(--b0)':'var(--g1)';
-    const border=heat>=80?'var(--b4)':heat>=50?'var(--b3)':'var(--g3)';
-    const numCol=heat>=80?'var(--b7)':heat>=50?'var(--b6)':'var(--g6)';
-    h+=`<div onclick="_poRevDayClick('${mo}',${day},'${stF}','${pat}','${patKey}')"
-      style="background:${bg};border:2px solid ${border};border-radius:10px;padding:10px 14px;min-width:60px;text-align:center;cursor:pointer;transition:box-shadow .15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="font-family:'DM Mono',monospace;font-weight:800;font-size:1rem;color:${numCol};">${day}</div>
-      <div style="font-size:.72rem;font-weight:700;color:${numCol};margin-top:2px;">${cnt}x</div>
-    </div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
-function _poRevDayClick(mo, day, stF, pat, patKey){
-  const el=document.getElementById('poContent');
-  if(!el) return;
-  const stateFiltDraws=FILT.filter(r=>r.state===stF);
-  const stateSorteds=new Set(stateFiltDraws.map(r=>r.sorted));
-  const dk=mo+'-'+String(day).padStart(2,'0');
-  const histMatches=ALL.filter(r=>{
-    if(r.state===stF) return false;
-    if(pat!=='ALL'&&_getRepeatKey(r.sorted)!==patKey) return false;
-    return stateSorteds.has(r.sorted)&&r.dk===dk;
-  });
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const moNum=+mo.slice(5,7); const yr=mo.slice(0,4);
-  const dayLabel=`${mn[moNum]} ${day} ${yr}`;
-  const _nextDk=(()=>{const d=new Date(dk+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10);})();
-  const _nextRecs=ALL.filter(r=>r.dk===_nextDk);
-  const _nextBtn=_nextRecs.length?`<span style="cursor:pointer;color:var(--b5);text-decoration:underline;margin-left:10px;" onclick="cmod();_poShowNextDay('${dk}','${_nextDk}')">📅 Next day →</span>`:'';
-
-  let h=`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">`;
-  h+=`<button onclick="_poShowYearsReverse('${stF}','${pat}','${patKey}')" style="background:var(--g5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ Years</button>`;
-  h+=`<button onclick="_poRevYearClick('${yr}','${stF}','${pat}','${patKey}')" style="background:var(--b5);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${yr}</button>`;
-  h+=`<button onclick="_poRevMonthClick('${yr}','${mo}','${stF}','${pat}','${patKey}')" style="background:var(--b4);color:var(--b8);border:none;border-radius:6px;padding:5px 12px;font-size:.76rem;cursor:pointer;">◀ ${mn[moNum]} ${yr}</button>`;
-  h+=`</div>`;
-  h+=`<div style="font-size:.78rem;color:var(--g5);margin-bottom:12px;"><strong>${dayLabel}</strong> — <strong>${histMatches.length}</strong> match${histMatches.length!==1?'es':''} · <span style="cursor:pointer;color:var(--b5);text-decoration:underline;" onclick="cmod();showDayAllDraws('${dk}')">See all draws this day</span>${_nextBtn}</div>`;
-
-  if(!histMatches.length){el.innerHTML=h+`<div class="es">No matches on ${dayLabel}.</div>`;return;}
-
-  // Group by sorted value — show one row per historical draw, all FILT matches below
-  const filtBySorted={};
-  stateFiltDraws.forEach(f=>{if(!filtBySorted[f.sorted])filtBySorted[f.sorted]=[];filtBySorted[f.sorted].push(f);});
-
-  h+=`<div style="border:1px solid var(--g2);border-radius:8px;overflow:hidden;">`;
-  histMatches.forEach((r,i)=>{
-    const bdr=i<histMatches.length-1?'border-bottom:1px solid var(--g2);':'';
-    const filtHits=filtBySorted[r.sorted]||[];
-    h+=`<div style="${bdr}padding:8px 12px;">`;
-    // Historical draw — left side (same style as Way 1)
-    const stBg=`background:var(--b6);color:#fff;`;
-    const drawCol=r.draw==='midday'?'color:var(--red);':'color:var(--b5);';
-    h+=`<div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:4px;">`;
-    h+=`<span style="font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:4px;${stBg}">${r.state}</span>`;
-    h+=`<span style="font-size:.76rem;font-weight:700;${drawCol}">${r.draw==='midday'?'midday':'evening'}</span>`;
-    h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.95rem;">${r.number}</span>`;
-    h+=`<span style="font-size:.7rem;color:var(--g5);">(${r.sorted})</span>`;
-    h+=`</div>`;
-    // FILT matches — right side (same as Way 1's green arrow rows)
-    filtHits.forEach(fm=>{
-      const fDrawCol=fm.draw==='midday'?'color:var(--red);':'color:var(--b5);';
-      h+=`<div style="display:flex;align-items:baseline;gap:5px;padding-left:12px;margin-top:3px;">`;
-      h+=`<span style="color:var(--g4);font-size:.8rem;">→</span>`;
-      h+=`<span style="font-size:.7rem;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--b6);color:#fff;">${fm.state}</span>`;
-      h+=`<span style="font-size:.76rem;font-weight:700;${fDrawCol}">${fm.draw}</span>`;
-      h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;color:var(--b5);">${fm.number}</span>`;
-      h+=`<span style="font-size:.7rem;color:var(--g5);">(${fm.sorted})</span>`;
-      h+=`<span style="font-size:.7rem;color:var(--g5);">${fm.dk}</span>`;
-      h+=`</div>`;
-    });
-    h+=`</div>`;
-  });
-  h+=`</div>`;
-  el.innerHTML=h;
+  _poShowYears();
 }
 
 function _poFiltMatchCount(recs){
@@ -5954,43 +5284,32 @@ function _buildConsecStreakWidget(inline){
         const days2=e2.histYmDays.get(ym);
         days1.forEach(d1v=>{
           if(days2.has(d1v+1)){
-            // Forward: hist day goes up (e.g. 17→18→19)
+            // Get matching cur records and their sources
             const rec1=e1.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v))||e1.recs[0];
             const rec2=e2.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v+1))||e2.recs[0];
             const srcs1=getSources(rec1,ym,d1v);
             const srcs2=getSources(rec2,ym,d1v+1);
-            edges.push({dk1,dk2,hist_ym:ym,hd1:d1v,hd2:d1v+1,rec1,rec2,srcs1,srcs2,dir:'fwd'});
-          }
-          if(days2.has(d1v-1)){
-            // Backward: hist day goes down (e.g. 19→18→17)
-            const rec1b=e1.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v))||e1.recs[0];
-            const rec2b=e2.recs.find(r=>getHistYmDays(r).get(ym)?.has(d1v-1))||e2.recs[0];
-            const srcs1b=getSources(rec1b,ym,d1v);
-            const srcs2b=getSources(rec2b,ym,d1v-1);
-            edges.push({dk1,dk2,hist_ym:ym,hd1:d1v,hd2:d1v-1,rec1:rec1b,rec2:rec2b,srcs1:srcs1b,srcs2:srcs2b,dir:'bwd'});
+            edges.push({dk1,dk2,hist_ym:ym,hd1:d1v,hd2:d1v+1,rec1,rec2,srcs1,srcs2});
           }
         });
       });
     }
 
-    // Separate fwd and bwd edges
-    const fwdEdges=edges.filter(e=>e.dir!=='bwd');
-    const bwdEdges=edges.filter(e=>e.dir==='bwd');
-
-    // Merge edges into chains (forward)
+    // Merge edges into chains (bidirectional — same hist_ym, consecutive hd)
     const usedEdges=new Set();
     const chains=[];
-    fwdEdges.forEach((e,idx)=>{
+    edges.forEach((e,idx)=>{
       if(usedEdges.has(idx)) return;
+      // Build chain starting from this edge
       const links=[
         {cur_dk:e.dk1,hist_day:e.hd1,rec:e.rec1,srcs:e.srcs1},
         {cur_dk:e.dk2,hist_day:e.hd2,rec:e.rec2,srcs:e.srcs2}
       ];
       usedEdges.add(idx);
       let lastEdge=e;
-      for(let j=idx+1;j<fwdEdges.length;j++){
+      for(let j=idx+1;j<edges.length;j++){
         if(usedEdges.has(j)) continue;
-        const ne=fwdEdges[j];
+        const ne=edges[j];
         if(ne.hist_ym===lastEdge.hist_ym&&ne.dk1===lastEdge.dk2&&ne.hd1===lastEdge.hd2){
           links.push({cur_dk:ne.dk2,hist_day:ne.hd2,rec:ne.rec2,srcs:ne.srcs2});
           usedEdges.add(j); lastEdge=ne;
@@ -5999,31 +5318,7 @@ function _buildConsecStreakWidget(inline){
       // Deduplicate links by cur_dk
       const seen=new Set(); const ulinks=links.filter(l=>{if(seen.has(l.cur_dk))return false;seen.add(l.cur_dk);return true;});
       chains.push({hist_ym:e.hist_ym,chain:ulinks,len:ulinks.length,
-        latestCurDk:ulinks[ulinks.length-1].cur_dk,dir:'fwd'});
-    });
-
-    // Backward chains
-    const usedBwdEdges=new Set();
-    const bwdChains=[];
-    bwdEdges.forEach((e,idx)=>{
-      if(usedBwdEdges.has(idx)) return;
-      const blinks=[
-        {cur_dk:e.dk1,hist_day:e.hd1,rec:e.rec1,srcs:e.srcs1},
-        {cur_dk:e.dk2,hist_day:e.hd2,rec:e.rec2,srcs:e.srcs2}
-      ];
-      usedBwdEdges.add(idx);
-      let lastBwdEdge=e;
-      for(let j=idx+1;j<bwdEdges.length;j++){
-        if(usedBwdEdges.has(j)) continue;
-        const ne=bwdEdges[j];
-        if(ne.hist_ym===lastBwdEdge.hist_ym&&ne.dk1===lastBwdEdge.dk2&&ne.hd1===lastBwdEdge.hd2){
-          blinks.push({cur_dk:ne.dk2,hist_day:ne.hd2,rec:ne.rec2,srcs:ne.srcs2});
-          usedBwdEdges.add(j); lastBwdEdge=ne;
-        }
-      }
-      const seenB=new Set(); const ulinksB=blinks.filter(l=>{if(seenB.has(l.cur_dk))return false;seenB.add(l.cur_dk);return true;});
-      bwdChains.push({hist_ym:e.hist_ym,chain:ulinksB,len:ulinksB.length,
-        latestCurDk:ulinksB[ulinksB.length-1].cur_dk,dir:'bwd'});
+        latestCurDk:ulinks[ulinks.length-1].cur_dk});
     });
 
     // Deduplicate chains
@@ -6047,14 +5342,7 @@ function _buildConsecStreakWidget(inline){
       if(gaps.length) avgGap=Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
     }
 
-    // Deduplicate backward chains
-    const seenBwdChains=new Set();
-    const uniqueBwdChains=bwdChains.filter(c=>{
-      const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day;
-      if(seenBwdChains.has(k))return false; seenBwdChains.add(k); return true;
-    });
-    uniqueBwdChains.sort((a,b)=>b.latestCurDk.localeCompare(a.latestCurDk));
-    stateData.push({st,chains:uniqueChains,lastChain,daysSince,avgGap,totalChains:uniqueChains.length,bwdChains:uniqueBwdChains});
+    stateData.push({st,chains:uniqueChains,lastChain,daysSince,avgGap,totalChains:uniqueChains.length});
   });
 
   stateData.sort((a,b)=>{
@@ -6238,122 +5526,6 @@ function _buildConsecStreakWidget(inline){
   });
 
   html+=`</div>`;
-
-  // ── Backward Consecutive Section ──────────────────────────────
-  const bwdStateData=stateData.filter(d=>d.bwdChains&&d.bwdChains.length>0);
-  if(bwdStateData.length>0){
-    html+=`<div style="margin-top:18px;border-top:2px solid var(--g2);padding-top:12px;">`;
-    html+=`<div style="font-size:.8rem;font-weight:700;color:var(--b6);margin-bottom:10px;">⬇️ Backward Consecutive Streaks (e.g. 19→18→17)</div>`;
-    html+=`<div style="display:flex;flex-direction:column;gap:10px;">`;
-
-    bwdStateData.forEach(d=>{
-      const {st,bwdChains,daysSince,avgGap,totalChains}=d;
-      const lastBwdChain=bwdChains[0]||null;
-      const trulyActiveBwd=lastBwdChain&&lastBwdChain.latestCurDk===latestDk;
-      const activeBwd=_isUnfiltered?trulyActiveBwd:(lastBwdChain&&_filtDks.has(lastBwdChain.latestCurDk));
-      const overdueBwd=avgGap&&daysSince>0&&daysSince>=avgGap*1.5;
-
-      let activeBwdChains;
-      if(_isUnfiltered){
-        activeBwdChains=bwdChains.filter(c=>c.latestCurDk===latestDk);
-      } else {
-        activeBwdChains=bwdChains.filter(c=>_filtDks.has(c.latestCurDk));
-      }
-      const displayBwdChains=activeBwdChains.length?activeBwdChains:(_isUnfiltered?[]:(lastBwdChain?[lastBwdChain]:[]));
-      if(!displayBwdChains.length) return;
-
-      displayBwdChains.forEach((chain)=>{
-        const isGreen2=chain.len>=3;
-        const isChainActiveBwd=_isUnfiltered?(chain.latestCurDk===latestDk):(_filtDks.has(chain.latestCurDk));
-        const rowBg=isChainActiveBwd?(isGreen2?'#f0fdf4':'#fffbeb'):'#fff';
-        const rowBorder=isChainActiveBwd?(isGreen2?'#86efac':'#fcd34d'):'var(--g2)';
-
-        let row=`<div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:8px;padding:8px 12px;">`;
-        row+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">`;
-        row+=`<span class="st" style="min-width:28px;">${st}</span>`;
-
-        if(isChainActiveBwd) row+=`<span style="background:${isGreen2?'#dcfce7':'#fef3c7'};color:${isGreen2?'#065f46':'#92400e'};border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;">${isGreen2?'🟢':'🟡'} ACTIVE</span>`;
-
-        const hym=chain.hist_ym.split('-');
-        const firstCur=chain.chain[0].cur_dk.split('-');
-        const lastCur=chain.chain[chain.chain.length-1].cur_dk.split('-');
-        const firstHd=chain.chain[0].hist_day, lastHd=chain.chain[chain.chain.length-1].hist_day;
-        const rangeLabel=+firstCur[1]===+lastCur[1]
-          ?`${mn[+firstCur[1]-1]} ${+firstCur[2]}–${+lastCur[2]}`
-          :`${mn[+firstCur[1]-1]} ${+firstCur[2]}–${mn[+lastCur[1]-1]} ${+lastCur[2]}`;
-        const histFirstDate=new Date(chain.hist_ym+'-'+String(firstHd).padStart(2,'0'));
-        const histLastDate=new Date(chain.hist_ym+'-'+String(lastHd).padStart(2,'0'));
-        const histRangeLabel=histFirstDate.getMonth()===histLastDate.getMonth()
-          ?`${mn[histFirstDate.getMonth()]} ${firstHd}–${lastHd} ${hym[0]}`
-          :`${mn[histFirstDate.getMonth()]} ${firstHd}–${mn[histLastDate.getMonth()]} ${lastHd} ${hym[0]}`;
-
-        row+=`<span style="font-size:.72rem;font-weight:600;color:var(--g7);">${rangeLabel}</span>`;
-        row+=`<span style="font-size:.68rem;background:var(--b0);border:1px solid var(--b3);border-radius:4px;padding:1px 6px;color:var(--b7);font-weight:700;">${chain.len}d</span>`;
-        row+=`<span style="font-size:.68rem;color:var(--g5);">← ${histRangeLabel}</span>`;
-
-        if(!isChainActiveBwd) row+=`<span style="font-size:.7rem;font-weight:${overdueBwd?700:400};color:${overdueBwd?'#dc2626':'var(--g5)'};">${daysSince}d ago${overdueBwd?' ⚠️':''}</span>`;
-
-        // Previous day button (backward) — lastHd-1
-        if(isChainActiveBwd){
-          const histPrevDk=`${chain.hist_ym}-${String(lastHd-1).padStart(2,'0')}`;
-          const histPrevExists=lastHd>1&&ALL.some(r=>r.dk===histPrevDk);
-          if(histPrevExists){
-            const histPrevDate=new Date(histPrevDk);
-            const histPrevLabel=mn[histPrevDate.getMonth()]+' '+histPrevDate.getDate()+' '+hym[0];
-            row+=`<span style="cursor:pointer;color:var(--b5);font-size:.7rem;text-decoration:underline;margin-left:4px;" onclick="cmod();_consecNextDay('${histPrevDk}','${st}')">📅 ← ${histPrevLabel}</span>`;
-          }
-        }
-
-        const stYmTop2=stateTopYm[st]||[];
-        if(stYmTop2.length){
-          const [topYm2,topCnt2]=stYmTop2[0];
-          const topYmP2=topYm2.split('-');
-          const topYmLabel2=mn[+topYmP2[1]-1]+' '+topYmP2[0];
-          row+=`<span style="background:#dcfce7;border:1px solid #86efac;border-radius:5px;padding:1px 7px;font-size:.62rem;font-weight:700;color:#065f46;">🔁 ${topYmLabel2} (${topCnt2}x)</span>`;
-        }
-
-        row+=`<span style="margin-left:auto;font-size:.68rem;color:var(--g5);">${bwdChains.length}x`;
-        if(avgGap) row+=` · avg ${avgGap}d`;
-        row+=`</span></div>`;
-
-        // Chain links with source states
-        row+=`<div style="margin-left:8px;border-left:3px solid ${isGreen2?'#86efac':'#fcd34d'};padding-left:10px;display:flex;flex-direction:column;gap:4px;">`;
-        chain.chain.forEach(link=>{
-          const cp=link.cur_dk.split('-');
-          const curLabel=`${mn[+cp[1]-1]} ${+cp[2]}`;
-          const hym2=chain.hist_ym.split('-');
-          const histLabel=`${mn[+hym2[1]-1]} ${link.hist_day} ${hym2[0]}`;
-          const rec=link.rec;
-          const srcs=link.srcs||[];
-
-          row+=`<div style="display:flex;align-items:flex-start;gap:6px;font-size:.72rem;">`;
-          row+=`<span style="color:var(--g6);min-width:52px;flex-shrink:0;">${curLabel}</span>`;
-          row+=`<div style="display:flex;flex-direction:column;gap:2px;">`;
-          if(rec){
-            row+=`<div style="display:flex;align-items:center;gap:5px;">`;
-            row+=`<span class="${rec.draw==='midday'?'dm':'de'}" style="font-size:.65rem;">${rec.draw}</span>`;
-            row+=`<span class="nr" style="cursor:pointer;font-size:.75rem;" onclick="cmod();showNumModal('${rec.sorted}')">${rec.number}</span>`;
-            row+=`<span class="ns">(${rec.sorted})</span>`;
-            row+=`<span style="background:var(--b0);border:1px solid var(--b3);border-radius:4px;padding:0 5px;font-size:.65rem;font-weight:700;color:var(--b7);">Σ${rec.sum}</span>`;
-            row+=`<span style="color:var(--g4);margin:0 2px;">←</span>`;
-            row+=`<span style="color:var(--g5);font-size:.68rem;">${histLabel}</span>`;
-            row+=`</div>`;
-          }
-          if(srcs.length){
-            const sameSt=srcs.every(s=>s.state===st);
-            row+=`<div style="font-size:.66rem;color:${sameSt?'var(--b6)':'var(--g5)'};margin-left:2px;">`;
-            row+=`src: ${srcs.slice(0,3).map(s=>`<span style="font-weight:${s.state===st?700:400};color:${s.state===st?'var(--b7)':'var(--g5)'};">${s.state} ${s.number}</span>`).join(' ')}`;
-            row+=`</div>`;
-          }
-          row+=`</div></div>`;
-        });
-        row+=`</div></div>`;
-        html+=row;
-      });
-    });
-    html+=`</div></div>`;
-  }
-
   if(!inline) html+=`</div>`;
   return html;
 }
@@ -8002,22 +7174,6 @@ function renderResults(buildPatterns=true){
         const _delta=Math.abs(r.sum-_tc2);
         return`<span style="font-size:.75rem;white-space:nowrap;"><span class="sb" onclick="navigateToDeltaValue(${_delta},[],null)" title="Δ=${_delta} — click to see all combos with this delta">Δ${_delta}</span> <span class="sb" style="font-size:.68rem;background:var(--pur);color:#fff;border:none;padding:1px 5px;border-radius:4px;cursor:pointer;" onclick="navigateToExpDeltaValue(${_delta})" title="E${_delta} — click to see combos that will land at delta ${_delta} next draw">E${_delta}↗</span></span>`;
       })()}</td>
-      <td style="font-size:.75rem;text-align:center;">${(()=>{
-        const _prior=ALL.filter(x=>x.sorted===r.sorted&&x.dk<r.dk);
-        if(!_prior.length) return '<span style="color:var(--g4);font-size:.7rem;">—</span>';
-        const _lastDk=_prior.reduce((a,b)=>a.dk>b.dk?a:b).dk;
-        const _days=Math.round((new Date(r.dk+'T12:00:00Z')-new Date(_lastDk+'T12:00:00Z'))/86400000);
-        const _col=_days<=7?'var(--b5)':_days<=30?'var(--g6)':'var(--g4)';
-        return`<span style="font-weight:700;color:${_col};">${_days}d</span>`;
-      })()}</td>
-      <td style="font-size:.75rem;text-align:center;">${(()=>{
-        const _priorEx=ALL.filter(x=>x.number===r.number&&x.dk<r.dk);
-        if(!_priorEx.length) return '<span style="color:var(--g4);font-size:.7rem;">—</span>';
-        const _lastExDk=_priorEx.reduce((a,b)=>a.dk>b.dk?a:b).dk;
-        const _daysEx=Math.round((new Date(r.dk+'T12:00:00Z')-new Date(_lastExDk+'T12:00:00Z'))/86400000);
-        const _colEx=_daysEx<=7?'var(--b5)':_daysEx<=30?'var(--g6)':'var(--g4)';
-        return`<span style="font-weight:700;color:${_colEx};">${_daysEx}d</span>`;
-      })()}</td>
       <td style="font-size:.75rem">${ph}</td>
     </tr>`;
   });
@@ -8026,7 +7182,7 @@ function renderResults(buildPatterns=true){
   if(_totalPages > 1){
     const _navRow = document.createElement('tr');
     const _navTd = document.createElement('td');
-    _navTd.colSpan = 9;
+    _navTd.colSpan = 7;
     _navTd.style.cssText = 'padding:10px;text-align:center;background:var(--b1)';
     const _showing = document.createElement('span');
     _showing.style.cssText = 'font-size:.8rem;color:var(--b5);margin-right:10px';
@@ -8821,35 +7977,6 @@ function toggleExactSearch(){
   runSearch();
 }
 
-
-// Parse sum filter: "22 25,28" -> Set{22,25,28}
-function _parseSumFilter(val){
-  if(!val||!val.trim()) return null;
-  const s=new Set();
-  val.split(/[,\s]+/).forEach(p=>{const n=parseInt(p);if(!isNaN(n)&&n>=0)s.add(n);});
-  return s.size?s:null;
-}
-// Parse contains filter: "0 5 7, 3" -> ["057","3"] each chunk must all appear
-function _parseContainsFilter(val){
-  if(!val||!val.trim()) return null;
-  const chunks=val.split(/[,]+/).map(c=>c.replace(/\D/g,'').split('').join('')).filter(c=>c.length);
-  return chunks.length?chunks:null;
-}
-function _matchSum(num, sumSet){
-  if(!sumSet) return true;
-  const s=num.split('').reduce((a,d)=>a+ +d,0);
-  return sumSet.has(s);
-}
-function _matchContains(num, contChunks){
-  if(!contChunks) return true;
-  // Number must match AT LEAST ONE chunk (OR logic between chunks, AND within chunk)
-  return contChunks.some(chunk=>{
-    const rc={};[...num].forEach(d=>rc[d]=(rc[d]||0)+1);
-    const cc={};[...chunk].forEach(d=>cc[d]=(cc[d]||0)+1);
-    return Object.entries(cc).every(([d,n])=>(rc[d]||0)>=n);
-  });
-}
-
 function runSearch(){
   const q=(document.getElementById('searchInput').value||'').replace(/\D/g,'').trim();
   const c=document.getElementById('searchResults');
@@ -8863,14 +7990,10 @@ function runSearch(){
     const _moRaw=(document.getElementById('searchMonthF')?.value||'').trim();
     const _daySet=_dayRaw?(()=>{const s=new Set();_dayRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>0)s.add(i);}else{const n=parseInt(p);if(n>0)s.add(n);}});return s.size?s:null;})():null;
     const _moSet=_moRaw?(()=>{const s=new Set();_moRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>=1&&i<=12)s.add(i);}else{const n=parseInt(p);if(n>=1&&n<=12)s.add(n);}});return s.size?s:null;})():null;
-    const _srchSumSet=_parseSumFilter((document.getElementById('searchSumF')?.value||''));
-    const _srchContChunks=_parseContainsFilter((document.getElementById('searchContainsF')?.value||''));
     const matches=ALL.filter(r=>{
       const _sSel=_msfState['searchSt']||new Set();if(_sSel.size>0&&!_sSel.has(r.state))return false;
       if(_daySet&&!_daySet.has(r.day))return false;
       if(_moSet&&!_moSet.has(+r.ym.split('-')[1]))return false;
-      if(!_matchSum(r.number,_srchSumSet))return false;
-      if(!_matchContains(r.number,_srchContChunks))return false;
       const numDigits=r.number.split('').sort();
       let rem=[...numDigits];
       for(const d of qDigits){
@@ -8922,14 +8045,10 @@ function runSearch(){
   const _5moRaw=(document.getElementById('searchMonthF')?.value||'').trim();
   const _5daySet=_5dayRaw?(()=>{const s=new Set();_5dayRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>0)s.add(i);}else{const n=parseInt(p);if(n>0)s.add(n);}});return s.size?s:null;})():null;
   const _5moSet=_5moRaw?(()=>{const s=new Set();_5moRaw.split(/[,\s]+/).forEach(p=>{const r=p.trim().match(/^(\d+)-(\d+)$/);if(r){for(let i=+r[1];i<=+r[2];i++)if(i>=1&&i<=12)s.add(i);}else{const n=parseInt(p);if(n>=1&&n<=12)s.add(n);}});return s.size?s:null;})():null;
-  const _5sumSet=_parseSumFilter((document.getElementById('searchSumF')?.value||''));
-  const _5contChunks=_parseContainsFilter((document.getElementById('searchContainsF')?.value||''));
   const _stFilter=r=>{
     if(_sSel2.size>0&&!_sSel2.has(r.state))return false;
     if(_5daySet&&!_5daySet.has(r.day))return false;
     if(_5moSet&&!_5moSet.has(+r.ym.split('-')[1]))return false;
-    if(!_matchSum(r.number,_5sumSet))return false;
-    if(!_matchContains(r.number,_5contChunks))return false;
     return true;
   };
   const exact=ALL.filter(r=>r.number===q&&_stFilter(r));
@@ -11011,7 +10130,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','posFilter','posConverge','posRepeat'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','posFilter','posConverge'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -11044,12 +10163,8 @@ function renderCur(){
   else if(curTab==='posToday'){_renderPosToday();}
   else if(curTab==='permMatcher'){_renderPermMatcher();}
   else if(curTab==='posTrips'){_renderPosTrips();}
-  else if(curTab==='digitSearch'){_renderDigitSearch();}
-  else if(curTab==='sameDayPerm'){_renderSameDayPerm();}
-  else if(curTab==='triplePredictor'){_renderTriplePredictor();}
   else if(curTab==='posFilter'){_renderPosFilter();}
   else if(curTab==='posConverge'){_renderPosConverge();}
-  else if(curTab==='posRepeat'){_renderPosRepeat();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -11120,7 +10235,7 @@ function globalSearch(){
   if(!matches.length){
     showView('results',document.querySelector('nav button'));
     document.querySelectorAll('nav button').forEach((b,i)=>{b.classList.toggle('active',i===0);});
-    document.getElementById('rBody').innerHTML=`<tr><td colspan="9"><div class="es">No draws found for <strong>${q}</strong> (normalized: ${qSorted}) in the current filter scope.</div></td></tr>`;
+    document.getElementById('rBody').innerHTML=`<tr><td colspan="7"><div class="es">No draws found for <strong>${q}</strong> (normalized: ${qSorted}) in the current filter scope.</div></td></tr>`;
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
@@ -15660,259 +14775,13 @@ function _buildDashboard(el){
 
     const alerts=[];
 
-    // 1. Hot normalized values — today + prev 2 days side by side
+    // 1. Hot normalized values (drawn 3+ times this year) in today's draws
     const yrFreq={};
     curYrDraws.forEach(r=>yrFreq[r.sorted]=(yrFreq[r.sorted]||0)+1);
-
-    // Get sorted list of unique draw dates descending
-    const allDks=[...new Set(ALL.map(r=>r.dk))].sort((a,b)=>b.localeCompare(a));
-    const latestDkIdx=allDks.indexOf(latestDk);
-    const prevDk1=allDks[latestDkIdx+1]||null;
-    const prevDk2=allDks[latestDkIdx+2]||null;
-
-    function getHotForDk(dk){
-      if(!dk) return [];
-      const dkDraws=ALL.filter(r=>r.dk===dk);
-      return dkDraws.filter(r=>yrFreq[r.sorted]>=3).map(r=>({num:r.number,sorted:r.sorted,cnt:yrFreq[r.sorted],state:r.state,draw:r.draw}));
-    }
-
-    const todayHotNorms=getHotForDk(latestDk);
-    const prev1HotNorms=getHotForDk(prevDk1);
-    const prev2HotNorms=getHotForDk(prevDk2);
-
-    function fmtDkShort(dk){if(!dk)return'';const p=dk.split('-');return p[1]+'/'+p[2];}
-    function hotRepeaterBody(items,color){
-      if(!items.length) return `<span style="font-size:.68rem;color:${color};opacity:.6;">None</span>`;
-      return items.map(x=>`<span style="font-family:'DM Mono',monospace;font-weight:700;">${x.num}</span> <span style="font-size:.65rem;color:${color};">${x.state}/${x.draw.slice(0,3)} · ${x.cnt}x in ${curYr}</span>`).join('<br>');
-    }
-
-    if(todayHotNorms.length||prev1HotNorms.length||prev2HotNorms.length){
-      const col='#92400e',bg='#fef3c7',bdr='#f59e0b';
-      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid #f59e0b;">
-          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:4px;">🔥 Today (${fmtDkShort(latestDk)})</div>
-          ${hotRepeaterBody(todayHotNorms,col)}
-        </div>
-        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid #f59e0b;">
-          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:4px;">Hot Repeaters ${fmtDkShort(prevDk1)}</div>
-          ${hotRepeaterBody(prev1HotNorms,col)}
-        </div>
-        <div style="flex:1;min-width:140px;padding-left:12px;">
-          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:4px;">Hot Repeaters ${fmtDkShort(prevDk2)}</div>
-          ${hotRepeaterBody(prev2HotNorms,col)}
-        </div>
-      </div>`;
-      alerts.push({icon:'🔥',label:'Hot Repeaters',color:col,bg,border:bdr,body});
-    }
-
-    // 1b. Hot Sums — sums appearing 2+ times for that day (today + prev 2 days)
-    function getHotSumsForDk(dk){
-      if(!dk) return [];
-      const dkDraws=ALL.filter(r=>r.dk===dk);
-      const sumFreq={};
-      dkDraws.forEach(r=>sumFreq[r.sum]=(sumFreq[r.sum]||0)+1);
-      return Object.entries(sumFreq).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]).map(([s,c])=>({sum:+s,cnt:c}));
-    }
-
-    const todayHotSums=getHotSumsForDk(latestDk);
-    const prev1HotSums=getHotSumsForDk(prevDk1);
-    const prev2HotSums=getHotSumsForDk(prevDk2);
-
-    function sumPill(s,cnt){
-      return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid #f59e0b;border-radius:8px;padding:4px 10px;margin:2px;min-width:40px;">
-        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#92400e;">${s}</span>
-        <span style="font-size:.6rem;color:#b45309;font-weight:600;">${cnt}x today</span>
-      </span>`;
-    }
-    function sumPillDay(s,cnt,label){
-      return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid #f59e0b;border-radius:8px;padding:4px 10px;margin:2px;min-width:40px;">
-        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#92400e;">${s}</span>
-        <span style="font-size:.6rem;color:#b45309;font-weight:600;">${cnt}x ${label}</span>
-      </span>`;
-    }
-
-    if(todayHotSums.length||prev1HotSums.length||prev2HotSums.length){
-      const col='#92400e',bg='#fef3c7',bdr='#f59e0b';
-      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid #f59e0b;">
-          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:6px;">🔥 Today (${fmtDkShort(latestDk)})</div>
-          <div style="display:flex;flex-wrap:wrap;gap:2px;">${todayHotSums.length?todayHotSums.map(x=>sumPill(x.sum,x.cnt)).join(''):'<span style="font-size:.68rem;color:#92400e;opacity:.6;">None</span>'}</div>
-        </div>
-        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid #f59e0b;">
-          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:6px;">Hot Sums ${fmtDkShort(prevDk1)}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:2px;">${prev1HotSums.length?prev1HotSums.map(x=>sumPillDay(x.sum,x.cnt,'this day')).join(''):'<span style="font-size:.68rem;color:#92400e;opacity:.6;">None</span>'}</div>
-        </div>
-        <div style="flex:1;min-width:140px;padding-left:12px;">
-          <div style="font-size:.65rem;font-weight:800;color:#92400e;margin-bottom:6px;">Hot Sums ${fmtDkShort(prevDk2)}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:2px;">${prev2HotSums.length?prev2HotSums.map(x=>sumPillDay(x.sum,x.cnt,'this day')).join(''):'<span style="font-size:.68rem;color:#92400e;opacity:.6;">None</span>'}</div>
-        </div>
-      </div>`;
-      alerts.push({icon:'Σ',label:'Hot Sums',color:col,bg,border:bdr,body});
-    }
-
-    // 1c. Hot Top Drawn — frequency BUCKETS that appeared 2+ times on that specific day
-    // (matches how Frequency tab shows 47x, 45x etc — groups by all-time draw count)
-    const _atFreqCache={};
-    ALL.forEach(r=>_atFreqCache[r.sorted]=(_atFreqCache[r.sorted]||0)+1);
-
-    function getHotTopDrawnForDk(dk){
-      if(!dk) return [];
-      const dkDraws=ALL.filter(r=>r.dk===dk);
-      // Group by all-time frequency bucket
-      const bucketFreq={};
-      dkDraws.forEach(r=>{
-        const bucket=_atFreqCache[r.sorted]||0;
-        bucketFreq[bucket]=(bucketFreq[bucket]||0)+1;
-      });
-      return Object.entries(bucketFreq).filter(([,c])=>c>=2)
-        .sort((a,b)=>+b[0]-+a[0])
-        .map(([bucket,dayCnt])=>({bucket:+bucket,dayCnt}));
-    }
-
-    const todayHotTopDrawn=getHotTopDrawnForDk(latestDk);
-    const prev1HotTopDrawn=getHotTopDrawnForDk(prevDk1);
-    const prev2HotTopDrawn=getHotTopDrawnForDk(prevDk2);
-
-    function topDrawnPill(x,bdr){
-      return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid ${bdr};border-radius:8px;padding:4px 10px;margin:2px;min-width:44px;">
-        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#1e40af;">${x.bucket}x</span>
-        <span style="font-size:.6rem;color:#1e40af;font-weight:700;">${x.dayCnt}x this day</span>
-      </span>`;
-    }
-
-    if(todayHotTopDrawn.length||prev1HotTopDrawn.length||prev2HotTopDrawn.length){
-      const col='#1e40af',bg='#dbeafe',bdr='#93c5fd';
-      function tdBody(arr){return arr.length?`<div style="display:flex;flex-wrap:wrap;gap:2px;">${arr.map(x=>topDrawnPill(x,bdr)).join('')}</div>`:`<span style="font-size:.68rem;color:${col};opacity:.6;">None</span>`;}
-      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid ${bdr};">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:6px;">📊 Today (${fmtDkShort(latestDk)})</div>
-          ${tdBody(todayHotTopDrawn)}
-        </div>
-        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid ${bdr};">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:6px;">Top Drawn ${fmtDkShort(prevDk1)}</div>
-          ${tdBody(prev1HotTopDrawn)}
-        </div>
-        <div style="flex:1;min-width:140px;padding-left:12px;">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:6px;">Top Drawn ${fmtDkShort(prevDk2)}</div>
-          ${tdBody(prev2HotTopDrawn)}
-        </div>
-      </div>`;
-      alerts.push({icon:'📊',label:'Hot Top Drawn',color:col,bg,border:bdr,body});
-    }
-
-    // 1d. Hot Delta Sums — delta values (|sum-atCnt|<=2) appearing 2+ times on that specific day
-    function getHotDeltaForDk(dk){
-      if(!dk) return [];
-      const dkDraws=ALL.filter(r=>r.dk===dk);
-      const atFreq={};
-      ALL.forEach(r=>atFreq[r.sorted]=(atFreq[r.sorted]||0)+1);
-      // Compute delta per draw
-      const deltaFreq={};
-      dkDraws.forEach(r=>{
-        const cnt=atFreq[r.sorted]||0;
-        const delta=Math.abs(r.sum-cnt);
-        if(cnt>=2&&delta<=2) deltaFreq[delta]=(deltaFreq[delta]||0)+1;
-      });
-      return Object.entries(deltaFreq).filter(([,c])=>c>=2)
-        .sort((a,b)=>+a[0]-+b[0])
-        .map(([d,dayCnt])=>({delta:+d,dayCnt}));
-    }
-
-    const todayHotDelta=getHotDeltaForDk(latestDk);
-    const prev1HotDelta=getHotDeltaForDk(prevDk1);
-    const prev2HotDelta=getHotDeltaForDk(prevDk2);
-
-    function deltaPill(x,bdr){
-      return `<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:2px solid ${bdr};border-radius:8px;padding:4px 10px;margin:2px;min-width:40px;">
-        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;color:#065f46;">Δ${x.delta}</span>
-        <span style="font-size:.6rem;color:#047857;font-weight:700;">${x.dayCnt}x this day</span>
-      </span>`;
-    }
-
-    if(todayHotDelta.length||prev1HotDelta.length||prev2HotDelta.length){
-      const col='#065f46',bg='#d1fae5',bdr='#6ee7b7';
-      function dlBody(arr){return arr.length?`<div style="display:flex;flex-wrap:wrap;gap:2px;">${arr.map(x=>deltaPill(x,bdr)).join('')}</div>`:`<span style="font-size:.68rem;color:${col};opacity:.6;">None</span>`;}
-      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;padding-right:12px;border-right:1px solid ${bdr};">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:6px;">Δ Today (${fmtDkShort(latestDk)})</div>
-          ${dlBody(todayHotDelta)}
-        </div>
-        <div style="flex:1;min-width:140px;padding:0 12px;border-right:1px solid ${bdr};">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:6px;">Delta Sums ${fmtDkShort(prevDk1)}</div>
-          ${dlBody(prev1HotDelta)}
-        </div>
-        <div style="flex:1;min-width:140px;padding-left:12px;">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:6px;">Delta Sums ${fmtDkShort(prevDk2)}</div>
-          ${dlBody(prev2HotDelta)}
-        </div>
-      </div>`;
-      alerts.push({icon:'Δ',label:'Hot Delta Sums',color:col,bg,border:bdr,body});
-    }
-
-    // 1e. Hot Digits — 2/3/4 digit combos appearing 2+ times on that specific day
-    function getHotDigitsForDk(dk){
-      if(!dk) return {d2:[],d3:[],d4:[]};
-      const dkDraws=ALL.filter(r=>r.dk===dk);
-      // All-time freq for display
-      const atD2={},atD3={},atD4={};
-      ALL.forEach(r=>{
-        const n=r.number;
-        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++){var k=[n[a],n[b]].sort().join('');atD2[k]=(atD2[k]||0)+1;}
-        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++){var k=[n[a],n[b],n[c]].sort().join('');atD3[k]=(atD3[k]||0)+1;}
-        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var d=c+1;d<5;d++){var k=[n[a],n[b],n[c],n[d]].sort().join('');atD4[k]=(atD4[k]||0)+1;}
-      });
-      // Count how many times each combo appears across today's draws
-      const dayD2={},dayD3={},dayD4={};
-      dkDraws.forEach(r=>{
-        const n=r.number;
-        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++){var k=[n[a],n[b]].sort().join('');dayD2[k]=(dayD2[k]||0)+1;}
-        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++){var k=[n[a],n[b],n[c]].sort().join('');dayD3[k]=(dayD3[k]||0)+1;}
-        for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var d=c+1;d<5;d++){var k=[n[a],n[b],n[c],n[d]].sort().join('');dayD4[k]=(dayD4[k]||0)+1;}
-      });
-      function topHot(dayMap,atMap){
-        return Object.entries(dayMap).filter(([,c])=>c>=2)
-          .sort((a,b)=>b[1]-a[1]||(atMap[b[0]]||0)-(atMap[a[0]]||0))
-          .slice(0,3).map(([combo,dayCnt])=>({combo,dayCnt,atCnt:atMap[combo]||0}));
-      }
-      return {d2:topHot(dayD2,atD2),d3:topHot(dayD3,atD3),d4:topHot(dayD4,atD4)};
-    }
-
-    function hotDigitsSection(data,col,bdr){
-      const empty=!data.d2.length&&!data.d3.length&&!data.d4.length;
-      if(empty) return `<span style="font-size:.68rem;color:${col};opacity:.6;">None</span>`;
-      function pills(arr,label){
-        if(!arr.length) return '';
-        return `<div style="margin-bottom:5px;"><span style="font-size:.6rem;font-weight:700;color:${col};text-transform:uppercase;margin-right:4px;">${label}</span>`+
-          arr.map(x=>`<span style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:1.5px solid ${bdr};border-radius:6px;padding:2px 8px;margin:1px;">
-            <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.82rem;color:${col};">${x.combo}</span>
-            <span style="font-size:.56rem;color:${col};opacity:.8;">${x.atCnt}x all-time</span>
-            <span style="font-size:.58rem;color:${col};font-weight:700;">${x.dayCnt}x this day</span>
-          </span>`).join('')+'</div>';
-      }
-      return pills(data.d2,'2-digit')+pills(data.d3,'3-digit')+pills(data.d4,'4-digit');
-    }
-
-    const todayHotDigits=getHotDigitsForDk(latestDk);
-    const prev1HotDigits=getHotDigitsForDk(prevDk1);
-    const prev2HotDigits=getHotDigitsForDk(prevDk2);
-
-    {
-      const col='#6b21a8',bg='#ede9fe',bdr='#c4b5fd';
-      const body=`<div style="display:flex;gap:0;flex-wrap:wrap;">
-        <div style="flex:1;min-width:160px;padding-right:12px;border-right:1px solid ${bdr};">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">🔢 Today (${fmtDkShort(latestDk)})</div>
-          ${hotDigitsSection(todayHotDigits,col,bdr)}
-        </div>
-        <div style="flex:1;min-width:160px;padding:0 12px;border-right:1px solid ${bdr};">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Top Digits ${fmtDkShort(prevDk1)}</div>
-          ${hotDigitsSection(prev1HotDigits,col,bdr)}
-        </div>
-        <div style="flex:1;min-width:160px;padding-left:12px;">
-          <div style="font-size:.65rem;font-weight:800;color:${col};margin-bottom:4px;">Top Digits ${fmtDkShort(prevDk2)}</div>
-          ${hotDigitsSection(prev2HotDigits,col,bdr)}
-        </div>
-      </div>`;
-      alerts.push({icon:'🔢',label:'Hot Digits (2·3·4)',color:col,bg,border:bdr,body});
+    const todayHotNorms=latestDraws.filter(r=>yrFreq[r.sorted]>=3).map(r=>({num:r.number,sorted:r.sorted,cnt:yrFreq[r.sorted],state:r.state,draw:r.draw}));
+    if(todayHotNorms.length){
+      alerts.push({icon:'🔥',label:'Hot Repeaters Today',color:'#92400e',bg:'#fef3c7',border:'#f59e0b',
+        body:todayHotNorms.map(x=>`<span style="font-family:'DM Mono',monospace;font-weight:700;">${x.num}</span> <span style="font-size:.65rem;color:#92400e;">${x.state}/${x.draw.slice(0,3)} · ${x.cnt}x in ${curYr}</span>`).join('<br>')});
     }
 
     // 2. Cross-state same-day sorted matches today
@@ -17739,14 +16608,11 @@ function runDupCheck(){
   if(!tokens.length){container.innerHTML='<div style="color:var(--g5);font-size:.8rem;">No valid numbers found.</div>';filterBar.innerHTML='';return;}
 
   const useNorm = document.getElementById('dupNormalized')?.checked;
-  const _dupSumSet=_parseSumFilter((document.getElementById('dupSumF')?.value||''));
-  const _dupContChunks=_parseContainsFilter((document.getElementById('dupContainsF')?.value||''));
   const freq = {};
+  // normMap: normalized key -> first raw number seen (for display)
   const normMap = {};
   tokens.forEach(t=>{
     const n = t.padStart(5,'0').slice(-5);
-    if(!_matchSum(n,_dupSumSet))return;
-    if(!_matchContains(n,_dupContChunks))return;
     const key = useNorm ? srt(n) : n;
     freq[key] = (freq[key]||0)+1;
     if(!normMap[key]) normMap[key] = n;
@@ -20954,117 +19820,6 @@ function _psClear(){
   if(first)first.focus();
   _renderPosSearch();
 }
-function _renderPosRepeat(){
-  const scope=document.getElementById('prScope').value;
-  const stF=document.getElementById('prState').value;
-  const q=(document.getElementById('prSearch').value||'').toLowerCase();
-  const tbody=document.getElementById('prTbody');
-  if(!tbody) return;
-
-  const PC={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
-  const PB={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
-
-  function getPat(n){
-    var f={};
-    n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
-    var v=Object.values(f).sort(function(a,b){return b-a;});
-    if(v[0]===5) return 'Qu';
-    if(v[0]===4) return 'Q';
-    if(v[0]===3&&v[1]===2) return 'TD';
-    if(v[0]===3) return 'T';
-    if(v[0]===2&&v[1]===2) return 'DD';
-    if(v[0]===2) return 'D';
-    return 'S';
-  }
-
-  // Use exact same streak keys as Results tab
-  var prConsec=findConsecutivePatternsCached(FILT, findPatternsCached(FILT));
-  var yellowKeys=prConsec.yellow||new Set();
-  var greenKeys=prConsec.green||new Set();
-
-  // Build draws from ALL
-  var src=ALL;
-  if(scope!=='ALL') src=src.filter(function(r){return r.dk.startsWith(scope);});
-  if(stF!=='ALL') src=src.filter(function(r){return r.state===stF;});
-
-  // Build 4-pos combo counts per day-of-month
-  var pos4=[];
-  for(var a=0;a<5;a++) for(var b=a+1;b<5;b++) for(var c=b+1;c<5;c++) for(var d=c+1;d<5;d++)
-    pos4.push([a,b,c,d]);
-
-  var keyMap={};
-  src.forEach(function(r){
-    var dayNum=parseInt(r.dk.slice(8,10));
-    pos4.forEach(function(p){
-      var digits=p.map(function(i){return r.number[i];}).join('');
-      var k=p.join('')+'|'+digits+'|'+dayNum;
-      if(!keyMap[k]) keyMap[k]=[];
-      keyMap[k].push({d:r.dk,st:r.state,num:r.number,pat:getPat(r.number),draw:r.draw==='midday'?'M':'E'});
-    });
-  });
-
-  // Filter to 2+ hits, sort each by date asc
-  var results=[];
-  Object.keys(keyMap).forEach(function(k){
-    var occs=keyMap[k];
-    if(occs.length<2) return;
-    var parts=k.split('|');
-    var pos=parts[0],dig=parts[1],day=parseInt(parts[2]);
-    occs.sort(function(a,b){return a.d.localeCompare(b.d);});
-    results.push({pos:pos,dig:dig,day:day,hits:occs.length,occs:occs});
-  });
-  results.sort(function(a,b){return a.day-b.day||a.pos.localeCompare(b.pos);});
-
-  // Apply search filter
-  var filtered=results.filter(function(r){
-    if(!q) return true;
-    var s=r.pos+r.dig+r.day+r.occs.map(function(o){return o.d+o.st+o.num+o.pat+o.draw;}).join('');
-    return s.toLowerCase().indexOf(q)>=0;
-  });
-
-  window._prResults=filtered;
-  document.getElementById('prCount').textContent=filtered.length+' combos';
-
-  function renderPat(pos,dig){
-    var o='';
-    for(var i=0;i<5;i++){
-      var idx=pos.indexOf(String(i));
-      var filled=idx>=0;
-      var ch=filled?dig[idx]:'·';
-      o+='<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:24px;border:1.5px solid '+(filled?'#c4b5fd':'var(--g2)')+';background:'+(filled?'#ede9fe':'#fff')+';color:'+(filled?'#5b21b6':'var(--g4)')+';font-family:monospace;font-weight:'+(filled?'800':'400')+';font-size:11px;border-radius:4px;margin-right:1px;">'+ch+'</span>';
-    }
-    return o;
-  }
-
-  function occHtml(occs){
-    return '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+occs.map(function(o){
-      var bc=PC[o.pat]||'#374151',bg=PB[o.pat]||'#f3f4f6';
-      var dbg=o.draw==='M'?'#fef3c7':'#dbeafe',dtc=o.draw==='M'?'#92400e':'#1e40af';
-      var streakKey=o.st+'-'+o.d+'-'+(o.draw==='M'?'midday':'evening');
-      var isGrn=greenKeys.has(streakKey);
-      var isYlw=!isGrn&&yellowKeys.has(streakKey);
-      var outerBg=isGrn?'background:#dcfce7;border:1.5px solid #86efac;border-radius:6px;padding:2px 5px;':
-                  isYlw?'background:#fef9c3;border:1.5px solid #fcd34d;border-radius:6px;padding:2px 5px;':'';
-      var streak=isGrn?'🟢 ':isYlw?'🟡 ':'';
-      return '<span style="display:flex;align-items:center;gap:3px;font-size:11px;font-family:monospace;'+outerBg+'">'+streak+o.d+' <b>'+o.st+'</b> '+o.num+' <span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+o.pat+'</span><span style="padding:1px 4px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+o.draw+'</span></span>';
-    }).join('<span style="color:var(--g3);margin:0 2px;">→</span>')+'</div>';
-  }
-
-  tbody.innerHTML='';
-  var lastDay=-1;
-  filtered.forEach(function(r,i){
-    var tr=document.createElement('tr');
-    tr.style.cssText=(i%2===0)?'background:var(--g0);':'background:#fff;';
-    if(r.day!==lastDay&&i>0) tr.style.borderTop='2px solid #c4b5fd';
-    var dayCell=r.day!==lastDay?'<td style="padding:5px 10px;text-align:center;font-family:monospace;font-weight:800;color:#5b21b6;font-size:14px;border-bottom:0.5px solid var(--g2);">'+r.day+'</td>':'<td style="border-bottom:0.5px solid var(--g2);"></td>';
-    lastDay=r.day;
-    var hitColor=r.hits>=3?'#dc2626':'#5b21b6';
-    tr.innerHTML=dayCell+'<td style="padding:5px 10px;border-bottom:0.5px solid var(--g2);">'+renderPat(r.pos,r.dig)+'</td><td style="padding:5px 10px;text-align:center;font-weight:800;color:'+hitColor+';border-bottom:0.5px solid var(--g2);">'+r.hits+'x</td><td style="padding:5px 10px;border-bottom:0.5px solid var(--g2);">'+occHtml(r.occs)+'</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-
 function _renderPosConverge(){
   const container=document.getElementById('pcContent');
   if(!container) return;
@@ -21261,576 +20016,6 @@ function _pcCopy(patFilter){
 }
 
 
-function _pfHighlight(){
-  const num=document.getElementById('pfLookup').value.trim();
-  const msg=document.getElementById('pfLookupMsg');
-  const rows=document.querySelectorAll('#pfResults [data-poskey]');
-
-  if(!num||num.length<1){
-    rows.forEach(function(r){
-      r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';
-    });
-    if(msg){msg.innerHTML='';} return;
-  }
-  var comboLen=num.length;
-
-  // digit freq helper
-  function digitFreq(s){var f={};s.split('').forEach(function(d){f[d]=(f[d]||0)+1;});return f;}
-
-  // Check if combo digits + free positions (filled optimally) can contain all input digits
-  function comboCanContainInput(inputFreq, digStr, numFreePos){
-    var comboFreq=digitFreq(digStr);
-    // How many input digits are already satisfied by combo?
-    var stillNeeded=0;
-    for(var d in inputFreq){
-      var have=comboFreq[d]||0;
-      var need=inputFreq[d];
-      if(have<need) stillNeeded+=(need-have);
-    }
-    // Free positions can fill the rest
-    return stillNeeded<=numFreePos;
-  }
-
-  // Build the best 5-digit number: fill free positions with needed input digits first
-  function buildNumber(posStr, digStr, inputFreq){
-    var posArr=posStr.split('').map(Number);
-    var missingPositions=[0,1,2,3,4].filter(function(x){return posArr.indexOf(x)===-1;});
-    var result=Array(5);
-    posArr.forEach(function(p,i){result[p]=digStr[i];});
-    // Fill free positions with leftover needed input digits
-    var comboFreq=digitFreq(digStr);
-    var toFill=[];
-    for(var d in inputFreq){
-      var still=inputFreq[d]-(comboFreq[d]||0);
-      for(var i=0;i<still;i++) toFill.push(d);
-    }
-    missingPositions.forEach(function(p,i){
-      result[p]=toFill[i]||'x';
-    });
-    return result.join('');
-  }
-
-  var inputFreq=digitFreq(num);
-  var matches=[];
-  rows.forEach(function(r){
-    var key=r.getAttribute('data-poskey');
-    if(!key) return;
-    var parts=key.split('|');
-    var posStr=parts[0], digStr=parts[1];
-    var numFreePos=5-posStr.length;
-    var isMatch=comboCanContainInput(inputFreq, digStr, numFreePos);
-    if(isMatch){
-      r.style.background='#ede9fe';r.style.border='2.5px solid #7c3aed';
-      r.style.boxShadow='0 0 0 3px #c4b5fd55';r.style.borderRadius='8px';
-      var hits=parseInt(r.getAttribute('data-hits')||'0');
-      var built=buildNumber(posStr,digStr,inputFreq);
-      matches.push({key:key,posStr:posStr,digStr:digStr,hits:hits,built:built,el:r});
-      if(matches.length===1) r.scrollIntoView({behavior:'smooth',block:'nearest'});
-    } else {
-      r.style.background='';r.style.border='0.5px solid var(--color-border-tertiary,#e5e7eb)';r.style.boxShadow='';
-    }
-  });
-
-  if(!msg) return;
-  if(matches.length===0){
-    msg.innerHTML='<span style="color:#dc2626;">No combos containing <b>'+num+'</b> found in results</span>';
-    return;
-  }
-
-  matches.sort(function(a,b){return b.hits-a.hits;});
-  var summaryParts=matches.map(function(m){
-    // Render the position pattern with digits
-    var pat='';
-    for(var i=0;i<5;i++){
-      var idx=m.posStr.indexOf(String(i));
-      if(idx>=0){
-        var d=m.digStr[idx];
-        var isInput=num.indexOf(d)>=0;
-        pat+='<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;background:'+(isInput?'#7c3aed':'#ede9fe')+';color:'+(isInput?'#fff':'#5b21b6')+';border-radius:4px;font-family:monospace;font-weight:800;font-size:12px;margin-right:1px;">'+d+'</span>';
-      } else {
-        pat+='<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;color:#9ca3af;font-size:12px;margin-right:1px;">·</span>';
-      }
-    }
-    return '<span style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:6px;padding:4px 8px;display:inline-flex;align-items:center;gap:6px;"><span style="font-family:monospace;font-weight:800;font-size:13px;color:#1e1b4b;">'+m.built+'</span>'+pat+'<span style="font-size:.68rem;color:#5b21b6;font-weight:700;">'+m.hits+'x</span></span>';
-  });
-
-  msg.innerHTML='<div style="margin-bottom:6px;"><span style="color:#5b21b6;font-weight:700;">'+matches.length+' combo'+(matches.length>1?'s':'')+' containing <b>'+num+'</b></span> — digits shown in dark purple, free positions as x</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'+summaryParts.join('')+'</div>';
-}
-
-
-function _buildFreqMaps(src){
-  var d2recs={},d3recs={},d4recs={};
-  src.forEach(function(r){
-    var dk=r.state+r.dk+r.draw;
-    var digs=r.number.split('');
-    var i,j,k,l,p;
-    for(i=0;i<5;i++) for(j=i+1;j<5;j++){
-      p=[digs[i],digs[j]].sort().join('');
-      if(!d2recs[p])d2recs[p]=[];
-      if(!d2recs[p].find(function(x){return x.state+x.dk+x.draw===dk;}))d2recs[p].push(r);
-    }
-    for(i=0;i<5;i++) for(j=i+1;j<5;j++) for(k=j+1;k<5;k++){
-      p=[digs[i],digs[j],digs[k]].sort().join('');
-      if(!d3recs[p])d3recs[p]=[];
-      if(!d3recs[p].find(function(x){return x.state+x.dk+x.draw===dk;}))d3recs[p].push(r);
-    }
-    for(i=0;i<5;i++) for(j=i+1;j<5;j++) for(k=j+1;k<5;k++) for(l=k+1;l<5;l++){
-      p=[digs[i],digs[j],digs[k],digs[l]].sort().join('');
-      if(!d4recs[p])d4recs[p]=[];
-      if(!d4recs[p].find(function(x){return x.state+x.dk+x.draw===dk;}))d4recs[p].push(r);
-    }
-  });
-  window._freqD2Nums=d2recs;
-  window._freqD3Nums=d3recs;
-  window._freqD4Nums=d4recs;
-}
-
-function _renderTriplePredictor(){
-  const st=document.getElementById('tpState')?.value||'OH';
-  const winDays=parseInt(document.getElementById('tpWindow')?.value||'90');
-  const body=document.getElementById('tpBody');
-  if(!body) return;
-
-  function getPat(n){
-    var f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
-    var v=Object.values(f).sort(function(a,b){return b-a;});
-    if(v[0]===3&&v[1]&&v[1]===2)return 'TD';
-    if(v[0]===3)return 'T';
-    if(v[0]===4)return 'Q';
-    if(v[0]===5)return 'Qu';
-    if(v[0]===2&&v[1]===2)return 'DD';
-    if(v[0]===2)return 'D';
-    return 'S';
-  }
-
-  var stDraws=ALL.filter(function(r){return r.state===st;});
-  if(!stDraws.length){body.innerHTML='<div class="es">No data for this state.</div>';return;}
-
-  stDraws.sort(function(a,b){
-    var dkCmp=b.dk.localeCompare(a.dk);
-    if(dkCmp!==0) return dkCmp;
-    var drawOrder={'midday':0,'evening':1};
-    return (drawOrder[b.draw]||0)-(drawOrder[a.draw]||0);
-  });
-
-  // Use the most recent draw date across ALL data (not filtered)
-  var allDksForState=[...new Set(stDraws.map(function(r){return r.dk;}))].sort();
-  var latestDk=allDksForState[allDksForState.length-1];
-  var latestDt=new Date(latestDk+'T12:00:00Z');
-  var todayDayNum=+latestDk.slice(8,10);
-
-  var windowDraws=winDays>0?stDraws.filter(function(r){
-    return (latestDt-new Date(r.dk+'T12:00:00Z'))/86400000<=winDays;
-  }):stDraws;
-
-  var allT=stDraws.filter(function(r){return getPat(r.number)==='T';});
-  var winT=windowDraws.filter(function(r){return getPat(r.number)==='T';});
-  var lastT=allT[0]||null;
-  var daysSince=lastT?Math.round((latestDt-new Date(lastT.dk+'T12:00:00Z'))/86400000):999;
-
-  // Gap analysis
-  var allGaps=[];
-  for(var i=1;i<allT.length;i++){
-    var d1=new Date(allT[i].dk+'T12:00:00Z');
-    var d2=new Date(allT[i-1].dk+'T12:00:00Z');
-    allGaps.push(Math.round((d2-d1)/86400000));
-  }
-  allGaps.sort(function(a,b){return a-b;});
-  var avgGap=allGaps.length?Math.round(allGaps.reduce(function(a,b){return a+b;},0)/allGaps.length):7;
-  var maxGap=allGaps.length?Math.max.apply(null,allGaps):50;
-  var pctRank=allGaps.length?Math.round(allGaps.filter(function(g){return g<=daysSince;}).length/allGaps.length*100):50;
-  var pressureScore=Math.min(100,pctRank);
-  var pressColor=pressureScore>=90?'#dc2626':pressureScore>=70?'#d97706':'#16a34a';
-  var pressLabel=pressureScore>=90?'CRITICAL':pressureScore>=70?'HIGH':'NORMAL';
-
-  // Slot tendency
-  var midT=winT.filter(function(r){return r.draw==='midday';}).length;
-  var eveT=winT.filter(function(r){return r.draw==='evening';}).length;
-  var totalT=midT+eveT||1;
-  var midPct=Math.round(midT/totalT*100);
-  var evePct=100-midPct;
-  var statSlot=midPct>=evePct?'Midday':'Evening';
-  var mirrorSlot=lastT?(lastT.draw==='midday'?'Midday':'Evening'):'Unknown';
-  // If both agree, high confidence; if split, use stat
-  var slotPrediction=statSlot===mirrorSlot?statSlot:statSlot;
-  var slotConf=statSlot===mirrorSlot?'Both stat & mirror agree':'Stat: '+statSlot+' · Mirror: '+mirrorSlot;
-
-  // Hot digits (last 30d)
-  var recent30=stDraws.filter(function(r){return (latestDt-new Date(r.dk+'T12:00:00Z'))/86400000<=30;});
-  var digitFreq={};
-  recent30.forEach(function(r){r.number.split('').forEach(function(d){digitFreq[d]=(digitFreq[d]||0)+1;});});
-  var hotDigits=Object.entries(digitFreq).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-
-  // Near miss digits (DD in last 14d)
-  var recent14=stDraws.filter(function(r){return (latestDt-new Date(r.dk+'T12:00:00Z'))/86400000<=14;});
-  var ddDigits={};
-  recent14.filter(function(r){return getPat(r.number)==='DD';}).forEach(function(r){
-    var f={};r.number.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
-    Object.entries(f).filter(function(e){return e[1]>=2;}).forEach(function(e){ddDigits[e[0]]=(ddDigits[e[0]]||0)+1;});
-  });
-  var nearMissDigits=Object.entries(ddDigits).sort(function(a,b){return b[1]-a[1];}).slice(0,3).map(function(e){return e[0];});
-
-  // Top T sums
-  var sumFreqT={};
-  allT.forEach(function(r){sumFreqT[r.sum]=(sumFreqT[r.sum]||0)+1;});
-  var topSums=Object.entries(sumFreqT).sort(function(a,b){return b[1]-a[1];}).slice(0,5).map(function(e){return +e[0];});
-
-  // Day of month tendency
-  var domT={};
-  allT.forEach(function(r){var d=+r.dk.slice(8,10);domT[d]=(domT[d]||0)+1;});
-  var upcomingDays=[];
-  for(var i=1;i<=7;i++){var dn=((todayDayNum-1+i)%31)+1;upcomingDays.push({day:dn,hits:domT[dn]||0});}
-  upcomingDays.sort(function(a,b){return b.hits-a.hits;});
-  var bestDay=upcomingDays[0];
-
-  // Best triple digit = intersection of hot digits + near miss digits
-  // Score each digit: hot rank + near miss bonus + historical T frequency as triple
-  var tripleDigitFreq={};
-  allT.forEach(function(r){
-    var f={};r.number.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
-    Object.entries(f).forEach(function(e){if(+e[1]>=3)tripleDigitFreq[e[0]]=(tripleDigitFreq[e[0]]||0)+1;});
-  });
-  var digitScores={};
-  for(var d=0;d<=9;d++){
-    var ds=String(d);
-    var hotRank=hotDigits.findIndex(function(e){return e[0]===ds;});
-    var hotScore=hotRank>=0?(5-hotRank)*3:0;
-    var nmScore=nearMissDigits.includes(ds)?10:0;
-    var histScore=(tripleDigitFreq[ds]||0)*2;
-    digitScores[ds]=hotScore+nmScore+histScore;
-  }
-  var topPredDigits=Object.entries(digitScores).sort(function(a,b){return b[1]-a[1];}).slice(0,3).map(function(e){return e[0];});
-
-  // Generate watch numbers: for each top digit, generate numbers with 3 of that digit
-  // in the top sum ranges, using other hot digits to fill
-  function genWatchNums(tripleDigit,sums){
-    var nums=[];
-    sums.slice(0,5).forEach(function(targetSum){
-      var tripleSum=+tripleDigit*3;
-      var remaining=targetSum-tripleSum;
-      if(remaining<0||remaining>18) return;
-      for(var a=0;a<=9;a++){
-        for(var b=a;b<=9;b++){
-          if(a+b===remaining){
-            var digits=[tripleDigit,tripleDigit,tripleDigit,String(a),String(b)].sort();
-            var num=digits.join('');
-            if(!nums.includes(num)) nums.push(num);
-          }
-        }
-      }
-    });
-    return nums.slice(0,6);
-  }
-
-  var watchNums=[];
-  topPredDigits.forEach(function(d){
-    genWatchNums(d,topSums).forEach(function(n){if(!watchNums.includes(n))watchNums.push(n);});
-  });
-  // If first digit produced nothing, pad with next digits
-  watchNums=watchNums.slice(0,12);
-
-  // === RENDER ===
-  var html='';
-
-  // PREDICTION BANNER
-  var bannerColor=pressureScore>=90?'#7f1d1d':pressureScore>=70?'#78350f':'#14532d';
-  var bannerBg=pressureScore>=90?'#fef2f2':pressureScore>=70?'#fffbeb':'#f0fdf4';
-  var bannerBorder=pressureScore>=90?'#fca5a5':pressureScore>=70?'#fcd34d':'#86efac';
-
-  html+='<div style="background:'+bannerBg+';border:2px solid '+bannerBorder+';border-radius:14px;padding:18px;margin-bottom:20px;">';
-  html+='<div style="font-size:.7rem;font-weight:800;color:'+bannerColor+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">🎯 PREDICTION SUMMARY — '+st+' · Pressure: <span style="color:'+pressColor+';">'+pressLabel+'</span> ('+daysSince+'d, '+pctRank+'th pctile)</div>';
-
-  html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">';
-
-  // Slot prediction
-  html+='<div style="background:#fff;border-radius:10px;padding:12px;border:1.5px solid '+bannerBorder+'">' +
-    '<div style="font-size:.68rem;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Predicted Slot</div>'+
-    '<div style="font-size:1.4rem;font-weight:900;color:'+(slotPrediction==='Evening'?'#1e40af':'#92400e')+';">'+slotPrediction+'</div>'+
-    '<div style="font-size:.68rem;color:#6b7280;margin-top:2px;">'+slotConf+'</div></div>';
-
-  // Best upcoming day
-  html+='<div style="background:#fff;border-radius:10px;padding:12px;border:1.5px solid '+bannerBorder+'">' +
-    '<div style="font-size:.68rem;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Hottest Upcoming Day</div>'+
-    '<div style="font-size:1.4rem;font-weight:900;color:#5b21b6;">Day '+bestDay.day+'</div>'+
-    '<div style="font-size:.68rem;color:#6b7280;margin-top:2px;">'+bestDay.hits+'x T historically on this day</div></div>';
-
-  // Top digit to triple
-  html+='<div style="background:#fff;border-radius:10px;padding:12px;border:1.5px solid '+bannerBorder+'">' +
-    '<div style="font-size:.68rem;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Most Likely Triple Digit</div>'+
-    '<div style="font-size:1.4rem;font-weight:900;color:#9d174d;">'+topPredDigits.slice(0,3).join(' · ')+'</div>'+
-    '<div style="font-size:.68rem;color:#6b7280;margin-top:2px;">hot + near-miss + historical T freq</div></div>';
-
-  // Top sum
-  html+='<div style="background:#fff;border-radius:10px;padding:12px;border:1.5px solid '+bannerBorder+'">' +
-    '<div style="font-size:.68rem;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Top T Sums</div>'+
-    '<div style="font-size:1.4rem;font-weight:900;color:#065f46;">'+topSums.slice(0,3).join(' · ')+'</div>'+
-    '<div style="font-size:.68rem;color:#6b7280;margin-top:2px;">most frequent sums for '+st+' Ts</div></div>';
-
-  html+='</div></div>';
-
-  // WATCH NUMBERS
-  html+='<div style="margin-bottom:20px;">';
-  var watchStr=watchNums.join(' ');
-  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
-    '<div style="font-weight:800;font-size:.85rem;color:var(--g8);">👀 Numbers to Watch</div>'+
-    '<button id="tpCopyWatchBtn" style="padding:4px 12px;background:#1e1b4b;color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;">📋 Copy All</button>'+
-  '</div>';
-  html+='<div style="font-size:.72rem;color:var(--g5);margin-bottom:8px;">Generated from top predicted digits × top T sums — sorted by digit combo</div>';
-  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;" id="tpWatchNums">';
-  watchNums.forEach(function(n){
-    var s=n.split('').reduce(function(a,d){return a+ +d;},0);
-    html+='<span style="font-family:monospace;font-weight:800;font-size:1rem;background:#1e1b4b;color:#fff;padding:6px 14px;border-radius:8px;">'+n+' <span style="font-size:.65rem;opacity:.7;">Σ'+s+'</span></span>';
-  });
-  html+='</div></div>';
-
-  // SUPPORTING DATA (collapsible feel via 3-col grid)
-  html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">';
-
-  // Near miss digits
-  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;">'+
-    '<div style="font-weight:700;font-size:.78rem;color:var(--g8);margin-bottom:8px;">⚡ DD Near Misses (last 14d)</div>'+
-    (nearMissDigits.length?
-      nearMissDigits.map(function(d){
-        var cnt=ddDigits[d];
-        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'+
-          '<span style="font-family:monospace;font-weight:800;font-size:1.1rem;color:#9d174d;width:16px;">'+d+'</span>'+
-          '<div style="flex:1;background:#e5e7eb;border-radius:99px;height:6px;">'+
-          '<div style="width:'+Math.min(100,cnt*25)+'%;height:100%;background:#f43f5e;border-radius:99px;"></div></div>'+
-          '<span style="font-size:.7rem;color:#6b7280;">'+cnt+'x DD</span></div>';
-      }).join(''):
-      '<span style="font-size:.72rem;color:var(--g5);">None in last 14 days</span>')+
-    '</div>';
-
-  // Hot digits
-  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;">'+
-    '<div style="font-weight:700;font-size:.78rem;color:var(--g8);margin-bottom:8px;">🔥 Hot Digits (last 30d)</div>'+
-    hotDigits.map(function(e){
-      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'+
-        '<span style="font-family:monospace;font-weight:800;font-size:1.1rem;color:#92400e;width:16px;">'+e[0]+'</span>'+
-        '<div style="flex:1;background:#e5e7eb;border-radius:99px;height:6px;">'+
-        '<div style="width:'+Math.min(100,Math.round(e[1]/recent30.length*50))+'%;height:100%;background:#f59e0b;border-radius:99px;"></div></div>'+
-        '<span style="font-size:.7rem;color:#6b7280;">'+e[1]+'x</span></div>';
-    }).join('')+'</div>';
-
-  // Day of month heatmap
-  html+='<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;">'+
-    '<div style="font-weight:700;font-size:.78rem;color:var(--g8);margin-bottom:8px;">📅 Day-of-Month T Hits</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:3px;">';
-  var maxDom=Math.max.apply(null,Object.values(domT).concat([1]));
-  for(var d=1;d<=31;d++){
-    var hits=domT[d]||0;
-    var isUp=upcomingDays.some(function(x){return x.day===d;});
-    var isBest=d===bestDay.day;
-    var bg=hits===0?'#f3f4f6':'rgba(124,58,237,'+(0.15+hits/maxDom*0.7)+')';
-    var border=isBest?'2px solid #dc2626':isUp?'2px solid #f59e0b':'1px solid #e5e7eb';
-    html+='<div style="width:30px;text-align:center;border:'+border+';border-radius:5px;padding:3px 1px;background:'+bg+';">'+
-      '<div style="font-size:.6rem;font-weight:800;color:'+(hits>0?'#5b21b6':'#9ca3af')+';">'+d+'</div>'+
-      '<div style="font-size:.55rem;color:'+(hits>0?'#5b21b6':'#9ca3af')+';">'+hits+'</div></div>';
-  }
-  html+='</div><div style="margin-top:6px;font-size:.62rem;color:var(--g5);">🔴=best day 🟡=upcoming 7d</div></div>';
-
-  html+='</div>';
-  body.innerHTML=html;
-  var cpBtn=document.getElementById('tpCopyWatchBtn');
-  if(cpBtn) cpBtn.addEventListener('click',function(){_copyToClipboard(watchNums.join(' '),this);});
-}
-
-
-function _renderSameDayPerm(){
-  const scope=document.getElementById('sdpYear')?.value||'2026';
-  const summary=document.getElementById('sdpSummary');
-  const body=document.getElementById('sdpBody');
-  if(!summary||!body) return;
-
-  const PAT_COLOR={Qu:'#0f2044',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
-  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
-
-  function getPat(n){
-    var f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
-    var v=Object.values(f).sort(function(a,b){return b-a;});
-    if(v[0]===5)return 'Qu';if(v[0]===4)return 'Q';if(v[0]===3&&v[1]===2)return 'TD';
-    if(v[0]===3)return 'T';if(v[0]===2&&v[1]===2)return 'DD';if(v[0]===2)return 'D';return 'S';
-  }
-
-  function occSpan(o){
-    var p=getPat(o.number);
-    var bc=PAT_COLOR[p]||'#374151';var bg=PAT_BG[p]||'#f3f4f6';
-    var dbg=o.draw==='midday'?'#fef3c7':'#dbeafe';var dtc=o.draw==='midday'?'#92400e':'#1e40af';
-    return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#f8f8f8;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;margin:1px;">'+
-      '<b>'+o.state+'</b> <span style="font-family:monospace;font-weight:700;">'+o.number+'</span>'+
-      '<span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+p+'</span>'+
-      '<span style="padding:1px 3px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+(o.draw==='midday'?'M':'E')+'</span></span>';
-  }
-
-  // Build double-day cases from ALL
-  var src=ALL;
-  if(scope!=='all') src=src.filter(function(r){return r.dk.startsWith(scope);});
-
-  var byDateSorted={};
-  src.forEach(function(r){
-    var k=r.dk+'|'+r.sorted;
-    if(!byDateSorted[k]) byDateSorted[k]={dk:r.dk,sorted:r.sorted,occs:[]};
-    byDateSorted[k].occs.push(r);
-  });
-
-  var doubles=Object.values(byDateSorted).filter(function(x){return x.occs.length>=2;});
-  doubles.sort(function(a,b){return a.dk.localeCompare(b.dk);});
-
-  // For each double, find 3rd hit in ALL (not just scope)
-  var allByDate={};
-  ALL.forEach(function(r){
-    if(!allByDate[r.dk]) allByDate[r.dk]=[];
-    allByDate[r.dk].push(r);
-  });
-
-  var allDks=Object.keys(allByDate).sort();
-  var cutoff=allDks[allDks.length-1];
-
-  var rows=doubles.map(function(x){
-    var dt=new Date(x.dk+'T12:00:00Z');
-    var hit=null;
-    for(var delta=1;delta<=400;delta++){
-      var nd=new Date(dt); nd.setUTCDate(nd.getUTCDate()+delta);
-      var ndk=nd.toISOString().slice(0,10);
-      if(ndk>cutoff) break;
-      var matches=(allByDate[ndk]||[]).filter(function(r){return r.sorted===x.sorted;});
-      if(matches.length){hit={dk:ndk,delta:delta,draw:matches[0]};break;}
-    }
-    var daysWaiting=Math.round((new Date(cutoff)-dt)/(86400000));
-    return {dk:x.dk,sorted:x.sorted,occs:x.occs,hit:hit,daysWaiting:daysWaiting};
-  });
-
-  var found=rows.filter(function(r){return r.hit;}).length;
-  var pct=rows.length?Math.round(found/rows.length*100):0;
-
-  summary.innerHTML=
-    '<div style="background:#f3f4f6;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;">'+rows.length+'</b>Total doubles</div>'+
-    '<div style="background:#f0fdf4;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;color:#16a34a;">'+found+'</b>3rd hit found</div>'+
-    '<div style="background:#fff9f9;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;color:#dc2626;">'+(rows.length-found)+'</b>Still waiting</div>'+
-    '<div style="background:#ede9fe;border-radius:8px;padding:8px 14px;font-size:13px;"><b style="font-size:16px;display:block;color:#5b21b6;">'+pct+'%</b>Hit rate</div>';
-
-  // Build table with month headers
-  var curMonth='';
-  var trows='';
-  rows.forEach(function(r,i){
-    var month=r.dk.slice(0,7);
-    if(month!==curMonth){
-      curMonth=month;
-      var parts=month.split('-');
-      var mnames=['','January','February','March','April','May','June','July','August','September','October','November','December'];
-      trows+='<tr><td colspan="7" style="padding:7px 10px;background:#1e1b4b;color:#fff;font-weight:700;font-size:.78rem;">'+mnames[+parts[1]]+' '+parts[0]+'</td></tr>';
-    }
-    var occsHtml=r.occs.map(occSpan).join('');
-    var deltaCell,thirdCell,rowBg;
-    if(r.hit){
-      var d=r.hit.draw;var p=getPat(d.number);
-      var bc=PAT_COLOR[p]||'#374151';var bg=PAT_BG[p]||'#f3f4f6';
-      var dbg=d.draw==='midday'?'#fef3c7':'#dbeafe';var dtc=d.draw==='midday'?'#92400e':'#1e40af';
-      var thirdHtml='<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:5px;padding:2px 6px;">'+
-        '<b>'+d.state+'</b> <span style="font-family:monospace;font-weight:700;">'+d.number+'</span>'+
-        '<span style="padding:1px 4px;border-radius:3px;background:'+bg+';color:'+bc+';font-size:9px;font-weight:700;">'+p+'</span>'+
-        '<span style="padding:1px 3px;border-radius:3px;background:'+dbg+';color:'+dtc+';font-size:9px;font-weight:700;">'+(d.draw==='midday'?'M':'E')+'</span></span>';
-      deltaCell='<td style="padding:6px 10px;text-align:center;font-weight:700;color:#16a34a;">+'+r.hit.delta+'d</td>';
-      thirdCell='<td style="padding:6px 10px;">'+r.hit.dk+'<br>'+thirdHtml+'</td>';
-      rowBg='#fff';
-    } else {
-      deltaCell='<td style="padding:6px 10px;text-align:center;color:#dc2626;font-weight:700;">'+r.daysWaiting+'d 🕐</td>';
-      thirdCell='<td style="padding:6px 10px;color:#dc2626;font-weight:600;">Not yet</td>';
-      rowBg='#fff9f9';
-    }
-    trows+='<tr style="background:'+rowBg+';border-bottom:1px solid #f3f4f6;">'+
-      '<td style="padding:6px 10px;text-align:center;font-weight:800;color:#6b7280;">'+(i+1)+'</td>'+
-      '<td style="padding:6px 10px;font-size:12px;">'+r.dk+'</td>'+
-      '<td style="padding:6px 10px;font-family:monospace;font-weight:800;font-size:14px;color:#5b21b6;">'+r.sorted+'</td>'+
-      '<td style="padding:6px 10px;">'+occsHtml+'</td>'+
-      deltaCell+thirdCell+
-      '<td style="padding:6px 10px;text-align:center;">'+(r.hit?'✅':'⏳')+'</td></tr>';
-  });
-
-  body.innerHTML='<table style="border-collapse:collapse;width:100%;font-size:13px;">'+
-    '<thead><tr style="background:#1e1b4b;color:#fff;">'+
-    '<th style="padding:8px 10px;text-align:center;">#</th>'+
-    '<th style="padding:8px 10px;">Double Date</th>'+
-    '<th style="padding:8px 10px;">Sorted</th>'+
-    '<th style="padding:8px 10px;">Same-Day Draws</th>'+
-    '<th style="padding:8px 10px;text-align:center;">Days to 3rd</th>'+
-    '<th style="padding:8px 10px;">3rd Hit</th>'+
-    '<th style="padding:8px 10px;text-align:center;">Status</th></tr></thead>'+
-    '<tbody>'+trows+'</tbody></table>';
-}
-
-
-function _renderDigitSearch(){
-  const input=document.getElementById('dsInput');
-  const msg=document.getElementById('dsMsg');
-  const results=document.getElementById('dsResults');
-  const topCombos=document.getElementById('dsTopCombos');
-
-  // Always rebuild freq maps from FILT (fall back to ALL if FILT empty)
-  var dsRows=(FILT&&FILT.length)?FILT:ALL;
-  _buildFreqMaps(dsRows);
-
-  // Always rebuild top combos (respects global FILT)
-  if(topCombos){
-    // Build digit counts from FILT
-    const d2={},d3={},d4={};
-    dsRows.forEach(function(r){
-      const n=r.number;
-      const seen2=new Set(),seen3=new Set(),seen4=new Set();
-      // 2-digit pairs — count unique pairs per draw (same as Frequency tab)
-      for(var i=0;i<5;i++) for(var j=i+1;j<5;j++){
-        var k=[n[i],n[j]].sort().join('');
-        if(!seen2.has(k)){seen2.add(k);d2[k]=(d2[k]||0)+1;}
-      }
-      // 3-digit combos
-      for(var i=0;i<5;i++) for(var j=i+1;j<5;j++) for(var k2=j+1;k2<5;k2++){
-        var kk=[n[i],n[j],n[k2]].sort().join('');
-        if(!seen3.has(kk)){seen3.add(kk);d3[kk]=(d3[kk]||0)+1;}
-      }
-      // 4-digit combos
-      for(var i=0;i<5;i++) for(var j=i+1;j<5;j++) for(var k2=j+1;k2<5;k2++) for(var l=k2+1;l<5;l++){
-        var kk=[n[i],n[j],n[k2],n[l]].sort().join('');
-        if(!seen4.has(kk)){seen4.add(kk);d4[kk]=(d4[kk]||0)+1;}
-      }
-    });
-    function topN(obj,n){return Object.entries(obj).sort(function(a,b){return b[1]-a[1];}).slice(0,n);}
-    var t2=topN(d2,3),t3=topN(d3,5),t4=topN(d4,8);
-    var h='';
-    function mkBadge(combo,cnt,col,rank){
-      var medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
-      return '<span data-dsc="'+combo+'" class="ds-badge" style="cursor:pointer;background:var(--g0);border:1.5px solid var(--g3);border-radius:8px;padding:5px 12px;font-family:monospace;font-weight:700;font-size:.88rem;display:inline-flex;align-items:center;gap:5px;">'+(medal?medal+' ':'')+'<span style="color:var(--g9);font-weight:800;">'+combo+'</span><span style="font-size:.7rem;color:var(--g5);font-weight:500;margin-left:4px;">'+cnt+'x</span></span>';
-    }
-    if(t2.length){h+='<div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--b6);text-transform:uppercase;min-width:52px;">2-digit</span>';t2.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--b5)',i+1);});h+='</div>';}
-    if(t3.length){h+='<div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--ac2);text-transform:uppercase;min-width:52px;">3-digit</span>';t3.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--ac2)',i+1);});h+='</div>';}
-    if(t4.length){h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:.68rem;font-weight:700;color:var(--pur);text-transform:uppercase;min-width:52px;">4-digit</span>';t4.forEach(function(e,i){h+=mkBadge(e[0],e[1],'var(--pur)',i+1);});h+='</div>';}
-    topCombos.innerHTML=h;
-    // Attach click handlers via event delegation
-    topCombos.querySelectorAll('.ds-badge').forEach(function(el){
-      el.addEventListener('click',function(){
-        var c=this.getAttribute('data-dsc');
-        _freqDigitClick(c,c);
-      });
-    });
-  }
-
-  // Handle search input
-  if(!input||!results) return;
-  var val=input.value.trim();
-  if(!val||val.length<2){
-    if(msg) msg.textContent=val.length===1?'Enter at least 2 digits':'';
-    results.innerHTML='';
-    return;
-  }
-  // Sort the input digits to get the combo key
-  var combo=val.split('').sort().join('');
-  if(msg) msg.textContent='';
-  // Reuse _freqDigitClick which renders into the modal — but we want it inline
-  // So call it and it will open the modal as usual
-  _freqDigitClick(combo, val);
-}
-
-
 function _renderPosFilter(){
   const container=document.getElementById('pfResults');
   if(!container) return;
@@ -21839,8 +20024,6 @@ function _renderPosFilter(){
   const minHits=parseInt(document.getElementById('pfMinHits').value);
   const scope=document.getElementById('pfScope').value;
   const stF=document.getElementById('pfState').value;
-  const pfDrawF=document.getElementById('pfDraw')?.value||'both';
-  const pfSumSet=_parseSumFilter(document.getElementById('pfSum')?.value||'');
   const dayF=document.getElementById('pfDay').value.trim();
   const monthF=document.getElementById('pfMonth').value;
   const yearF=document.getElementById('pfYear').value;
@@ -21854,8 +20037,6 @@ function _renderPosFilter(){
   // Build full scope rows (for hit counts)
   let allRows=ALL;
   if(stF!=='ALL') allRows=allRows.filter(r=>r.state===stF);
-  if(pfDrawF!=='both') allRows=allRows.filter(r=>r.draw===pfDrawF);
-  if(pfSumSet) allRows=allRows.filter(r=>_matchSum(r.number,pfSumSet));
   if(scope!=='ALL') allRows=allRows.filter(r=>r.dk.startsWith(scope));
 
   // Build date-filtered rows (must have hit on this date criteria)
@@ -21937,7 +20118,7 @@ function _renderPosFilter(){
     const dateHits=dateRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx]));
     const allHits=allRows.filter(r=>posArr.every((p,idx)=>r.number[p]===digStr[idx])).sort((a,b)=>b.dk.localeCompare(a.dk));
 
-    h+=`<div data-poskey="${key}" data-hits="${cnt}" style="border-radius:7px;border:0.5px solid var(--color-border-tertiary,#e5e7eb);background:#fff;">`;
+    h+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
     // Header
     h+=`<div onclick="(function(el){el.nextElementSibling.style.display=el.nextElementSibling.style.display==='none'?'block':'none';})(this)" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
     h+=`<div style="font-size:.75rem;font-weight:800;color:${rkColors[Math.min(i,2)]};min-width:24px;">#${rk}</div>`;
@@ -21978,10 +20159,6 @@ function _renderPosFilter(){
   });
   h+=`</div>`;
   container.innerHTML=h;
-  // Re-apply lookup highlight if a number is entered
-  if(document.getElementById('pfLookup')&&document.getElementById('pfLookup').value.length===5){
-    _pfHighlight();
-  }
 }
 
 
@@ -22533,14 +20710,6 @@ function _renderPosSearch(){
   const stEl=document.getElementById('psState');
   const stF=stEl?stEl.value:'ALL';
   const yrF=yrEl?yrEl.value:'ALL';
-  const minHitsEl=document.getElementById('psMinHits');
-  const maxHitsEl=document.getElementById('psMaxHits');
-  const posLenEl=document.getElementById('psPosLen');
-  const psDrawEl=document.getElementById('psDraw');
-  const minHits=minHitsEl?parseInt(minHitsEl.value)||0:0;
-  const maxHits=maxHitsEl?parseInt(maxHitsEl.value)||9999:9999;
-  const posLen=posLenEl?parseInt(posLenEl.value)||0:0;
-  const psDrawF=psDrawEl?psDrawEl.value:'both'; // both, midday, evening
 
   // Read pattern
   const pat=[];
@@ -22554,7 +20723,6 @@ function _renderPosSearch(){
   let scopeRows=ALL;
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
-  if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
 
   // Build positional combinations counts
   const POS=[0,1,2,3,4];
@@ -22582,12 +20750,9 @@ function _renderPosSearch(){
     const cutoff=arr[n-1][1];
     return arr.filter(([,c])=>c>=cutoff);
   }
-  function applyHitsFilter(arr){
-    return arr.filter(([,c])=>c>=minHits&&c<=maxHits);
-  }
-  const top2=(posLen===0||posLen===2)?applyHitsFilter(topNWithTies(counts2,minHits>0?99999:3)):[];
-  const top3=(posLen===0||posLen===3)?applyHitsFilter(topNWithTies(counts3,minHits>0?99999:3)):[];
-  const top4=(posLen===0||posLen===4)?applyHitsFilter(topNWithTies(counts4,minHits>0?99999:10)):[];
+  const top2=topNWithTies(counts2,3);
+  const top3=topNWithTies(counts3,3);
+  const top4=topNWithTies(counts4,10);
 
   // Track new combos via localStorage — NEW = wasn't in the list last render
   const _LS_PREV='ll_combo_prev_list';
@@ -23243,114 +21408,7 @@ function _sdcrSetScope(scope){
     h+=`</div>`;
   }
 
-  // ===== 4-DIGIT SECTION =====
-  h+=`<div style="margin-top:28px;border-top:2px solid var(--g2);padding-top:20px;">`;
-  h+=`<div style="font-size:.82rem;font-weight:800;color:var(--g8);margin-bottom:12px;">📅 Same-Day Cross-Month Repeats — 4-Digit Sequences</div>`;
-
-  function get4seqs(num){
-    const seqs=new Set();
-    for(let i=0;i<=num.length-4;i++) seqs.add(num.slice(i,i+4));
-    return seqs;
-  }
-
-  const dayData4={};
-  for(let day=1;day<=31;day++){
-    const dayDraws=src.filter(r=>r.day===day);
-    const seqMap4={};
-    dayDraws.forEach(r=>{
-      const seenThisDraw=new Set();
-      get4seqs(r.number).forEach(seq=>{
-        if(seenThisDraw.has(seq))return;
-        seenThisDraw.add(seq);
-        if(!seqMap4[seq])seqMap4[seq]=[];
-        seqMap4[seq].push(r);
-      });
-    });
-    const hits4=Object.entries(seqMap4)
-      .filter(([,insts])=>new Set(insts.map(r=>r.ym)).size>=2)
-      .map(([seq,insts])=>({seq,insts:insts.sort((a,b)=>a.ym.localeCompare(b.ym)),months:new Set(insts.map(r=>r.ym)).size}))
-      .sort((a,b)=>b.months-a.months||b.insts.length-a.insts.length);
-    dayData4[day]={hits:hits4,total:dayDraws.length};
-  }
-
-  const maxHits4=Math.max(...Object.values(dayData4).map(d=>d.hits.length),1);
-  const totalCases4=Object.values(dayData4).reduce((s,d)=>s+d.hits.length,0);
-  const hotDay4=Object.entries(dayData4).sort((a,b)=>b[1].hits.length-a[1].hits.length)[0];
-
-  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">`;
-  h+=`<div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--b7);">${totalCases4}</div><div style="font-size:.62rem;color:var(--g5);">Total 4-digit sequence repeats</div></div>`;
-  h+=`<div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--b7);">Day ${hotDay4[0]}</div><div style="font-size:.62rem;color:var(--g5);">Hottest day (${hotDay4[1].hits.length} seqs)</div></div>`;
-  h+=`</div>`;
-
-  h+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px;">`;
-  for(let day=1;day<=31;day++){
-    const d=dayData4[day];
-    const cnt=d.hits.length;
-    const hasHit=cnt>0;
-    const intensity=hasHit?Math.max(0.1,cnt/maxHits4):0;
-    const bg=hasHit?'rgba(124,58,237,'+(intensity*0.2+0.06)+')':'var(--g0)';
-    const border=hasHit?'2px solid rgba(124,58,237,'+(intensity*0.6+0.2)+')':'1.5px solid var(--g2)';
-    const col=hasHit?'var(--pur)':'var(--g4)';
-    const topSeq=hasHit?d.hits[0].seq:'';
-    h+=`<div onclick="${hasHit?'_showSdcrDay4('+day+',\''+scope+'\')' :'void(0)'}" style="background:${bg};border:${border};border-radius:9px;padding:8px 4px;text-align:center;cursor:${hasHit?'pointer':'default'};height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;">`;
-    h+=`<div style="font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;color:${col};">${day}</div>`;
-    h+=`<div style="font-size:.65rem;font-weight:700;color:${col};margin-top:2px;">${hasHit?cnt+'x':'—'}</div>`;
-    if(hasHit) h+=`<div style="font-size:.48rem;color:var(--pur);margin-top:1px;font-family:'DM Mono',monospace;">${topSeq}</div>`;
-    h+=`</div>`;
-  }
-  h+=`</div>`;
-  h+=`<div style="font-size:.65rem;color:var(--g5);margin-bottom:16px;">Count = 4-digit sequences (consecutive from drawn number) that appeared on that calendar day in 2+ different months. Click any tile for details.</div>`;
-
-  const daysWithHits4=Object.entries(dayData4).filter(([,d])=>d.hits.length>0).sort((a,b)=>b[1].hits.length-a[1].hits.length);
-  if(daysWithHits4.length){
-    h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Top Days</div>`;
-    h+=`<div style="display:flex;flex-direction:column;gap:6px;">`;
-    daysWithHits4.slice(0,5).forEach(([day,d])=>{
-      h+=`<div style="background:var(--g0);border:1.5px solid #c4b5fd;border-radius:9px;padding:10px 13px;cursor:pointer;" onclick="_showSdcrDay4(${day},'${scope}')">`;
-      h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">`;
-      h+=`<span style="font-size:.82rem;font-weight:700;color:var(--pur);">Day ${day}</span>`;
-      h+=`<span style="font-size:.68rem;color:var(--g5);">${d.hits.length} 4-digit sequence${d.hits.length>1?'s':''} repeated across months</span>`;
-      h+=`</div>`;
-      h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
-      d.hits.slice(0,5).forEach(r=>{
-        const sameState=r.insts.length>1&&r.insts[0].state===r.insts[r.insts.length-1].state?[r.insts[0].state]:null;
-        h+=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:.68rem;background:var(--g1);border-radius:5px;padding:2px 7px;">`;
-        h+=`<span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--pur);">${r.seq}</span>`;
-        h+=`<span style="color:var(--g5);">${r.insts.slice(0,3).map(i=>mn[+i.ym.slice(5,7)]+(scope==='all'?' '+i.ym.slice(0,4):'')+' '+i.number+'('+i.state+')').join(' · ')}</span>`;
-        if(sameState) h+=`<span style="color:#92400e;font-weight:700;">⭐${sameState[0]}</span>`;
-        h+=`</span>`;
-      });
-      if(d.hits.length>5) h+=`<span style="font-size:.65rem;color:var(--g5);align-self:center;">+${d.hits.length-5} more</span>`;
-      h+=`</div></div>`;
-    });
-    h+=`</div>`;
-  }
-  h+=`</div>`;
-
-  window._sdcrDayData4=dayData4;
-
   container.innerHTML=h;
-}
-
-function _showSdcrDay4(day, scope){
-  const data=window._sdcrDayData4;
-  if(!data||!data[day]) return;
-  const d=data[day];
-  if(!d.hits.length) return;
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let h=`<div style="font-size:.8rem;font-weight:700;color:var(--pur);margin-bottom:10px;">Day ${day} — ${d.hits.length} 4-digit sequence${d.hits.length>1?'s':''} repeated across months</div>`;
-  h+=`<div style="display:flex;flex-direction:column;gap:8px;">`;
-  d.hits.forEach(r=>{
-    h+=`<div style="background:var(--g0);border:1.5px solid #c4b5fd;border-radius:8px;padding:8px 12px;">`;
-    h+=`<div style="font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;color:var(--pur);margin-bottom:4px;">${r.seq} <span style="font-size:.65rem;color:var(--g5);font-weight:400;">${r.months} months · ${r.insts.length} draws</span></div>`;
-    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
-    r.insts.forEach(i=>{
-      h+=`<span style="font-size:.68rem;background:#ede9fe;border-radius:4px;padding:2px 7px;color:var(--pur);">${mn[+i.ym.slice(5,7)]}${scope==='all'?' '+i.ym.slice(0,4):''} <b>${i.number}</b> (${i.state})</span>`;
-    });
-    h+=`</div></div>`;
-  });
-  h+=`</div>`;
-  omod(`Day ${day} — 4-Digit Sequences`,h);
 }
 
 // ── Unseen Singles ────────────────────────────────────────────────
@@ -23551,7 +21609,7 @@ function _renderTripleHotDays(){
   const _dowLabels={1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',0:'Sun'};
   const _dowOrder=[1,2,3,4,5,6,0];
   const _dowShort={1:'Mo',2:'Tu',3:'We',4:'Th',5:'Fr',6:'Sa',0:'Su'};
-  const src=scope==='all'?ALL:ALL.filter(r=>r.ym.startsWith(scope));
+  const src=scope==='2026'?ALL.filter(r=>r.ym.startsWith('2026')):ALL;
   const tripleData={};
   for(let d=0;d<=9;d++) tripleData[d]={counts:{},total:0,examples:[],records:{}};
   src.forEach(r=>{
