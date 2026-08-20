@@ -3294,6 +3294,11 @@ tr:hover td{background:var(--b0);}
           <option value="2024">2024</option>
           <option value="2023">2023</option>
         </select>
+        <input type="text" id="ptripSearch" placeholder="Search e.g. 000 or 1234" maxlength="4"
+          oninput="_renderPosTrips()"
+          style="width:110px;padding:4px 9px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-family:'DM Mono',monospace;font-size:.82rem;background:rgba(255,255,255,.15);color:#fff;outline:none;"
+          title="Search for a 3 or 4 digit combo — shows all position combos containing those digits">
+        <button onclick="document.getElementById('ptripSearch').value='';_renderPosTrips();" style="padding:3px 8px;font-size:.72rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">Clear</button>
       </div>
     </div>
     <div id="ptripContent" style="padding:16px;"></div>
@@ -3418,7 +3423,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=384"></script>
+<script src="lottolens-data.js?v=386"></script>
 <script>
 
 // ================================================================
@@ -22011,6 +22016,7 @@ function _renderPosTrips(){
 
   const stF=document.getElementById('ptripState').value;
   const scF=document.getElementById('ptripScope').value;
+  const ptripQ=(document.getElementById('ptripSearch')?.value||'').replace(/\D/g,'');
 
   // Build scope
   let scopeRows=ALL;
@@ -22057,9 +22063,19 @@ function _renderPosTrips(){
   });
 
   // Filter to min 2 hits, sort by count desc then most recent dk desc on ties
-  const top3=Object.entries(counts3t).filter(([,c])=>c>=2)
+  // Also apply search filter: key format is "positions|digits" e.g. "012|000"
+  function _ptripMatchSearch(key){
+    if(!ptripQ) return true;
+    const digits=key.split('|')[1]||'';
+    // Count how many times each query digit appears in result digits
+    const freq={};[...digits].forEach(d=>freq[d]=(freq[d]||0)+1);
+    const qf={};[...ptripQ].forEach(d=>qf[d]=(qf[d]||0)+1);
+    // All query digits must appear at least as many times as in query
+    return Object.entries(qf).every(([d,n])=>(freq[d]||0)>=n);
+  }
+  const top3=Object.entries(counts3t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k))
     .sort((a,b)=>b[1]-a[1]||(recent3t[b[0]]||'').localeCompare(recent3t[a[0]]||''));
-  const top4=Object.entries(counts4t).filter(([,c])=>c>=2)
+  const top4=Object.entries(counts4t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k))
     .sort((a,b)=>b[1]-a[1]||(recent4t[b[0]]||'').localeCompare(recent4t[a[0]]||''));
 
   // Reuse haventComeFor4 if available (defined in _renderPosSearch scope)
