@@ -1027,7 +1027,7 @@ tr:hover td{background:var(--b0);}
         <input type="text" id="searchSumF" placeholder="Sum e.g. 22,25 28" maxlength="20"
           style="width:130px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Filter by digit sum">
-        <input type="text" id="searchContainsF" placeholder="e.g. 057,13 or 25 47 89" maxlength="60"
+        <input type="text" id="searchContainsF" placeholder="Contains e.g. 057,13" maxlength="30"
           style="width:140px;padding:8px 11px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runSearchDebounced()" title="Contains digits (1-5 digits, all must appear)">
         <div class="msf-wrap" id="searchSt-wrap">
@@ -1076,7 +1076,7 @@ tr:hover td{background:var(--b0);}
         <input type="text" id="dupSumF" placeholder="Sum e.g. 22,25 28" maxlength="20"
           style="width:130px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runDupCheck()" title="Filter by digit sum">
-        <input type="text" id="dupContainsF" placeholder="e.g. 057,13 or 25 47 89" maxlength="60"
+        <input type="text" id="dupContainsF" placeholder="Contains e.g. 057,13" maxlength="30"
           style="width:140px;padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;"
           oninput="runDupCheck()" title="Contains digits (1-5 digits, all must appear)">
         <button class="btn btn-p" onclick="runDupCheck()">Check</button>
@@ -3294,11 +3294,6 @@ tr:hover td{background:var(--b0);}
           <option value="2024">2024</option>
           <option value="2023">2023</option>
         </select>
-        <input type="text" id="ptripSearch" placeholder="Search e.g. 000 or 1234" maxlength="4"
-          oninput="_renderPosTrips()"
-          style="width:110px;padding:4px 9px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-family:'DM Mono',monospace;font-size:.82rem;background:rgba(255,255,255,.15);color:#fff;outline:none;"
-          title="Search for a 3 or 4 digit combo — shows all position combos containing those digits">
-        <button onclick="document.getElementById('ptripSearch').value='';_renderPosTrips();" style="padding:3px 8px;font-size:.72rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">Clear</button>
       </div>
     </div>
     <div id="ptripContent" style="padding:16px;"></div>
@@ -3423,7 +3418,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=387"></script>
+<script src="lottolens-data.js?v=378"></script>
 <script>
 
 // ================================================================
@@ -8594,32 +8589,17 @@ function renderFreqStats(src){
       ${mkDigits(top3,'Top 3-Digit Combos','var(--ac2)',d3nums)}
       ${mkDigits(top4,'Top 4-Digit Combos','var(--pur)',d4nums)}
     </div>`;
-  // Build copy text for each section
-  const _sumsCopyText=podiumTiers.map(t=>t.sums.join(' ')).join(' ');
-  const _drawnCopyText=drawnTiers.map(t=>t.cnt+'x('+t.combos.join(',')+'x)').join(' ');
-  const _d2CopyText=top2.slice(0,10).map(([k])=>k).join(' ');
-  const _d3CopyText=top3.slice(0,10).map(([k])=>k).join(' ');
-  const _d4CopyText=top4.slice(0,10).map(([k])=>k).join(' ');
-
-  function _freqCopyBtn(id,text,label='📋'){
-    return `<button id="${id}" data-copy="${text.replace(/"/g,'&quot;')}" onclick="_copyToClipboard(this.getAttribute('data-copy'),this)" style="padding:2px 8px;font-size:.65rem;font-weight:700;background:var(--g1);border:1px solid var(--g3);border-radius:5px;cursor:pointer;margin-left:6px;">${label}</button>`;
-  }
-
   statsEl.innerHTML=`
     <div class="sc" style="border-color:var(--ac);flex:1;min-width:200px;">
-      <div class="lbl" style="display:flex;align-items:center;">🔥 Top Sums ${_freqCopyBtn('freqSumsCopy',_sumsCopyText)}</div>
+      <div class="lbl">🔥 Top Sums</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-end">${sumTilesHtml}</div>
     </div>
     <div class="sc" style="border-color:var(--ac2);flex:1;min-width:200px;">
-      <div class="lbl" style="display:flex;align-items:center;">🏆 Top Drawn ${_freqCopyBtn('freqDrawnCopy',_drawnCopyText)}</div>
+      <div class="lbl">🏆 Top Drawn</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-end">${drawnTilesHtml||'<span style="font-size:.75rem;color:var(--g5)">No data</span>'}</div>
     </div>
     <div class="sc" style="border-color:var(--b4);flex:1;min-width:200px;">
-      <div class="lbl" style="display:flex;align-items:center;">📊 Top Digits (2 · 3 · 4)
-        ${_freqCopyBtn('freqD2Copy',_d2CopyText,'📋 2')}
-        ${_freqCopyBtn('freqD3Copy',_d3CopyText,'📋 3')}
-        ${_freqCopyBtn('freqD4Copy',_d4CopyText,'📋 4')}
-      </div>
+      <div class="lbl">📊 Top Digits (2 · 3 · 4)</div>
       <div style="margin-top:6px">${digitsHtml}</div>
     </div>`;
 }
@@ -8849,15 +8829,10 @@ function _parseSumFilter(val){
   val.split(/[,\s]+/).forEach(p=>{const n=parseInt(p);if(!isNaN(n)&&n>=0)s.add(n);});
   return s.size?s:null;
 }
-// Parse contains filter: supports comma OR space separated groups
-// "057,13" or "057 13" or "05 7, 13" -> [["0","5","7"],["1","3"]]
-// Each group = all digits must appear; groups are OR'd
+// Parse contains filter: "0 5 7, 3" -> ["057","3"] each chunk must all appear
 function _parseContainsFilter(val){
   if(!val||!val.trim()) return null;
-  // Split on commas first, then spaces within each chunk
-  const chunks=val.split(/[,]+/)
-    .map(c=>c.trim().replace(/\D/g,''))
-    .filter(c=>c.length);
+  const chunks=val.split(/[,]+/).map(c=>c.replace(/\D/g,'').split('').join('')).filter(c=>c.length);
   return chunks.length?chunks:null;
 }
 function _matchSum(num, sumSet){
@@ -22016,7 +21991,6 @@ function _renderPosTrips(){
 
   const stF=document.getElementById('ptripState').value;
   const scF=document.getElementById('ptripScope').value;
-  const ptripQ=(document.getElementById('ptripSearch')?.value||'').replace(/\D/g,'');
 
   // Build scope
   let scopeRows=ALL;
@@ -22063,19 +22037,9 @@ function _renderPosTrips(){
   });
 
   // Filter to min 2 hits, sort by count desc then most recent dk desc on ties
-  // Also apply search filter: key format is "positions|digits" e.g. "012|000"
-  function _ptripMatchSearch(key){
-    if(!ptripQ) return true;
-    const digits=key.split('|')[1]||'';
-    // Count how many times each query digit appears in result digits
-    const freq={};[...digits].forEach(d=>freq[d]=(freq[d]||0)+1);
-    const qf={};[...ptripQ].forEach(d=>qf[d]=(qf[d]||0)+1);
-    // All query digits must appear at least as many times as in query
-    return Object.entries(qf).every(([d,n])=>(freq[d]||0)>=n);
-  }
-  const top3=Object.entries(counts3t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k))
+  const top3=Object.entries(counts3t).filter(([,c])=>c>=2)
     .sort((a,b)=>b[1]-a[1]||(recent3t[b[0]]||'').localeCompare(recent3t[a[0]]||''));
-  const top4=Object.entries(counts4t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k))
+  const top4=Object.entries(counts4t).filter(([,c])=>c>=2)
     .sort((a,b)=>b[1]-a[1]||(recent4t[b[0]]||'').localeCompare(recent4t[a[0]]||''));
 
   // Reuse haventComeFor4 if available (defined in _renderPosSearch scope)
