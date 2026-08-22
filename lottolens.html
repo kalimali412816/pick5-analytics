@@ -3456,7 +3456,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=390"></script>
+<script src="lottolens-data.js?v=391"></script>
 <script>
 
 // ================================================================
@@ -21824,7 +21824,10 @@ function renderNextDayIntel(){
   if(dupeRecs.length){
     const dupeSortedList=[...new Set(dupeRecs.map(function(r){return r.sorted;}))];
     h+=`<div style="background:#faf5ff;border:2px solid #7c3aed;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
-      <div style="font-size:.75rem;font-weight:800;color:#5b21b6;margin-bottom:6px;">🔀 ${dupeSortedList.length} Anagram Dupe${dupeSortedList.length>1?'s':''} in Pool</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:.75rem;font-weight:800;color:#5b21b6;">🔀 ${dupeSortedList.length} Anagram Dupe${dupeSortedList.length>1?'s':''} in Pool</span>
+        <button onclick="_copyToClipboard(${JSON.stringify(dupeRecs.map(function(r){return r.number;}).join(' '))},this)" style="padding:2px 8px;font-size:.65rem;font-weight:700;background:#ede9fe;color:#5b21b6;border:1.5px solid #7c3aed;border-radius:5px;cursor:pointer;">📋 Copy All Dupes</button>
+      </div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
     dupeSortedList.forEach(function(s){
       const matches=dupeRecs.filter(function(r){return r.sorted===s;});
@@ -21874,23 +21877,32 @@ function renderNextDayIntel(){
 
     if(srcChange){
       const info=sourceMap[r.srcDk];
+      const _srcNums=filtered.filter(function(rx){return rx.srcDk===r.srcDk;}).map(function(rx){return rx.number;}).join(' ');
       h+=`<tr><td colspan="10" style="padding:4px 10px;background:${isHot?'#fef3c7':'var(--g1)'};font-size:.7rem;font-weight:700;color:${isHot?'#92400e':'var(--g6)'};border-top:2px solid var(--g3);">
-        ${isHot?'🔥 ':''}Source: ${fmtDk(r.srcDk)} → Next day: ${fmtDk(info?.nextDk||'')}
-        ${isHot?'<span style="margin-left:6px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">HOT '+r.srcCount+'x</span>':''}
-        <span style="margin-left:8px;color:var(--g5);font-weight:400;">${(info?.currentDraws||[]).map(function(cd){return cd.state+' '+cd.number;}).join(', ')}</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span>${isHot?'🔥 ':''}Source: ${fmtDk(r.srcDk)} → Next day: ${fmtDk(info?.nextDk||'')}</span>
+          ${isHot?`<span style="background:#f59e0b;color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">HOT ${r.srcCount}x</span>`:''}
+          <span style="color:var(--g5);font-weight:400;">${(info?.currentDraws||[]).map(function(cd){return cd.state+' '+cd.number;}).join(', ')}</span>
+          <button onclick="_copyToClipboard('${_srcNums}',this)" style="padding:1px 7px;font-size:.63rem;font-weight:700;background:var(--b0);color:var(--b6);border:1px solid var(--b3);border-radius:4px;cursor:pointer;margin-left:auto;">📋 Copy</button>
+        </div>
       </td></tr>`;
     }
 
     h+=`<tr style="border-bottom:1px solid var(--g2);${rowBg}${isSpecial?'font-weight:700;':''}">
       <td style="padding:6px 10px;"><span style="background:var(--b6);color:#fff;padding:1px 6px;border-radius:4px;font-size:.7rem;font-weight:700;">${r.state}</span></td>
       <td style="padding:6px 10px;font-weight:700;${drawCol}">${r.draw==='midday'?'Mid':'Eve'}</td>
-      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;">${isDupe?'🔀 ':''}${isSpecial?'⭐ ':''}${r.number}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;white-space:nowrap;">
+        ${r.number}
+        <span style="background:${PAT_BG[p]};color:${PAT_COLOR[p]};padding:1px 5px;border-radius:4px;font-size:.68rem;font-weight:700;margin-left:5px;font-family:'DM Sans',sans-serif;">${p}</span>
+        ${isSpecial?'<span style="font-size:.7rem;margin-left:2px;">⭐</span>':''}
+        ${isDupe?'<span style="font-size:.7rem;margin-left:2px;">🔀</span>':''}
+      </td>
       <td style="padding:6px 10px;font-family:'DM Mono',monospace;color:var(--b5);font-size:.75rem;">${r.sorted}</td>
       <td style="padding:6px 10px;">${r.sum}</td>
       <td style="padding:6px 10px;">${r.td}</td>
       <td style="padding:6px 10px;"><span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;font-size:.7rem;font-weight:700;">Δ${r.delta}</span></td>
       <td style="padding:6px 10px;"><span style="background:#ede9fe;color:#5b21b6;padding:1px 5px;border-radius:3px;font-size:.7rem;font-weight:700;">EΔ${r.edeltaNext}</span></td>
-      <td style="padding:6px 10px;"><span style="background:${PAT_BG[p]};color:${PAT_COLOR[p]};padding:2px 6px;border-radius:4px;font-size:.72rem;font-weight:700;">${p}</span></td>
+      <td style="padding:4px 6px;"></td>
       <td style="padding:6px 10px;font-size:.68rem;color:var(--g5);">${fmtDk(r.srcDk)}</td>
     </tr>`;
   });
