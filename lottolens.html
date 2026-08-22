@@ -3456,7 +3456,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=392"></script>
+<script src="lottolens-data.js?v=393"></script>
 <script>
 
 // ================================================================
@@ -8629,7 +8629,7 @@ function renderFreqStats(src){
     </div>`;
   // Build copy text for each section
   const _sumsCopyText=podiumTiers.map(t=>t.sums.join(' ')).join(' ');
-  const _drawnCopyText=drawnTiers.map(t=>t.cnt+'x('+t.combos.join(',')+'x)').join(' ');
+  const _drawnCopyText=drawnTiers.map(t=>t.buckets.map(b=>b.cnt+'x').join(',')).join(' ');
   const _d2CopyText=top2.slice(0,10).map(([k])=>k).join(' ');
   const _d3CopyText=top3.slice(0,10).map(([k])=>k).join(' ');
   const _d4CopyText=top4.slice(0,10).map(([k])=>k).join(' ');
