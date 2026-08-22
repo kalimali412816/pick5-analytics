@@ -3456,7 +3456,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=389"></script>
+<script src="lottolens-data.js?v=390"></script>
 <script>
 
 // ================================================================
@@ -21708,64 +21708,70 @@ function renderNextDayIntel(){
   const ndiDeltaF=(document.getElementById('ndiDeltaF')?.value||'').trim();
   const ndiDigitF=(document.getElementById('ndiDigitF')?.value||'').replace(/\D/g,'');
 
-  // Step 1: find all pattern matches for FILT draws
-  const pats=findPatterns(FILT);
-  if(!pats.length){
-    el.innerHTML='<div class="es">No pattern matches found in current filter.</div>';
-    return;
-  }
+  // Step 1: find most recent date in FILT
+  const allDks=FILT.map(function(r){return r.dk;});
+  if(!allDks.length){el.innerHTML='<div class="es">No draws in current filter.</div>';return;}
+  const latestDk=allDks.reduce(function(a,b){return a>b?a:b;});
 
-  // Step 2: collect source dates and their next-day draws
+  // Only use draws from the latest date
+  const latestDraws=FILT.filter(function(r){return r.dk===latestDk;});
+
+  // Compute next day
+  const d=new Date(latestDk+'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate()+1);
+  const nextDk=d.toISOString().slice(0,10);
+
+  // Step 2: find pattern matches for latest draws only
+  const pats=findPatterns(latestDraws);
+
+  // Step 3: collect source dates and their next-day draws
   const sourceMap={};
   pats.forEach(function(pat){
     if(matchTypeF!=='ALL'&&pat.matchType!==matchTypeF) return;
     pat.previous.forEach(function(prev){
       const srcDk=prev.dk;
       if(!sourceMap[srcDk]){
-        const d=new Date(srcDk+'T12:00:00Z');
-        d.setUTCDate(d.getUTCDate()+1);
-        const nextDk=d.toISOString().slice(0,10);
-        sourceMap[srcDk]={currentDraws:[],nextDk,nextRecs:ALL.filter(function(r){return r.dk===nextDk;}),matchType:pat.matchType,srcCount:0};
+        const sd=new Date(srcDk+'T12:00:00Z');
+        sd.setUTCDate(sd.getUTCDate()+1);
+        const sNextDk=sd.toISOString().slice(0,10);
+        sourceMap[srcDk]={currentDraws:[],nextDk:sNextDk,nextRecs:ALL.filter(function(r){return r.dk===sNextDk;}),matchType:pat.matchType};
       }
       const exists=sourceMap[srcDk].currentDraws.find(function(x){return x.number===pat.current.number&&x.state===pat.current.state&&x.dk===pat.current.dk;});
       if(!exists) sourceMap[srcDk].currentDraws.push(pat.current);
     });
   });
 
-  // Step 3: flatten all next-day records, tag with source date count
-  const allRecs=[];
-  Object.entries(sourceMap).forEach(function([srcDk,info]){
-    info.nextRecs.forEach(function(r){
-      // Compute TD, sum, delta
-      const td=(_allBySorted.get(r.sorted)||[]).length;
-      const sum=r.sum!==undefined?r.sum:r.number.split('').reduce(function(a,d){return a+(+d);},0);
-      const delta=Math.abs(sum-td);
-      allRecs.push({...r,td,sum,delta,edeltaNext:delta+1,srcDk,srcCount:info.currentDraws.length,matchType:info.matchType,currentDraws:info.currentDraws});
-    });
-  });
-
-  if(!allRecs.length){
-    el.innerHTML='<div class="es">No next-day draws found for any pattern match source.</div>';
+  if(!Object.keys(sourceMap).length){
+    el.innerHTML='<div class="es">No pattern matches found for '+latestDk+' draws.</div>';
     return;
   }
 
-  // Step 4: detect sorted dupes across records
+  // Step 4: flatten all next-day records
+  const allRecs=[];
+  Object.entries(sourceMap).forEach(function([srcDk,info]){
+    info.nextRecs.forEach(function(r){
+      const td=(_allBySorted.get(r.sorted)||[]).length;
+      const sum=r.sum!==undefined?r.sum:r.number.split('').reduce(function(a,dig){return a+(+dig);},0);
+      const delta=Math.abs(sum-td);
+      allRecs.push(Object.assign({},r,{td,sum,delta,edeltaNext:delta+1,srcDk,srcCount:info.currentDraws.length,matchType:info.matchType,currentDraws:info.currentDraws,srcNextDk:info.nextDk}));
+    });
+  });
+
+  // Step 5: detect sorted dupes
   const sortedCount={};
   allRecs.forEach(function(r){sortedCount[r.sorted]=(sortedCount[r.sorted]||0)+1;});
   const dupeSorted=new Set(Object.keys(sortedCount).filter(function(s){return sortedCount[s]>1;}));
 
-  // Step 5: parse filters
+  // Step 6: parse filters
   const sumVals=ndiSumF?ndiSumF.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
   const tdVals=ndiTdF?ndiTdF.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
   const deltaVals=ndiDeltaF?ndiDeltaF.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
   function matchDigitF(num){
     if(!ndiDigitF) return true;
-    const freq={};[...num].forEach(function(d){freq[d]=(freq[d]||0)+1;});
-    const qf={};[...ndiDigitF].forEach(function(d){qf[d]=(qf[d]||0)+1;});
-    return Object.entries(qf).every(function([d,n]){return (freq[d]||0)>=n;});
+    const freq={};[...num].forEach(function(dig){freq[dig]=(freq[dig]||0)+1;});
+    const qf={};[...ndiDigitF].forEach(function(dig){qf[dig]=(qf[dig]||0)+1;});
+    return Object.entries(qf).every(function([dig,n]){return (freq[dig]||0)>=n;});
   }
-
-  // Apply filters
   let filtered=allRecs.filter(function(r){
     if(sumVals.length&&!sumVals.includes(r.sum)) return false;
     if(tdVals.length&&!tdVals.includes(r.td)) return false;
@@ -21774,14 +21780,13 @@ function renderNextDayIntel(){
     return true;
   });
 
-  // Sort: hot sources first, then by source date desc, then by draw
   filtered.sort(function(a,b){
     if(b.srcCount!==a.srcCount) return b.srcCount-a.srcCount;
     return b.srcDk.localeCompare(a.srcDk)||a.state.localeCompare(b.state);
   });
 
   function getPat(n){
-    const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    const f={};n.split('').forEach(function(dig){f[dig]=(f[dig]||0)+1;});
     const v=Object.values(f).sort(function(a,b){return b-a;});
     if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';
     if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';
@@ -21789,19 +21794,20 @@ function renderNextDayIntel(){
   const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
   const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function fmtDk(dk){const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
+  function fmtDk(dk){if(!dk)return'';const[y,mo,day]=dk.split('-');return mn[+mo]+' '+day+', '+y;}
 
-  // Step 6: dupe banner at top
+  // Build HTML
+  const hotSrcs=Object.entries(sourceMap).filter(function([,i]){return i.currentDraws.length>=2;});
   const dupeRecs=filtered.filter(function(r){return dupeSorted.has(r.sorted);});
-  const hotRecs=filtered.filter(function(r){return r.srcCount>=2;});
 
-  let h='';
+  let h=`<div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:.78rem;">
+    <span style="font-weight:700;color:var(--b6);">Latest day: ${fmtDk(latestDk)}</span>
+    <span style="color:var(--g5);margin-left:10px;">→ Predicting next day: <strong style="color:var(--g8);">${fmtDk(nextDk)}</strong></span>
+    <span style="color:var(--g5);margin-left:10px;">${Object.keys(sourceMap).length} source dates · ${filtered.length} next-day draws</span>
+  </div>`;
 
-  // Stats row
-  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-    <span style="font-size:.75rem;color:var(--g6);">${filtered.length} draws</span>`;
-
-  // Copy buttons per pattern
+  // Copy buttons
+  h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">`;
   ['S','D','DD','T','TD','Q','Qu'].forEach(function(pat){
     const nums=filtered.filter(function(r){return getPat(r.number)===pat;});
     if(!nums.length) return;
@@ -21817,37 +21823,33 @@ function renderNextDayIntel(){
   // Dupe banner
   if(dupeRecs.length){
     const dupeSortedList=[...new Set(dupeRecs.map(function(r){return r.sorted;}))];
-    h+=`<div style="background:#faf5ff;border:2px solid #7c3aed;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
-      <div style="font-size:.75rem;font-weight:800;color:#5b21b6;margin-bottom:6px;">🔀 ${dupeSortedList.length} Anagram Dupe${dupeSortedList.length>1?'s':''} in Next-Day Pool</div>
+    h+=`<div style="background:#faf5ff;border:2px solid #7c3aed;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+      <div style="font-size:.75rem;font-weight:800;color:#5b21b6;margin-bottom:6px;">🔀 ${dupeSortedList.length} Anagram Dupe${dupeSortedList.length>1?'s':''} in Pool</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
     dupeSortedList.forEach(function(s){
       const matches=dupeRecs.filter(function(r){return r.sorted===s;});
-      h+=`<span style="background:#ede9fe;border:1px solid #7c3aed;border-radius:5px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:.75rem;font-weight:700;color:#5b21b6;" title="${matches.map(function(r){return r.number+' ('+r.state+' '+fmtDk(r.nextDk||r.dk)+')';}).join(', ')}">
+      h+=`<span style="background:#ede9fe;border:1px solid #7c3aed;border-radius:5px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:.75rem;font-weight:700;color:#5b21b6;">
         ${s} ×${matches.length}</span>`;
     });
     h+=`</div></div>`;
   }
 
   // Hot sources banner
-  if(hotRecs.length){
-    const hotSrcs=[...new Set(hotRecs.map(function(r){return r.srcDk;}))];
-    h+=`<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
-      <div style="font-size:.75rem;font-weight:800;color:#92400e;margin-bottom:6px;">🔥 ${hotSrcs.length} Hot Source Date${hotSrcs.length>1?'s':''} (2+ current draws matched)</div>
+  if(hotSrcs.length){
+    h+=`<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+      <div style="font-size:.75rem;font-weight:800;color:#92400e;margin-bottom:6px;">🔥 ${hotSrcs.length} Hot Source Date${hotSrcs.length>1?'s':''} (2+ of today's draws matched)</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
-    hotSrcs.forEach(function(dk){
-      const info=sourceMap[dk];
+    hotSrcs.forEach(function([dk,info]){
       h+=`<span style="background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 9px;font-size:.75rem;font-weight:700;color:#92400e;">
-        ${fmtDk(dk)} (${info.currentDraws.length}x) → next: ${fmtDk(info.nextDk||'')}
-      </span>`;
+        ${fmtDk(dk)} (${info.currentDraws.length}x) → ${fmtDk(info.nextDk)}</span>`;
     });
     h+=`</div></div>`;
   }
 
   // Table
-  h+=`<div style="overflow-x:auto;">
-  <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+  h+=`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.78rem;">
     <thead><tr style="background:var(--g1);text-align:left;">
-      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);white-space:nowrap;">State</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">State</th>
       <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Draw</th>
       <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Number</th>
       <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Boxed</th>
@@ -21865,27 +21867,24 @@ function renderNextDayIntel(){
     const isHot=r.srcCount>=2;
     const isDupe=dupeSorted.has(r.sorted);
     const isSpecial=p==='T'||p==='TD'||p==='Q'||p==='Qu';
-    const drawCol=r.draw==='midday'?'color:var(--red);font-weight:700;':'color:var(--b5);font-weight:700;';
-    const rowBg=isHot?'#fffbeb':isDupe?'#faf5ff':'';
+    const drawCol=r.draw==='midday'?'color:var(--red);':'color:var(--b5);';
+    const rowBg=isHot?'background:#fffbeb;':isDupe?'background:#faf5ff;':'';
     const srcChange=r.srcDk!==lastSrc;
     lastSrc=r.srcDk;
 
-    // Group separator when source date changes
     if(srcChange){
       const info=sourceMap[r.srcDk];
       h+=`<tr><td colspan="10" style="padding:4px 10px;background:${isHot?'#fef3c7':'var(--g1)'};font-size:.7rem;font-weight:700;color:${isHot?'#92400e':'var(--g6)'};border-top:2px solid var(--g3);">
-        ${isHot?'🔥 ':''} Source: ${fmtDk(r.srcDk)} → Next day: ${fmtDk(info?.nextDk||'')}
+        ${isHot?'🔥 ':''}Source: ${fmtDk(r.srcDk)} → Next day: ${fmtDk(info?.nextDk||'')}
         ${isHot?'<span style="margin-left:6px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">HOT '+r.srcCount+'x</span>':''}
         <span style="margin-left:8px;color:var(--g5);font-weight:400;">${(info?.currentDraws||[]).map(function(cd){return cd.state+' '+cd.number;}).join(', ')}</span>
       </td></tr>`;
     }
 
-    h+=`<tr style="border-bottom:1px solid var(--g2);${rowBg?'background:'+rowBg+';':''}${isSpecial?'font-weight:700;':''}">
+    h+=`<tr style="border-bottom:1px solid var(--g2);${rowBg}${isSpecial?'font-weight:700;':''}">
       <td style="padding:6px 10px;"><span style="background:var(--b6);color:#fff;padding:1px 6px;border-radius:4px;font-size:.7rem;font-weight:700;">${r.state}</span></td>
-      <td style="padding:6px 10px;${drawCol}">${r.draw==='midday'?'Mid':'Eve'}</td>
-      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;">
-        ${isDupe?'🔀 ':''}${isSpecial?'⭐ ':''}${r.number}
-      </td>
+      <td style="padding:6px 10px;font-weight:700;${drawCol}">${r.draw==='midday'?'Mid':'Eve'}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;">${isDupe?'🔀 ':''}${isSpecial?'⭐ ':''}${r.number}</td>
       <td style="padding:6px 10px;font-family:'DM Mono',monospace;color:var(--b5);font-size:.75rem;">${r.sorted}</td>
       <td style="padding:6px 10px;">${r.sum}</td>
       <td style="padding:6px 10px;">${r.td}</td>
