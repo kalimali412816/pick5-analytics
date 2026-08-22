@@ -820,6 +820,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
   <div class="tab" onclick="switchTab('sameDayPerm',this)">♊ Same-Day Doubles</div>
   <div class="tab" onclick="switchTab('triplePredictor',this)">🎯 T Predictor</div>
+  <div class="tab" onclick="switchTab('nextDayIntel',this)">🔮 Next Day Intel</div>
 </div>
 
 <!-- RESULTS -->
@@ -851,6 +852,26 @@ tr:hover td{background:var(--b0);}
       <th title="Days since this exact number last appeared (any state in filter)">Last Exact<span class="sort-arrow"></span></th>
       <th onclick="sortTable('results','pattern')">Pattern Match<span class="sort-arrow"></span></th>
     </tr></thead><tbody id="rBody"></tbody></table></div>
+  </div>
+</div>
+
+<div id="panel-nextDayIntel" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>🔮 Next Day Intel</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">All pattern match sources from your current filter → combined next-day draws · hot dates highlighted</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="ndiMatchType" onchange="renderNextDayIntel()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Match Types</option>
+          <option value="bomb">💣 Boom Only</option>
+          <option value="boxed">📦 Boxed Only</option>
+        </select>
+        <button onclick="renderNextDayIntel()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">🔄 Refresh</button>
+      </div>
+    </div>
+    <div id="ndiContent" style="padding:16px;"></div>
   </div>
 </div>
 
@@ -3423,7 +3444,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=387"></script>
+<script src="lottolens-data.js?v=388"></script>
 <script>
 
 // ================================================================
@@ -11036,7 +11057,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','posFilter','posConverge','posRepeat'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -11072,6 +11093,7 @@ function renderCur(){
   else if(curTab==='digitSearch'){_renderDigitSearch();}
   else if(curTab==='sameDayPerm'){_renderSameDayPerm();}
   else if(curTab==='triplePredictor'){_renderTriplePredictor();}
+  else if(curTab==='nextDayIntel'){renderNextDayIntel();}
   else if(curTab==='posFilter'){_renderPosFilter();}
   else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='posRepeat'){_renderPosRepeat();}
@@ -21660,6 +21682,161 @@ function _renderTriplePredictor(){
   var cpBtn=document.getElementById('tpCopyWatchBtn');
   if(cpBtn) cpBtn.addEventListener('click',function(){_copyToClipboard(watchNums.join(' '),this);});
 }
+// ================================================================
+// NEXT DAY INTEL TAB
+// ================================================================
+function renderNextDayIntel(){
+  const el=document.getElementById('ndiContent');
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:20px 0;">Building intel...</div>';
+
+  const matchTypeF=document.getElementById('ndiMatchType')?.value||'ALL';
+
+  // Step 1: find all pattern matches for FILT draws
+  const pats=findPatterns(FILT);
+  if(!pats.length){
+    el.innerHTML='<div class="es">No pattern matches found in current filter.</div>';
+    return;
+  }
+
+  // Step 2: for each match, record the source date and collect next-day draws
+  // Track: sourceDk -> {currentDraws:[], nextDayRecs:[]}
+  const sourceMap={};  // sourceDk -> {currentDraws, nextDayDk, nextDayRecs}
+
+  pats.forEach(function(pat){
+    if(matchTypeF!=='ALL'&&pat.matchType!==matchTypeF) return;
+    pat.previous.forEach(function(prev){
+      const srcDk=prev.dk;
+      if(!sourceMap[srcDk]){
+        // Compute next day
+        const d=new Date(srcDk+'T12:00:00Z');
+        d.setUTCDate(d.getUTCDate()+1);
+        const nextDk=d.toISOString().slice(0,10);
+        const nextRecs=ALL.filter(function(r){return r.dk===nextDk;});
+        sourceMap[srcDk]={currentDraws:[],nextDk,nextRecs,matchType:pat.matchType};
+      }
+      // Add the current FILT draw that matched this source
+      const exists=sourceMap[srcDk].currentDraws.find(function(x){
+        return x.number===pat.current.number&&x.state===pat.current.state&&x.dk===pat.current.dk;
+      });
+      if(!exists) sourceMap[srcDk].currentDraws.push(pat.current);
+    });
+  });
+
+  const sources=Object.entries(sourceMap).sort(function(a,b){
+    // Sort by number of current draws (hot dates first), then by date desc
+    return b[1].currentDraws.length-a[1].currentDraws.length||b[0].localeCompare(a[0]);
+  });
+
+  if(!sources.length){
+    el.innerHTML='<div class="es">No source dates found.</div>';
+    return;
+  }
+
+  // Step 3: collect ALL next-day numbers across all sources for anagram duplicate detection
+  const allNextNums=[];
+  sources.forEach(function([srcDk,info]){
+    info.nextRecs.forEach(function(r){ allNextNums.push({number:r.number,sorted:r.sorted,srcDk}); });
+  });
+
+  // Find sorted values that appear in multiple source groups (anagram duplicates)
+  const sortedToSrcs={};
+  allNextNums.forEach(function(x){
+    if(!sortedToSrcs[x.sorted]) sortedToSrcs[x.sorted]=new Set();
+    sortedToSrcs[x.sorted].add(x.srcDk);
+  });
+  const hotSorted=new Set(Object.keys(sortedToSrcs).filter(function(s){return sortedToSrcs[s].size>1;}));
+
+  // Build HTML
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDk(dk){
+    const [y,mo,d]=dk.split('-');
+    return mn[+mo]+' '+d+', '+y;
+  }
+  function getPat(n){
+    const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    const v=Object.values(f).sort(function(a,b){return b-a;});
+    if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';
+    if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';
+  }
+  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+  const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+
+  const totalSources=sources.length;
+  const hotSources=sources.filter(function([,i]){return i.currentDraws.length>=2;});
+
+  let h=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+    <div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:var(--b6);">${totalSources}</span> <span style="color:var(--g6);">source dates</span>
+    </div>
+    <div style="background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:#92400e;">${hotSources.length}</span> <span style="color:#92400e;">🔥 hot dates (2+ matches)</span>
+    </div>
+    <div style="background:#ede9fe;border:1.5px solid #7c3aed;border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:#5b21b6;">${hotSorted.size}</span> <span style="color:#5b21b6;">🔀 anagram dupes across next days</span>
+    </div>
+  </div>`;
+
+  sources.forEach(function([srcDk,info]){
+    const isHot=info.currentDraws.length>=2;
+    const borderCol=isHot?'#f59e0b':'var(--g3)';
+    const headerBg=isHot?'#fffbeb':'var(--g0)';
+    const nextFmt=fmtDk(info.nextDk);
+    const srcFmt=fmtDk(srcDk);
+    const matchIcon=info.matchType==='bomb'?'💣':'📦';
+
+    h+=`<div style="border:2px solid ${borderCol};border-radius:12px;margin-bottom:14px;overflow:hidden;">`;
+
+    // Header: source date + current draws that matched
+    h+=`<div style="background:${headerBg};padding:10px 14px;border-bottom:1px solid ${borderCol};">`;
+    h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">`;
+    if(isHot) h+=`<span style="background:#f59e0b;color:#fff;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:4px;">🔥 HOT</span>`;
+    h+=`<span style="font-size:.82rem;font-weight:800;color:var(--g9);">Source: ${srcFmt}</span>`;
+    h+=`<span style="font-size:.72rem;color:var(--g5);">${matchIcon} ${info.matchType==='bomb'?'Boom':'Boxed'}</span>`;
+    h+=`<span style="font-size:.72rem;color:var(--g5);margin-left:auto;">→ Next day: <strong>${nextFmt}</strong></span>`;
+    h+=`</div>`;
+    // Current draws that triggered this
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;">`;
+    info.currentDraws.forEach(function(cr){
+      const cp=getPat(cr.number);
+      h+=`<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--b3);border-radius:6px;padding:3px 8px;font-size:.72rem;">`;
+      h+=`<span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">${cr.state}</span>`;
+      h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;">${cr.number}</span>`;
+      h+=`<span style="padding:1px 4px;border-radius:3px;background:${PAT_BG[cp]};color:${PAT_COLOR[cp]};font-size:.62rem;font-weight:700;">${cp}</span>`;
+      h+=`<span style="font-size:.65rem;color:var(--g5);">${cr.dk.slice(5).replace('-','/')} ${cr.draw==='midday'?'M':'E'}</span>`;
+      h+=`</span>`;
+    });
+    h+=`</div></div>`;
+
+    // Next day draws
+    if(!info.nextRecs.length){
+      h+=`<div style="padding:10px 14px;font-size:.75rem;color:var(--g5);">No draws on record for ${nextFmt}</div>`;
+    } else {
+      h+=`<div style="padding:10px 14px;">`;
+      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;">`;
+      info.nextRecs.forEach(function(r){
+        const p=getPat(r.number);
+        const isAnagDupe=hotSorted.has(r.sorted);
+        const drawCol=r.draw==='midday'?'var(--red)':'var(--b5)';
+        const cardBorder=isAnagDupe?'2px solid #7c3aed':'1px solid var(--g2)';
+        const cardBg=isAnagDupe?'#faf5ff':'var(--g0)';
+        h+=`<div style="background:${cardBg};border:${cardBorder};border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;">`;
+        if(isAnagDupe) h+=`<span title="Anagram appears in multiple next-day pools" style="font-size:.7rem;">🔀</span>`;
+        h+=`<span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">${r.state}</span>`;
+        h+=`<span style="font-size:.72rem;font-weight:700;${drawCol==='var(--red)'?'color:var(--red)':'color:var(--b5);'}">${r.draw==='midday'?'Mid':'Eve'}</span>`;
+        h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;">${r.number}</span>`;
+        h+=`<span style="padding:1px 4px;border-radius:3px;background:${PAT_BG[p]};color:${PAT_COLOR[p]};font-size:.62rem;font-weight:700;">${p}</span>`;
+        if(p==='T'||p==='TD'||p==='Q'||p==='Qu') h+=`<span style="font-size:.7rem;">⭐</span>`;
+        h+=`</div>`;
+      });
+      h+=`</div></div>`;
+    }
+    h+=`</div>`;
+  });
+
+  el.innerHTML=h;
+}
+
 
 
 function _renderSameDayPerm(){
