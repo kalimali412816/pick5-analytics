@@ -871,6 +871,18 @@ tr:hover td{background:var(--b0);}
         <button onclick="renderNextDayIntel()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">🔄 Refresh</button>
       </div>
     </div>
+    <div style="padding:10px 16px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid rgba(255,255,255,.1);">
+      <input id="ndiSumF" type="text" placeholder="Sum e.g. 17,21" oninput="renderNextDayIntel()"
+        style="width:110px;padding:4px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.75rem;background:var(--g0);" />
+      <input id="ndiTdF" type="text" placeholder="TD e.g. 40,55" oninput="renderNextDayIntel()"
+        style="width:110px;padding:4px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.75rem;background:var(--g0);" />
+      <input id="ndiDeltaF" type="text" placeholder="Δ e.g. 5,10" oninput="renderNextDayIntel()"
+        style="width:100px;padding:4px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.75rem;background:var(--g0);" />
+      <input id="ndiDigitF" type="text" placeholder="Digits e.g. 057 13" maxlength="20" oninput="renderNextDayIntel()"
+        style="width:130px;padding:4px 8px;border:1px solid var(--g3);border-radius:5px;font-size:.75rem;background:var(--g0);" />
+      <button onclick="['ndiSumF','ndiTdF','ndiDeltaF','ndiDigitF'].forEach(function(id){document.getElementById(id).value='';});renderNextDayIntel();"
+        style="padding:4px 10px;font-size:.72rem;background:var(--g1);border:1px solid var(--g3);border-radius:5px;cursor:pointer;">Clear</button>
+    </div>
     <div id="ndiContent" style="padding:16px;"></div>
   </div>
 </div>
@@ -3444,7 +3456,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=388"></script>
+<script src="lottolens-data.js?v=389"></script>
 <script>
 
 // ================================================================
@@ -21691,6 +21703,10 @@ function renderNextDayIntel(){
   el.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:20px 0;">Building intel...</div>';
 
   const matchTypeF=document.getElementById('ndiMatchType')?.value||'ALL';
+  const ndiSumF=(document.getElementById('ndiSumF')?.value||'').trim();
+  const ndiTdF=(document.getElementById('ndiTdF')?.value||'').trim();
+  const ndiDeltaF=(document.getElementById('ndiDeltaF')?.value||'').trim();
+  const ndiDigitF=(document.getElementById('ndiDigitF')?.value||'').replace(/\D/g,'');
 
   // Step 1: find all pattern matches for FILT draws
   const pats=findPatterns(FILT);
@@ -21699,60 +21715,71 @@ function renderNextDayIntel(){
     return;
   }
 
-  // Step 2: for each match, record the source date and collect next-day draws
-  // Track: sourceDk -> {currentDraws:[], nextDayRecs:[]}
-  const sourceMap={};  // sourceDk -> {currentDraws, nextDayDk, nextDayRecs}
-
+  // Step 2: collect source dates and their next-day draws
+  const sourceMap={};
   pats.forEach(function(pat){
     if(matchTypeF!=='ALL'&&pat.matchType!==matchTypeF) return;
     pat.previous.forEach(function(prev){
       const srcDk=prev.dk;
       if(!sourceMap[srcDk]){
-        // Compute next day
         const d=new Date(srcDk+'T12:00:00Z');
         d.setUTCDate(d.getUTCDate()+1);
         const nextDk=d.toISOString().slice(0,10);
-        const nextRecs=ALL.filter(function(r){return r.dk===nextDk;});
-        sourceMap[srcDk]={currentDraws:[],nextDk,nextRecs,matchType:pat.matchType};
+        sourceMap[srcDk]={currentDraws:[],nextDk,nextRecs:ALL.filter(function(r){return r.dk===nextDk;}),matchType:pat.matchType,srcCount:0};
       }
-      // Add the current FILT draw that matched this source
-      const exists=sourceMap[srcDk].currentDraws.find(function(x){
-        return x.number===pat.current.number&&x.state===pat.current.state&&x.dk===pat.current.dk;
-      });
+      const exists=sourceMap[srcDk].currentDraws.find(function(x){return x.number===pat.current.number&&x.state===pat.current.state&&x.dk===pat.current.dk;});
       if(!exists) sourceMap[srcDk].currentDraws.push(pat.current);
     });
   });
 
-  const sources=Object.entries(sourceMap).sort(function(a,b){
-    // Sort by number of current draws (hot dates first), then by date desc
-    return b[1].currentDraws.length-a[1].currentDraws.length||b[0].localeCompare(a[0]);
+  // Step 3: flatten all next-day records, tag with source date count
+  const allRecs=[];
+  Object.entries(sourceMap).forEach(function([srcDk,info]){
+    info.nextRecs.forEach(function(r){
+      // Compute TD, sum, delta
+      const td=(_allBySorted.get(r.sorted)||[]).length;
+      const sum=r.sum!==undefined?r.sum:r.number.split('').reduce(function(a,d){return a+(+d);},0);
+      const delta=Math.abs(sum-td);
+      allRecs.push({...r,td,sum,delta,edeltaNext:delta+1,srcDk,srcCount:info.currentDraws.length,matchType:info.matchType,currentDraws:info.currentDraws});
+    });
   });
 
-  if(!sources.length){
-    el.innerHTML='<div class="es">No source dates found.</div>';
+  if(!allRecs.length){
+    el.innerHTML='<div class="es">No next-day draws found for any pattern match source.</div>';
     return;
   }
 
-  // Step 3: collect ALL next-day numbers across all sources for anagram duplicate detection
-  const allNextNums=[];
-  sources.forEach(function([srcDk,info]){
-    info.nextRecs.forEach(function(r){ allNextNums.push({number:r.number,sorted:r.sorted,srcDk}); });
-  });
+  // Step 4: detect sorted dupes across records
+  const sortedCount={};
+  allRecs.forEach(function(r){sortedCount[r.sorted]=(sortedCount[r.sorted]||0)+1;});
+  const dupeSorted=new Set(Object.keys(sortedCount).filter(function(s){return sortedCount[s]>1;}));
 
-  // Find sorted values that appear in multiple source groups (anagram duplicates)
-  const sortedToSrcs={};
-  allNextNums.forEach(function(x){
-    if(!sortedToSrcs[x.sorted]) sortedToSrcs[x.sorted]=new Set();
-    sortedToSrcs[x.sorted].add(x.srcDk);
-  });
-  const hotSorted=new Set(Object.keys(sortedToSrcs).filter(function(s){return sortedToSrcs[s].size>1;}));
-
-  // Build HTML
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function fmtDk(dk){
-    const [y,mo,d]=dk.split('-');
-    return mn[+mo]+' '+d+', '+y;
+  // Step 5: parse filters
+  const sumVals=ndiSumF?ndiSumF.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
+  const tdVals=ndiTdF?ndiTdF.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
+  const deltaVals=ndiDeltaF?ndiDeltaF.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
+  function matchDigitF(num){
+    if(!ndiDigitF) return true;
+    const freq={};[...num].forEach(function(d){freq[d]=(freq[d]||0)+1;});
+    const qf={};[...ndiDigitF].forEach(function(d){qf[d]=(qf[d]||0)+1;});
+    return Object.entries(qf).every(function([d,n]){return (freq[d]||0)>=n;});
   }
+
+  // Apply filters
+  let filtered=allRecs.filter(function(r){
+    if(sumVals.length&&!sumVals.includes(r.sum)) return false;
+    if(tdVals.length&&!tdVals.includes(r.td)) return false;
+    if(deltaVals.length&&!deltaVals.includes(r.delta)) return false;
+    if(!matchDigitF(r.number)) return false;
+    return true;
+  });
+
+  // Sort: hot sources first, then by source date desc, then by draw
+  filtered.sort(function(a,b){
+    if(b.srcCount!==a.srcCount) return b.srcCount-a.srcCount;
+    return b.srcDk.localeCompare(a.srcDk)||a.state.localeCompare(b.state);
+  });
+
   function getPat(n){
     const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
     const v=Object.values(f).sort(function(a,b){return b-a;});
@@ -21761,79 +21788,115 @@ function renderNextDayIntel(){
   }
   const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
   const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDk(dk){const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
 
-  const totalSources=sources.length;
-  const hotSources=sources.filter(function([,i]){return i.currentDraws.length>=2;});
+  // Step 6: dupe banner at top
+  const dupeRecs=filtered.filter(function(r){return dupeSorted.has(r.sorted);});
+  const hotRecs=filtered.filter(function(r){return r.srcCount>=2;});
 
-  let h=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
-    <div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;font-size:.78rem;">
-      <span style="font-weight:700;color:var(--b6);">${totalSources}</span> <span style="color:var(--g6);">source dates</span>
-    </div>
-    <div style="background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;padding:8px 14px;font-size:.78rem;">
-      <span style="font-weight:700;color:#92400e;">${hotSources.length}</span> <span style="color:#92400e;">🔥 hot dates (2+ matches)</span>
-    </div>
-    <div style="background:#ede9fe;border:1.5px solid #7c3aed;border-radius:8px;padding:8px 14px;font-size:.78rem;">
-      <span style="font-weight:700;color:#5b21b6;">${hotSorted.size}</span> <span style="color:#5b21b6;">🔀 anagram dupes across next days</span>
-    </div>
-  </div>`;
+  let h='';
 
-  sources.forEach(function([srcDk,info]){
-    const isHot=info.currentDraws.length>=2;
-    const borderCol=isHot?'#f59e0b':'var(--g3)';
-    const headerBg=isHot?'#fffbeb':'var(--g0)';
-    const nextFmt=fmtDk(info.nextDk);
-    const srcFmt=fmtDk(srcDk);
-    const matchIcon=info.matchType==='bomb'?'💣':'📦';
+  // Stats row
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
+    <span style="font-size:.75rem;color:var(--g6);">${filtered.length} draws</span>`;
 
-    h+=`<div style="border:2px solid ${borderCol};border-radius:12px;margin-bottom:14px;overflow:hidden;">`;
+  // Copy buttons per pattern
+  ['S','D','DD','T','TD','Q','Qu'].forEach(function(pat){
+    const nums=filtered.filter(function(r){return getPat(r.number)===pat;});
+    if(!nums.length) return;
+    h+=`<button onclick="_copyToClipboard('${nums.map(function(r){return r.number;}).join(' ')}',this)"
+      style="padding:2px 9px;font-size:.68rem;font-weight:700;background:${PAT_BG[pat]};color:${PAT_COLOR[pat]};border:1.5px solid ${PAT_COLOR[pat]};border-radius:5px;cursor:pointer;">
+      📋 ${pat} (${nums.length})</button>`;
+  });
+  h+=`<button onclick="_copyToClipboard('${filtered.map(function(r){return r.number;}).join(' ')}',this)"
+    style="padding:2px 9px;font-size:.68rem;font-weight:700;background:var(--g1);color:var(--g7);border:1.5px solid var(--g4);border-radius:5px;cursor:pointer;">
+    📋 All (${filtered.length})</button>`;
+  h+=`</div>`;
 
-    // Header: source date + current draws that matched
-    h+=`<div style="background:${headerBg};padding:10px 14px;border-bottom:1px solid ${borderCol};">`;
-    h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">`;
-    if(isHot) h+=`<span style="background:#f59e0b;color:#fff;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:4px;">🔥 HOT</span>`;
-    h+=`<span style="font-size:.82rem;font-weight:800;color:var(--g9);">Source: ${srcFmt}</span>`;
-    h+=`<span style="font-size:.72rem;color:var(--g5);">${matchIcon} ${info.matchType==='bomb'?'Boom':'Boxed'}</span>`;
-    h+=`<span style="font-size:.72rem;color:var(--g5);margin-left:auto;">→ Next day: <strong>${nextFmt}</strong></span>`;
-    h+=`</div>`;
-    // Current draws that triggered this
-    h+=`<div style="display:flex;flex-wrap:wrap;gap:5px;">`;
-    info.currentDraws.forEach(function(cr){
-      const cp=getPat(cr.number);
-      h+=`<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--b3);border-radius:6px;padding:3px 8px;font-size:.72rem;">`;
-      h+=`<span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">${cr.state}</span>`;
-      h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;">${cr.number}</span>`;
-      h+=`<span style="padding:1px 4px;border-radius:3px;background:${PAT_BG[cp]};color:${PAT_COLOR[cp]};font-size:.62rem;font-weight:700;">${cp}</span>`;
-      h+=`<span style="font-size:.65rem;color:var(--g5);">${cr.dk.slice(5).replace('-','/')} ${cr.draw==='midday'?'M':'E'}</span>`;
-      h+=`</span>`;
+  // Dupe banner
+  if(dupeRecs.length){
+    const dupeSortedList=[...new Set(dupeRecs.map(function(r){return r.sorted;}))];
+    h+=`<div style="background:#faf5ff;border:2px solid #7c3aed;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:.75rem;font-weight:800;color:#5b21b6;margin-bottom:6px;">🔀 ${dupeSortedList.length} Anagram Dupe${dupeSortedList.length>1?'s':''} in Next-Day Pool</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
+    dupeSortedList.forEach(function(s){
+      const matches=dupeRecs.filter(function(r){return r.sorted===s;});
+      h+=`<span style="background:#ede9fe;border:1px solid #7c3aed;border-radius:5px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:.75rem;font-weight:700;color:#5b21b6;" title="${matches.map(function(r){return r.number+' ('+r.state+' '+fmtDk(r.nextDk||r.dk)+')';}).join(', ')}">
+        ${s} ×${matches.length}</span>`;
     });
     h+=`</div></div>`;
+  }
 
-    // Next day draws
-    if(!info.nextRecs.length){
-      h+=`<div style="padding:10px 14px;font-size:.75rem;color:var(--g5);">No draws on record for ${nextFmt}</div>`;
-    } else {
-      h+=`<div style="padding:10px 14px;">`;
-      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;">`;
-      info.nextRecs.forEach(function(r){
-        const p=getPat(r.number);
-        const isAnagDupe=hotSorted.has(r.sorted);
-        const drawCol=r.draw==='midday'?'var(--red)':'var(--b5)';
-        const cardBorder=isAnagDupe?'2px solid #7c3aed':'1px solid var(--g2)';
-        const cardBg=isAnagDupe?'#faf5ff':'var(--g0)';
-        h+=`<div style="background:${cardBg};border:${cardBorder};border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;">`;
-        if(isAnagDupe) h+=`<span title="Anagram appears in multiple next-day pools" style="font-size:.7rem;">🔀</span>`;
-        h+=`<span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">${r.state}</span>`;
-        h+=`<span style="font-size:.72rem;font-weight:700;${drawCol==='var(--red)'?'color:var(--red)':'color:var(--b5);'}">${r.draw==='midday'?'Mid':'Eve'}</span>`;
-        h+=`<span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.88rem;">${r.number}</span>`;
-        h+=`<span style="padding:1px 4px;border-radius:3px;background:${PAT_BG[p]};color:${PAT_COLOR[p]};font-size:.62rem;font-weight:700;">${p}</span>`;
-        if(p==='T'||p==='TD'||p==='Q'||p==='Qu') h+=`<span style="font-size:.7rem;">⭐</span>`;
-        h+=`</div>`;
-      });
-      h+=`</div></div>`;
+  // Hot sources banner
+  if(hotRecs.length){
+    const hotSrcs=[...new Set(hotRecs.map(function(r){return r.srcDk;}))];
+    h+=`<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:.75rem;font-weight:800;color:#92400e;margin-bottom:6px;">🔥 ${hotSrcs.length} Hot Source Date${hotSrcs.length>1?'s':''} (2+ current draws matched)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
+    hotSrcs.forEach(function(dk){
+      const info=sourceMap[dk];
+      h+=`<span style="background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 9px;font-size:.75rem;font-weight:700;color:#92400e;">
+        ${fmtDk(dk)} (${info.currentDraws.length}x) → next: ${fmtDk(info.nextDk||'')}
+      </span>`;
+    });
+    h+=`</div></div>`;
+  }
+
+  // Table
+  h+=`<div style="overflow-x:auto;">
+  <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+    <thead><tr style="background:var(--g1);text-align:left;">
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);white-space:nowrap;">State</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Draw</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Number</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Boxed</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Sum</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">TD</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Δ</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">EΔ</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Pat</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Source</th>
+    </tr></thead><tbody>`;
+
+  let lastSrc='';
+  filtered.forEach(function(r){
+    const p=getPat(r.number);
+    const isHot=r.srcCount>=2;
+    const isDupe=dupeSorted.has(r.sorted);
+    const isSpecial=p==='T'||p==='TD'||p==='Q'||p==='Qu';
+    const drawCol=r.draw==='midday'?'color:var(--red);font-weight:700;':'color:var(--b5);font-weight:700;';
+    const rowBg=isHot?'#fffbeb':isDupe?'#faf5ff':'';
+    const srcChange=r.srcDk!==lastSrc;
+    lastSrc=r.srcDk;
+
+    // Group separator when source date changes
+    if(srcChange){
+      const info=sourceMap[r.srcDk];
+      h+=`<tr><td colspan="10" style="padding:4px 10px;background:${isHot?'#fef3c7':'var(--g1)'};font-size:.7rem;font-weight:700;color:${isHot?'#92400e':'var(--g6)'};border-top:2px solid var(--g3);">
+        ${isHot?'🔥 ':''} Source: ${fmtDk(r.srcDk)} → Next day: ${fmtDk(info?.nextDk||'')}
+        ${isHot?'<span style="margin-left:6px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">HOT '+r.srcCount+'x</span>':''}
+        <span style="margin-left:8px;color:var(--g5);font-weight:400;">${(info?.currentDraws||[]).map(function(cd){return cd.state+' '+cd.number;}).join(', ')}</span>
+      </td></tr>`;
     }
-    h+=`</div>`;
+
+    h+=`<tr style="border-bottom:1px solid var(--g2);${rowBg?'background:'+rowBg+';':''}${isSpecial?'font-weight:700;':''}">
+      <td style="padding:6px 10px;"><span style="background:var(--b6);color:#fff;padding:1px 6px;border-radius:4px;font-size:.7rem;font-weight:700;">${r.state}</span></td>
+      <td style="padding:6px 10px;${drawCol}">${r.draw==='midday'?'Mid':'Eve'}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;font-size:.9rem;">
+        ${isDupe?'🔀 ':''}${isSpecial?'⭐ ':''}${r.number}
+      </td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;color:var(--b5);font-size:.75rem;">${r.sorted}</td>
+      <td style="padding:6px 10px;">${r.sum}</td>
+      <td style="padding:6px 10px;">${r.td}</td>
+      <td style="padding:6px 10px;"><span style="background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;font-size:.7rem;font-weight:700;">Δ${r.delta}</span></td>
+      <td style="padding:6px 10px;"><span style="background:#ede9fe;color:#5b21b6;padding:1px 5px;border-radius:3px;font-size:.7rem;font-weight:700;">EΔ${r.edeltaNext}</span></td>
+      <td style="padding:6px 10px;"><span style="background:${PAT_BG[p]};color:${PAT_COLOR[p]};padding:2px 6px;border-radius:4px;font-size:.72rem;font-weight:700;">${p}</span></td>
+      <td style="padding:6px 10px;font-size:.68rem;color:var(--g5);">${fmtDk(r.srcDk)}</td>
+    </tr>`;
   });
 
+  h+=`</tbody></table></div>`;
   el.innerHTML=h;
 }
 
