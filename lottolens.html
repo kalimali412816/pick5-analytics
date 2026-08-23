@@ -863,6 +863,11 @@ tr:hover td{background:var(--b0);}
         <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">All pattern match sources from your current filter → combined next-day draws · hot dates highlighted</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="ndiDayOffset" onchange="renderNextDayIntel()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="-1">📅 1 Day Prior</option>
+          <option value="0" selected>📅 Latest Day</option>
+          <option value="1">📅 1 Day After</option>
+        </select>
         <select id="ndiMatchType" onchange="renderNextDayIntel()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Match Types</option>
           <option value="bomb">💣 Boom Only</option>
@@ -3456,7 +3461,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=395"></script>
+<script src="lottolens-data.js?v=396"></script>
 <script>
 
 // ================================================================
@@ -21708,18 +21713,31 @@ function renderNextDayIntel(){
   const ndiDeltaF=(document.getElementById('ndiDeltaF')?.value||'').trim();
   const ndiDigitF=(document.getElementById('ndiDigitF')?.value||'').replace(/\D/g,'');
 
-  // Step 1: find most recent date in FILT
+  // Step 1: find reference date based on offset selector
+  const dayOffset=parseInt(document.getElementById('ndiDayOffset')?.value||'0');
   const allDks=FILT.map(function(r){return r.dk;});
   if(!allDks.length){el.innerHTML='<div class="es">No draws in current filter.</div>';return;}
   const latestDk=allDks.reduce(function(a,b){return a>b?a:b;});
 
-  // Only use draws from the latest date
-  const latestDraws=FILT.filter(function(r){return r.dk===latestDk;});
+  // Compute reference date using offset
+  const refD=new Date(latestDk+'T12:00:00Z');
+  refD.setUTCDate(refD.getUTCDate()+dayOffset);
+  const refDk=refD.toISOString().slice(0,10);
 
-  // Compute next day
-  const d=new Date(latestDk+'T12:00:00Z');
-  d.setUTCDate(d.getUTCDate()+1);
-  const nextDk=d.toISOString().slice(0,10);
+  // Use draws from reference date
+  const latestDraws=FILT.filter(function(r){return r.dk===refDk;});
+  if(!latestDraws.length){
+    // If no draws on refDk, fall back to closest available date
+    const sorted=[...new Set(allDks)].sort();
+    const fallback=dayOffset<0?sorted[0]:sorted[sorted.length-1];
+    el.innerHTML='<div class="es">No draws found for '+refDk+'. Closest available: '+fallback+'</div>';
+    return;
+  }
+
+  // Compute next day from reference date (what we're predicting)
+  const nextD=new Date(refDk+'T12:00:00Z');
+  nextD.setUTCDate(nextD.getUTCDate()+1);
+  const nextDk=nextD.toISOString().slice(0,10);
 
   // Step 2: find pattern matches for latest draws only
   const pats=findPatterns(latestDraws);
@@ -21800,8 +21818,9 @@ function renderNextDayIntel(){
   const hotSrcs=Object.entries(sourceMap).filter(function([,i]){return i.currentDraws.length>=2;});
   const dupeRecs=filtered.filter(function(r){return dupeSorted.has(r.sorted);});
 
+  const offsetLabel=dayOffset===-1?'1 Day Prior':dayOffset===1?'1 Day After':'Latest Day';
   let h=`<div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:.78rem;">
-    <span style="font-weight:700;color:var(--b6);">Latest day: ${fmtDk(latestDk)}</span>
+    <span style="font-weight:700;color:var(--b6);">${offsetLabel}: ${fmtDk(refDk)}</span>
     <span style="color:var(--g5);margin-left:10px;">→ Predicting next day: <strong style="color:var(--g8);">${fmtDk(nextDk)}</strong></span>
     <span style="color:var(--g5);margin-left:10px;">${Object.keys(sourceMap).length} source dates · ${filtered.length} next-day draws</span>
   </div>`;
