@@ -3461,7 +3461,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=396"></script>
+<script src="lottolens-data.js?v=398"></script>
 <script>
 
 // ================================================================
@@ -21845,7 +21845,7 @@ function renderNextDayIntel(){
     h+=`<div style="background:#faf5ff;border:2px solid #7c3aed;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
         <span style="font-size:.75rem;font-weight:800;color:#5b21b6;">🔀 ${dupeSortedList.length} Anagram Dupe${dupeSortedList.length>1?'s':''} in Pool</span>
-        <button onclick="_copyToClipboard(${JSON.stringify(dupeRecs.map(function(r){return r.number;}).join(' '))},this)" style="padding:2px 8px;font-size:.65rem;font-weight:700;background:#ede9fe;color:#5b21b6;border:1.5px solid #7c3aed;border-radius:5px;cursor:pointer;">📋 Copy All Dupes</button>
+        <button id="ndiDupeCopyBtn" style="padding:2px 8px;font-size:.65rem;font-weight:700;background:#ede9fe;color:#5b21b6;border:1.5px solid #7c3aed;border-radius:5px;cursor:pointer;">📋 Copy All Dupes</button>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
     dupeSortedList.forEach(function(s){
@@ -21925,6 +21925,12 @@ function renderNextDayIntel(){
 
   h+=`</tbody></table></div>`;
   el.innerHTML=h;
+  // Wire up dupe copy button — store nums in dataset to keep in scope
+  const _dupeCopyBtn=document.getElementById('ndiDupeCopyBtn');
+  if(_dupeCopyBtn){
+    _dupeCopyBtn.dataset.nums=dupeRecs.map(function(r){return r.number;}).join(' ');
+    _dupeCopyBtn.onclick=function(){_copyToClipboard(this.dataset.nums,this);};
+  }
 }
 
 
