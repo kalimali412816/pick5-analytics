@@ -1277,6 +1277,16 @@ tr:hover td{background:var(--b0);}
           <option value="midday">Midday Only</option>
           <option value="evening">Evening Only</option>
         </select>
+        <select id="psPatFilter" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Patterns</option>
+          <option value="S">S</option>
+          <option value="D">D</option>
+          <option value="DD">DD</option>
+          <option value="T">T</option>
+          <option value="TD">TD</option>
+          <option value="Q">Q</option>
+          <option value="Qu">Qu</option>
+        </select>
       </div>
     </div>
     <div style="padding:16px;border-bottom:1px solid var(--g2);">
@@ -3338,16 +3348,7 @@ tr:hover td{background:var(--b0);}
           style="width:110px;padding:4px 9px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-family:'DM Mono',monospace;font-size:.82rem;background:rgba(255,255,255,.15);color:#fff;outline:none;"
           title="Search for a 3 or 4 digit combo — shows all position combos containing those digits">
         <button onclick="document.getElementById('ptripSearch').value='';_renderPosTrips();" style="padding:3px 8px;font-size:.72rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">Clear</button>
-        <select id="ptripPat" onchange="_renderPosTrips()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All Patterns</option>
-          <option value="S">S</option>
-          <option value="D">D</option>
-          <option value="DD">DD</option>
-          <option value="T">T</option>
-          <option value="TD">TD</option>
-          <option value="Q">Q</option>
-          <option value="Qu">Qu</option>
-        </select>
+
       </div>
     </div>
     <div id="ptripContent" style="padding:16px;"></div>
@@ -3472,7 +3473,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=402"></script>
+<script src="lottolens-data.js?v=403"></script>
 <script>
 
 // ================================================================
@@ -22301,7 +22302,6 @@ function _renderPosTrips(){
   const stF=document.getElementById('ptripState').value;
   const scF=document.getElementById('ptripScope').value;
   const ptripQ=(document.getElementById('ptripSearch')?.value||'').replace(/\D/g,'');
-  const ptripPat=document.getElementById('ptripPat')?.value||'ALL';
 
   // Build scope
   let scopeRows=ALL;
@@ -22358,44 +22358,9 @@ function _renderPosTrips(){
     // All query digits must appear at least as many times as in query
     return Object.entries(qf).every(([d,n])=>(freq[d]||0)>=n);
   }
-  const _ptripPatMap={'ALL':null,'S':['Singles'],'D':['Doubles'],'DD':['DD'],'T':['Triples'],'TD':['TD'],'Q':['Quads'],'Qu':['Qu']};
-  const _ptripPatInternal=_ptripPatMap[ptripPat]||null;
-  function _ptripMatchPat(key){
-    if(!_ptripPatInternal) return true;
-    // key = "positions|digits", digits are all same for 3-digit
-    // Check what patterns the hasn't-come generates for this key
-    const [posStr,digStr]=key.split('|');
-    const posArr=posStr.split('').map(Number);
-    // For 3-digit: the triple digit is digStr[0], check what patterns fill the missing 2 spots
-    const missing=[0,1,2,3,4].filter(function(p){return !posArr.includes(p);});
-    if(missing.length===2){
-      // Generate all possible fills and check if any match selected pattern
-      for(let a=0;a<=9;a++){
-        for(let b=0;b<=9;b++){
-          const arr=Array(5);
-          posArr.forEach(function(p,i){arr[p]=digStr[i];});
-          arr[missing[0]]=String(a);arr[missing[1]]=String(b);
-          const num=arr.join('');
-          if(_ptripPatInternal.includes(_getRepeatKey(num))) return true;
-        }
-      }
-      return false;
-    }
-    if(missing.length===1){
-      for(let x=0;x<=9;x++){
-        const arr=Array(5);
-        posArr.forEach(function(p,i){arr[p]=digStr[i];});
-        arr[missing[0]]=String(x);
-        const num=arr.join('');
-        if(_ptripPatInternal.includes(_getRepeatKey(num))) return true;
-      }
-      return false;
-    }
-    return true;
-  }
-  const top3=Object.entries(counts3t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k)&&_ptripMatchPat(k))
+  const top3=Object.entries(counts3t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k))
     .sort((a,b)=>b[1]-a[1]||(recent3t[b[0]]||'').localeCompare(recent3t[a[0]]||''));
-  const top4=Object.entries(counts4t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k)&&_ptripMatchPat(k))
+  const top4=Object.entries(counts4t).filter(([k,c])=>c>=2&&_ptripMatchSearch(k))
     .sort((a,b)=>b[1]-a[1]||(recent4t[b[0]]||'').localeCompare(recent4t[a[0]]||''));
 
   // Reuse haventComeFor4 if available (defined in _renderPosSearch scope)
@@ -22899,6 +22864,9 @@ function _renderPosSearch(){
   const maxHits=maxHitsEl?parseInt(maxHitsEl.value)||9999:9999;
   const posLen=posLenEl?parseInt(posLenEl.value)||0:0;
   const psDrawF=psDrawEl?psDrawEl.value:'both'; // both, midday, evening
+  const psPatF=document.getElementById('psPatFilter')?.value||'ALL';
+  const _psPatMap={'ALL':null,'S':['Singles'],'D':['Doubles'],'DD':['DD'],'T':['Triples'],'TD':['TD'],'Q':['Quads'],'Qu':['Qu']};
+  const _psPatInternal=_psPatMap[psPatF]||null;
 
   // Read pattern
   const pat=[];
@@ -23054,6 +23022,14 @@ function _renderPosSearch(){
   function renderTopSection(label,items,emoji){
     if(!items.length) return '';
     const is4=(label==='4-Digit Positions');
+    // Apply pattern filter: only show combos with matching hasn't-come items
+    if(_psPatInternal){
+      items=items.filter(function(item){
+        const hcCheck=is4?haventComeFor4(item[0]):[];
+        return hcCheck.some(function(h){return _psPatInternal.includes(h.type);});
+      });
+    }
+    if(!items.length) return '';
     const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
     const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
     const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
@@ -23079,7 +23055,8 @@ function _renderPosSearch(){
       s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
       s+=`</div>`;
       if(is4){
-        const hc=haventComeFor4(key);
+        const hcRaw=haventComeFor4(key);
+        const hc=_psPatInternal?hcRaw.filter(function(h){return _psPatInternal.includes(h.type);}):hcRaw;
         if(hc.length){
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
