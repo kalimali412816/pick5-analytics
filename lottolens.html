@@ -3473,7 +3473,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=404"></script>
+<script src="lottolens-data.js?v=405"></script>
 <script>
 
 // ================================================================
@@ -8353,7 +8353,7 @@ function _renderStraightRepeats(){
   }
 
   const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46'};
+  const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46',MI:'#7c3aed'};
 
   window._faqSrNums=repeats.map(r=>r.num);
   let h=`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">`;
@@ -13190,7 +13190,7 @@ async function askAI(){
     }
 
     // State-specific question
-    const stateMap={'georgia':'GA','florida':'FL','ohio':'OH','dc':'DC','washington':'DC','pennsylvania':'PA','maryland':'MD','louisiana':'LA','delaware':'DE','virginia':'VA','germany':'GE'};
+    const stateMap={'georgia':'GA','florida':'FL','ohio':'OH','dc':'DC','washington':'DC','pennsylvania':'PA','maryland':'MD','louisiana':'LA','delaware':'DE','virginia':'VA','germany':'GE','michigan':'MI'};
     let mentionedState=null;
     for(const [name,code] of Object.entries(stateMap)){
       if(ql.includes(name)||ql.includes(code.toLowerCase())) mentionedState=code;
@@ -19156,7 +19156,7 @@ function _renderPalindromes(){
   const curYearStr=new Date().getFullYear().toString();
   const palins2026=ALL.filter(r=>isPalin(r.number)&&r.ym.startsWith(curYearStr));
   const stateOrder=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
-  const stateNames={GA:'Georgia',FL:'Florida',DE:'Delaware',MD:'Maryland',LA:'Louisiana',OH:'Ohio',PA:'Pennsylvania',VA:'Virginia',DC:'D.C.',GE:'Germany'};
+  const stateNames={GA:'Georgia',FL:'Florida',DE:'Delaware',MD:'Maryland',LA:'Louisiana',OH:'Ohio',PA:'Pennsylvania',VA:'Virginia',DC:'D.C.',GE:'Germany',MI:'Michigan'};
   const ytdByState={};
   stateOrder.forEach(sc=>{
     const hits=palins2026.filter(r=>r.state===sc);
@@ -23724,7 +23724,7 @@ function _renderUnseenSingles(){
     else if(pat==='Doubles') seenD[r.state].add(r.sorted);
   });
 
-  const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46'};
+  const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46',MI:'#7c3aed'};
 
   function buildSection(st, allCombos, seen, label, borderColor, textColor){
     const unseen=allCombos.filter(s=>!seen.has(s));
@@ -23775,7 +23775,7 @@ function _renderUnseenCross(){
   if(!container) return;
 
   const states=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
-  const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46'};
+  const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46',MI:'#7c3aed'};
 
   // Build first-timer map per state: sorted -> {dk, number}
   const ft={};
