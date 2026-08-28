@@ -396,6 +396,7 @@ tr:hover td{background:var(--b0);}
         <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="GE" onchange="msfChange('stF')">GE</label></div>
         <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="LA" onchange="msfChange('stF')">LA</label></div>
         <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="MD" onchange="msfChange('stF')">MD</label></div>
+        <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="MI" onchange="msfChange('stF')">MI</label></div>
         <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="OH" onchange="msfChange('stF')">OH</label></div>
         <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="PA" onchange="msfChange('stF')">PA</label></div>
         <div class="msf-item"><label><input type="checkbox" class="stF-cb" value="VA" onchange="msfChange('stF')">VA</label></div>
@@ -405,7 +406,9 @@ tr:hover td{background:var(--b0);}
         </div>
       </div>
     </div>
-    <select id="stF" style="display:none"><option value="ALL">All States</option></select>
+    <select id="stF" style="display:none">
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+        </select>
   </div>
   <div class="fg"><label>Draw</label>
     <select id="drF" onchange="applyFiltersDebounced()">
@@ -902,10 +905,7 @@ tr:hover td{background:var(--b0);}
       <h3>Number Frequency — by Normal Value</h3>
       <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;">
         <select id="freqStateF" onchange="renderFrequency()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option>
-          <option value="GA">GA</option><option value="GE">GE</option><option value="MI">MI</option><option value="LA">LA</option>
-          <option value="MD">MD</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="freqSumF" onchange="renderFrequency()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Sums</option>
@@ -943,10 +943,7 @@ tr:hover td{background:var(--b0);}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <select id="faqStateF" onchange="renderFreqAdvanced()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option>
-          <option value="GA">GA</option><option value="GE">GE</option><option value="MI">MI</option><option value="LA">LA</option>
-          <option value="MD">MD</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="faqSumF" onchange="renderFreqAdvanced()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Sums</option>
@@ -1251,7 +1248,7 @@ tr:hover td{background:var(--b0);}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <select id="psState" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="psYear" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;"></select>
         <select id="psPosLen" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
@@ -1312,7 +1309,7 @@ tr:hover td{background:var(--b0);}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <select id="ptState" onchange="_renderPosToday()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
 
       </div>
@@ -1337,10 +1334,7 @@ tr:hover td{background:var(--b0);}
       <h3>Σ Delta Analysis</h3>
       <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
         <select id="deltaStateF" onchange="renderDelta()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option>
-          <option value="GA">GA</option><option value="GE">GE</option><option value="MI">MI</option><option value="LA">LA</option>
-          <option value="MD">MD</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <div class="badge" id="deltaLabel">All States</div>
       </div>
@@ -1490,7 +1484,9 @@ tr:hover td{background:var(--b0);}
             <div class="msf-acts"><button class="msf-act" onclick="msfSelectAll('mlyS')">All</button><button class="msf-act" onclick="msfClearAll('mlyS')">Clear</button></div>
           </div>
         </div>
-        <select id="monthlyS" style="display:none"><option value="ALL">All States</option></select>
+        <select id="monthlyS" style="display:none">
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+        </select>
         <!-- Month multi-select -->
         <div class="msf-wrap" id="mlyM-wrap">
           <div class="msf-btn" id="mlyM-btn" onclick="toggleMSF('mlyM')" style="min-width:90px;font-size:.75rem;">Aug 2026 <span class="msf-badge" id="mlyM-badge" style="display:none"></span> <span style="font-size:.7rem">▾</span></div>
@@ -2026,11 +2022,7 @@ tr:hover td{background:var(--b0);}
       <h3>🔬 Sum &amp; Structure Extensions</h3>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select id="ssStateF" onchange="renderStructure()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC-5</option><option value="DE">Delaware</option><option value="FL">Florida</option>
-          <option value="GA">Georgia</option><option value="GE">Germany Plus5</option><option value="LA">Louisiana</option>
-          <option value="MD">Maryland</option><option value="OH">Ohio</option><option value="PA">Pennsylvania</option>
-          <option value="VA">Virginia</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="ssDrawF" onchange="renderStructure()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Draws</option>
@@ -2050,11 +2042,7 @@ tr:hover td{background:var(--b0);}
       <h3>🎰 Triple Digit Frequency</h3>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select id="tdStateF" onchange="renderTripleFreq()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC-5</option><option value="DE">Delaware</option><option value="FL">Florida</option>
-          <option value="GA">Georgia</option><option value="GE">Germany Plus5</option><option value="LA">Louisiana</option>
-          <option value="MD">Maryland</option><option value="OH">Ohio</option><option value="PA">Pennsylvania</option>
-          <option value="VA">Virginia</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="tdDrawF" onchange="renderTripleFreq()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Draws</option>
@@ -2133,7 +2121,7 @@ tr:hover td{background:var(--b0);}
           <option value="Q">Q</option>
         </select>
         <select id="poStateF" onchange="renderPatternOrigin()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <div style="display:flex;border:1px solid rgba(255,255,255,.3);border-radius:6px;overflow:hidden;">
           <button id="poMode1" onclick="setPOMode('from')" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.9);color:#1e1b4b;border:none;cursor:pointer;">Results FROM State</button>
@@ -2295,8 +2283,8 @@ tr:hover td{background:var(--b0);}
     <div style="padding:10px 16px 6px 16px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:.74rem;color:var(--g6);font-weight:600;">State:</span>
       <select id="triplePatState" onchange="_renderTriplePatterns()" style="padding:5px 8px;border-radius:6px;border:1.5px solid var(--g2);font-size:.78rem;">
-        <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
-      </select>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+        </select>
       <span style="font-size:.74rem;color:var(--g6);font-weight:600;margin-left:6px;">Year:</span>
       <select id="triplePatYear" onchange="_renderTriplePatterns()" style="padding:5px 8px;border-radius:6px;border:1.5px solid var(--g2);font-size:.78rem;"></select>
     </div>
@@ -2374,17 +2362,7 @@ tr:hover td{background:var(--b0);}
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
         <select id="unseenSinglesState" onchange="_renderUnseenSingles()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 8px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.74rem;cursor:pointer;">
-          <option value="ALL">All States</option>
-          <option value="GA">GA</option>
-          <option value="FL">FL</option>
-          <option value="DE">DE</option>
-          <option value="MD">MD</option>
-          <option value="LA">LA</option>
-          <option value="OH">OH</option>
-          <option value="PA">PA</option>
-          <option value="VA">VA</option>
-          <option value="DC">DC</option>
-          <option value="GE">GE</option><option value="MI">MI</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
       </div>
     </div>
@@ -2974,11 +2952,7 @@ tr:hover td{background:var(--b0);}
           </div>
         </div>
         <select id="gapStateF" onchange="renderGap()" style="background:var(--g1);border:1.5px solid var(--g3);border-radius:7px;padding:5px 9px;font-size:.8rem;font-family:'DM Sans',sans-serif;color:var(--g9);outline:none;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC-5</option><option value="DE">Delaware</option><option value="FL">Florida</option>
-          <option value="GA">Georgia</option><option value="GE">Germany Plus5</option><option value="LA">Louisiana</option>
-          <option value="MD">Maryland</option><option value="OH">Ohio</option><option value="PA">Pennsylvania</option>
-          <option value="VA">Virginia</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="gapDrawF" onchange="renderGap()" style="background:var(--g1);border:1.5px solid var(--g3);border-radius:7px;padding:5px 9px;font-size:.8rem;font-family:'DM Sans',sans-serif;color:var(--g9);outline:none;">
           <option value="ALL">All Draws</option>
@@ -3064,10 +3038,7 @@ tr:hover td{background:var(--b0);}
           <option value="ALL">All Time</option>
         </select>
         <select id="prState" onchange="_renderPosRepeat()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
-          <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
-          <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
       </div>
     </div>
@@ -3108,10 +3079,7 @@ tr:hover td{background:var(--b0);}
           <option value="2023">2023</option>
         </select>
         <select id="pcState" onchange="_renderPosConverge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
-          <option value="ALL">All States</option>
-          <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
-          <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
-          <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="pcMinPos" onchange="_renderPosConverge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-size:.75rem;">
           <option value="3">3+ positions</option>
@@ -3194,15 +3162,7 @@ tr:hover td{background:var(--b0);}
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select id="tpState" onchange="_renderTriplePredictor()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="OH">Ohio</option>
-          <option value="GA">Georgia</option>
-          <option value="FL">Florida</option>
-          <option value="DE">Delaware</option>
-          <option value="MD">Maryland</option>
-          <option value="PA">Pennsylvania</option>
-          <option value="VA">Virginia</option>
-          <option value="DC">DC</option>
-          <option value="LA">Louisiana</option>
+          <option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="tpWindow" onchange="_renderTriplePredictor()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="90">Last 90 days</option>
@@ -3257,11 +3217,8 @@ tr:hover td{background:var(--b0);}
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">State</label>
           <select id="pfState" onchange="_renderPosFilter()" style="padding:6px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;color:var(--g8);background:#fff;">
-            <option value="ALL">All States</option>
-            <option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option>
-            <option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option>
-            <option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
-          </select>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+        </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;">Draw</label>
@@ -3334,7 +3291,7 @@ tr:hover td{background:var(--b0);}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <select id="ptripState" onchange="_renderPosTrips()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
-          <option value="ALL">All States</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="MD">MD</option><option value="LA">LA</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option><option value="DC">DC</option><option value="GE">GE</option><option value="MI">MI</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="ptripScope" onchange="_renderPosTrips()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Time</option>
@@ -3425,10 +3382,7 @@ tr:hover td{background:var(--b0);}
       <div style="margin-bottom:14px;">
         <label style="font-size:.7rem;font-weight:700;color:var(--g5);display:block;margin-bottom:4px;">STATE (optional — leave blank for all states)</label>
         <select id="btState" style="padding:7px 10px;border:1.5px solid var(--g3);border-radius:7px;font-size:.82rem;outline:none;background:#fff;">
-          <option value="ALL">All States</option>
-          <option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option>
-          <option value="GA">GA</option><option value="GE">GE</option><option value="MI">MI</option><option value="LA">LA</option>
-          <option value="MD">MD</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
+          <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
       </div>
 
@@ -3473,7 +3427,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=410"></script>
+<script src="lottolens-data.js?v=413"></script>
 <script>
 
 // ================================================================
@@ -4547,7 +4501,7 @@ function renderPatternOrigin(){
   // Populate state dropdown once
   const stEl = document.getElementById('poStateF');
   if(stEl && stEl.options.length<=1){
-    ['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'].forEach(s=>{
+    ['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'].forEach(s=>{
       const o=document.createElement('option');
       o.value=s; o.textContent=(RD[s]?.name||s);
       stEl.appendChild(o);
@@ -4557,7 +4511,7 @@ function renderPatternOrigin(){
   // Populate 2nd state picker once
   const sf2=document.getElementById('poStateF2');
   if(sf2&&sf2.options.length<=1){
-    ['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'].forEach(s=>{
+    ['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'].forEach(s=>{
       const o=document.createElement('option');
       o.value=s; o.textContent=s;
       sf2.appendChild(o);
@@ -5923,7 +5877,7 @@ function _buildBirthdaySumClusterWidget(){
 let _consecWidgetCache2=null;
 function _buildConsecStreakWidget(inline){
   const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const states_list=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const states_list=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
   const allDksSorted=[...new Set(ALL.map(r=>r.dk))].sort();
   const latestDk=allDksSorted[allDksSorted.length-1];
   const todayDate=new Date(latestDk);
@@ -14751,7 +14705,7 @@ let _dashRenderTimer=null;
 // ── Sum Streak Widget ─────────────────────────────────────────────
 function _buildSumStreakWidget(){
   const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const states=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const states=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
 
   // Compute current sum streak per state — grouped by DAY
   // Each day contributes all its draws; if ANY draw that day has the streak sum, day counts
@@ -14850,7 +14804,7 @@ function _buildSumStreakWidget(){
 // ── TD Streak Widget ──────────────────────────────────────────────
 function _buildTDStreakWidget(){
   const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const states=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const states=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
 
   // Current TD streak per state — consecutive days with at least one TD draw
   const streaks=[];
@@ -14940,7 +14894,7 @@ function _buildTDStreakWidget(){
 // ── Delta Streak Widget ───────────────────────────────────────────
 function _buildDeltaStreakWidget(){
   const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const states=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const states=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
 
   // Delta = |sum - total drawn count for that sorted value|
   // Current delta streak per state — consecutive days with same delta value
@@ -19155,7 +19109,7 @@ function _renderPalindromes(){
   // ── 2026 YTD State Banner ──────────────────────────────────────
   const curYearStr=new Date().getFullYear().toString();
   const palins2026=ALL.filter(r=>isPalin(r.number)&&r.ym.startsWith(curYearStr));
-  const stateOrder=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const stateOrder=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
   const stateNames={GA:'Georgia',FL:'Florida',DE:'Delaware',MD:'Maryland',LA:'Louisiana',OH:'Ohio',PA:'Pennsylvania',VA:'Virginia',DC:'D.C.',GE:'Germany',MI:'Michigan'};
   const ytdByState={};
   stateOrder.forEach(sc=>{
@@ -19234,7 +19188,7 @@ function _renderPalindromes(){
   h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">By State</div>`;
   h+=`<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
   const maxSt=Math.max(...Object.values(stateCounts));
-  ['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'].forEach(st=>{
+  ['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'].forEach(st=>{
     const cnt=stateCounts[st]||0;
     const stTotal=ALL.filter(r=>r.state===st).length;
     const pct=stTotal?(cnt/stTotal*100).toFixed(1):0;
@@ -19593,7 +19547,7 @@ function _renderStateFingerprint(){
   const container=document.getElementById('stateFingerprintContent');
   if(!container)return;
 
-  const STATES=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const STATES=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
 
   function getPat(s){
     const c={};[...s].forEach(d=>c[d]=(c[d]||0)+1);
@@ -19734,7 +19688,7 @@ function _renderCrossState(){
   const container=document.getElementById('crossStateContent');
   if(!container)return;
 
-  const STATES=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const STATES=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
 
   function getPat(s){
     const c={};[...s].forEach(d=>c[d]=(c[d]||0)+1);
@@ -23695,7 +23649,7 @@ function _renderUnseenSingles(){
   container.innerHTML='<div class="es">Computing...</div>';
 
   const stateFilter=document.getElementById('unseenSinglesState')?.value||'ALL';
-  const states=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const states=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
   const targetStates=stateFilter==='ALL'?states:[stateFilter];
 
   // All 252 singles
@@ -23774,7 +23728,7 @@ function _renderUnseenCross(){
   const container=document.getElementById('unseenCrossContent');
   if(!container) return;
 
-  const states=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const states=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
   const colors={GA:'#dc2626',FL:'#ea580c',DE:'#2563eb',MD:'#7c3aed',LA:'#db2777',OH:'#0891b2',PA:'#16a34a',VA:'#b45309',DC:'#475569',GE:'#065f46',MI:'#7c3aed'};
 
   // Build first-timer map per state: sorted -> {dk, number}
@@ -24009,7 +23963,7 @@ function _renderDigitDrought(){
   const container=document.getElementById('digitDroughtContent');
   if(!container)return;
 
-  const STATES=['GA','FL','DE','MD','LA','OH','PA','VA','DC','GE','MI'];
+  const STATES=['DC','DE','FL','GA','GE','LA','MD','MI','OH','PA','VA'];
   const WINDOW=30;
   let h='';
   h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💧 Digit Drought Tracker — Last ${WINDOW} Draws Per State</div>`;
