@@ -1,0 +1,98 @@
+// ============================================================
+// PICK 4 LENS — DATA FILE
+// Bump ?v=N in the <script> tag in pick4lens.html every update.
+// ============================================================
+
+// STATES: draw order matters — it defines the column order everywhere.
+// active:true  = one of the 12 starter states getting full ongoing data.
+// active:false = baseline-only for now (logged once, dormant until expanded).
+const P4_STATES = {
+  GA: { name: "Georgia",                 draws: ["Mid", "Eve", "Night"],                 active: true },
+  FL: { name: "Florida",                 draws: ["Mid", "Eve"],                          active: true },
+  PA: { name: "Pennsylvania",            draws: ["Mid", "Eve"],                          active: true },
+  SC: { name: "South Carolina",          draws: ["Mid", "Eve"],                          active: true },
+  TX: { name: "Texas",                   draws: ["Morning", "Mid", "Eve", "Night"],       active: true },
+  TN: { name: "Tennessee",               draws: ["Morning", "Mid", "Eve"],                active: true },
+  DC: { name: "Washington, D.C.",        draws: ["Mid", "Eve", "Night"],                 active: true },
+  RI: { name: "Rhode Island",            draws: ["Mid", "Eve"],                          active: true },
+  OR: { name: "Oregon",                  draws: ["Mid", "Eve", "Night", "Late Night"],    active: true },
+  OH: { name: "Ohio",                    draws: ["Mid", "Eve"],                          active: true },
+  MS: { name: "Mississippi",             draws: ["Mid", "Eve"],                          active: true },
+  NC: { name: "North Carolina",          draws: ["Mid", "Eve"],                          active: true },
+
+  // Dormant — baseline only, will activate as data comes in
+  AZ: { name: "Arizona",                 draws: ["Mid", "Eve"], active: false },
+  AR: { name: "Arkansas",                draws: ["Mid", "Eve"], active: false },
+  ATC:{ name: "Atlantic Canada",         draws: ["Eve"],        active: false },
+  CA: { name: "California",              draws: ["Eve"],        active: false },
+  CT: { name: "Connecticut",             draws: ["Mid", "Eve"], active: false },
+  DE: { name: "Delaware",                draws: ["Mid", "Eve"], active: false },
+  ID: { name: "Idaho",                   draws: ["Mid", "Eve"], active: false },
+  IL: { name: "Illinois",                draws: ["Mid", "Eve"], active: false },
+  IN: { name: "Indiana",                 draws: ["Mid", "Eve"], active: false },
+  IA: { name: "Iowa",                    draws: ["Mid", "Eve"], active: false },
+  KY: { name: "Kentucky",                draws: ["Mid", "Eve"], active: false },
+  LA: { name: "Louisiana",               draws: ["Eve"],        active: false },
+  MD: { name: "Maryland",                draws: ["Mid", "Eve"], active: false },
+  MA: { name: "Massachusetts",           draws: ["Mid", "Eve"], active: false },
+  MI: { name: "Michigan",                draws: ["Mid", "Eve"], active: false },
+  MO: { name: "Missouri",                draws: ["Mid", "Eve"], active: false },
+  NE: { name: "Nebraska",                draws: ["Eve"],        active: false },
+  NJ: { name: "New Jersey",              draws: ["Mid", "Eve"], active: false },
+  NM: { name: "New Mexico",              draws: ["Mid", "Eve"], active: false },
+  NY: { name: "New York",                draws: ["Mid", "Eve"], active: false },
+  ONT:{ name: "Ontario",                 draws: ["Mid", "Eve"], active: false },
+  PR: { name: "Puerto Rico",             draws: ["Mid", "Eve"], active: false },
+  QC: { name: "Québec",                  draws: ["Eve"],        active: false },
+  TRI:{ name: "Tri-State (ME, NH & VT)", draws: ["Mid", "Eve"], active: false },
+  VA: { name: "Virginia",                draws: ["Mid", "Eve"], active: false },
+  WV: { name: "West Virginia",           draws: ["Eve"],        active: false },
+  WCA:{ name: "Western Canada",          draws: ["Eve"],        active: false },
+  WI: { name: "Wisconsin",               draws: ["Mid", "Eve"], active: false },
+};
+
+// DATA: P4_DATA[stateCode][YYYY-MM-DD] = [ numbers in the same order as that
+// state's draws[] array above ]. Each number is a 4-char string (keep leading zeros).
+const P4_DATA = {
+  GA:  { "2026-09-04": ["9308", "9492", "2678"] },
+  FL:  { "2026-09-04": ["9415", "2371"] },
+  PA:  { "2026-09-04": ["3701", "9094"] },
+  SC:  { "2026-09-04": ["0587", "5990"] },
+  TX:  { "2026-09-04": ["2997", "2415", "3917", "7030"] },
+  TN:  { "2026-09-04": ["4996", "9903", "4189"] },
+  DC:  { "2026-09-04": ["3751", "0890", "5770"] },
+  RI:  { "2026-09-04": ["1389", "4997"] },
+  OR:  { "2026-09-04": ["0329", "9533", "8049", "3867"] },
+  OH:  { "2026-09-04": ["3693", "0153"] },
+  MS:  { "2026-09-04": ["4761", "8163"] },
+  NC:  { "2026-09-04": ["0326", "5660"] },
+
+  AZ:  { "2026-09-04": ["6216", "5086"] },
+  AR:  { "2026-09-04": ["5171", "0912"] },
+  ATC: { "2026-09-04": ["5518"] },
+  CA:  { "2026-09-04": ["0968"] },
+  CT:  { "2026-09-04": ["6999", "2212"] },
+  DE:  { "2026-09-04": ["6113", "5780"] },
+  ID:  { "2026-09-04": ["8600", "2759"] },
+  IL:  { "2026-09-04": ["4501", "8520"] },
+  IN:  { "2026-09-04": ["2032", "5649"] },
+  IA:  { "2026-09-04": ["1061", "4520"] },
+  KY:  { "2026-09-04": ["5769", "1760"] },
+  LA:  { "2026-09-04": ["9234"] },
+  MD:  { "2026-09-04": ["9012", "4416"] },
+  MA:  { "2026-09-04": ["0034", "7110"] },
+  MI:  { "2026-09-04": ["8482", "6618"] },
+  MO:  { "2026-09-04": ["2680", "5324"] },
+  NE:  { "2026-09-04": ["1835"] },
+  NJ:  { "2026-09-04": ["9667", "9804"] },
+  NM:  { "2026-09-04": ["4786", "5674"] },
+  NY:  { "2026-09-04": ["5601", "4762"] },
+  ONT: { "2026-09-04": ["5484", "8533"] },
+  PR:  { "2026-09-04": ["8965", "8325"] },
+  QC:  { "2026-09-04": ["5653"] },
+  TRI: { "2026-09-04": ["8091", "9005"] },
+  VA:  { "2026-09-04": ["9545", "4071"] },
+  WV:  { "2026-09-04": ["4371"] },
+  WCA: { "2026-09-04": ["8818"] },
+  WI:  { "2026-09-04": ["8913", "6919"] },
+};

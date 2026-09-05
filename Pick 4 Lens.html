@@ -1,0 +1,2899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pick 4 Lens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14110F;
+    --panel:#1E1A16;
+    --panel-2:#262019;
+    --border:#332C22;
+    --text:#F2EDE4;
+    --muted:#94897B;
+    --amber:#E8A33D;
+    --amber-dim:#7A5A28;
+    --green:#7A9B7E;
+    --rust:#C1502E;
+    --mono:'IBM Plex Mono', monospace;
+    --display:'Space Grotesk', sans-serif;
+    --body:'Manrope', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--body); min-height:100vh;
+  }
+  a{color:inherit;}
+  .app{display:flex; min-height:100vh;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--panel);
+    border-right:1px solid var(--border); padding:28px 20px;
+    display:flex; flex-direction:column; gap:28px;
+  }
+  .brand{display:flex; flex-direction:column; gap:2px;}
+  .brand .mark{font-family:var(--display); font-weight:700; font-size:22px; letter-spacing:.2px;}
+  .brand .mark span{color:var(--amber);}
+  .brand .sub{font-size:12px; color:var(--muted);}
+  .nav{display:flex; flex-direction:column; gap:4px;}
+  .nav button{
+    all:unset; cursor:pointer; padding:10px 12px; border-radius:6px;
+    font-family:var(--body); font-weight:600; font-size:14px; color:var(--muted);
+    display:flex; align-items:center; gap:10px;
+  }
+  .nav button:hover{background:var(--panel-2); color:var(--text);}
+  .nav button.active{background:var(--panel-2); color:var(--amber);}
+  .nav .dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.7;}
+
+  .state-list{display:flex; flex-direction:column; gap:2px; margin-top:-6px;}
+  .state-list .heading{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 6px 2px;}
+  .state-chip{
+    font-family:var(--mono); font-size:12px; color:var(--muted);
+    display:flex; justify-content:space-between; padding:4px 2px;
+  }
+  .state-chip b{color:var(--text); font-weight:600;}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1; padding:32px 40px; max-width:1100px;}
+  .page-head{margin-bottom:24px;}
+  .page-head h1{font-family:var(--display); font-size:26px; margin:0 0 4px;}
+  .page-head p{margin:0; color:var(--muted); font-size:14px;}
+
+  /* Ticker */
+  .ticker{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
+    gap:12px; margin-bottom:32px;
+  }
+  .ticker-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:14px 16px;
+  }
+  .ticker-card .st{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .ticker-card .st-code{font-family:var(--display); font-weight:700; font-size:15px;}
+  .ticker-card .st-date{font-size:11px; color:var(--muted); font-family:var(--mono);}
+  .draw-row{display:flex; justify-content:space-between; align-items:center; padding:3px 0;}
+  .draw-row .lbl{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+  .draw-row .num{
+    font-family:var(--mono); font-weight:600; font-size:16px; letter-spacing:2px;
+    color:var(--amber); font-variant-numeric:tabular-nums;
+  }
+
+  /* Table (Results) */
+  .filters{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+  select, input[type=date]{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-family:var(--body); font-size:13px;
+  }
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--border);
+  }
+  tbody td{padding:9px 10px; border-bottom:1px solid var(--border);}
+  tbody tr:hover{background:var(--panel);}
+  td.num, td.state{font-family:var(--mono);}
+  td.num{color:var(--amber); letter-spacing:2px; font-weight:600;}
+  td.state{font-weight:700;}
+  .pat-badge{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:4px; font-family:var(--body);}
+  .pat-S{background:#1e2a3f; color:#93c5fd; border:1px solid #2c4568;}
+  .pat-D{background:#1c2e21; color:#86efac; border:1px solid #2d4a35;}
+  .pat-DD{background:#332c14; color:#fde047; border:1px solid #4d431f;}
+  .pat-T{background:#3a1f2a; color:#f9a8d4; border:1px solid #55293b;}
+  .pat-Q{background:#3a1f1a; color:#fca5a5; border:1px solid #552b24;}
+
+  /* Frequency */
+  .freq-picker{margin-bottom:20px;}
+  .freq-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:18px;}
+  .freq-col h3{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 10px;}
+  .freq-bar-row{display:flex; align-items:center; gap:8px; margin-bottom:5px;}
+  .freq-bar-row .digit{font-family:var(--mono); width:14px; color:var(--muted); font-size:12px;}
+  .freq-bar-track{flex:1; background:var(--panel-2); border-radius:3px; height:10px; overflow:hidden;}
+  .freq-bar-fill{height:100%; background:var(--green);}
+  .freq-bar-row .count{width:20px; text-align:right; font-family:var(--mono); font-size:11px; color:var(--muted);}
+
+  .empty{color:var(--muted); font-size:13px; padding:20px 0;}
+
+  /* Position tab */
+  .pos-boxes{display:flex; gap:6px; margin:10px 0;}
+  .pos-boxes input{
+    width:38px; height:40px; text-align:center; font-family:var(--mono); font-size:16px;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+  }
+  .combo-row{
+    display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--border);
+    border-radius:7px; padding:7px 10px; margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .combo-row:hover{border-color:var(--amber-dim);}
+  .combo-row .rank{color:var(--amber); font-weight:700; min-width:26px; font-family:var(--mono);}
+  .combo-row .digitbox{
+    display:inline-flex; align-items:center; justify-content:center; width:22px; height:26px;
+    border:1px solid var(--border); border-radius:4px; font-family:var(--mono); font-size:13px; margin-right:2px;
+  }
+  .combo-row .digitbox.filled{border-color:var(--amber-dim); background:#2a2013; color:var(--amber); font-weight:700;}
+  .combo-row .hits{margin-left:auto; color:var(--muted); font-size:12px;}
+  .hasnt-come{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
+  .hasnt-come span{font-family:var(--mono); font-size:11px; background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:2px 7px;}
+
+  .delta-grid{display:flex; flex-wrap:wrap; gap:10px;}
+  .delta-tile{
+    background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px 16px;
+    text-align:center; min-width:90px; cursor:pointer;
+  }
+  .delta-tile.hot{border-color:var(--amber-dim); background:#241c10;}
+  .delta-tile .dv{font-family:var(--mono); font-weight:700; font-size:18px;}
+  .delta-tile .dc{font-size:12px; color:var(--muted); margin-top:2px;}
+  .delta-tile .dm{font-size:10.5px; color:var(--amber); margin-top:2px; font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="mark">Pick<span>4</span>Lens</div>
+      <div class="sub">4-digit draw analytics</div>
+    </div>
+
+    <div class="nav" id="tabNav">
+      <button data-tab="dashboard" class="active"><span class="dot"></span>Dashboard</button>
+      <button data-tab="results"><span class="dot"></span>Results</button>
+      <button data-tab="frequency"><span class="dot"></span>Frequency</button>
+      <button data-tab="freqplus"><span class="dot"></span>Freq+</button>
+      <button data-tab="hotcold"><span class="dot"></span>Hot/Cold</button>
+      <button data-tab="search"><span class="dot"></span>Search</button>
+      <button data-tab="position"><span class="dot"></span>Position</button>
+      <button data-tab="posToday"><span class="dot"></span>Positions Today</button>
+      <button data-tab="delta"><span class="dot"></span>Delta</button>
+      <button data-tab="trends"><span class="dot"></span>Trends</button>
+      <button data-tab="monthly"><span class="dot"></span>Monthly</button>
+      <button data-tab="smartgen"><span class="dot"></span>Smart Gen</button>
+      <button data-tab="datesum"><span class="dot"></span>Date Sum</button>
+      <button data-tab="sumsall"><span class="dot"></span>Σ Sums</button>
+      <button data-tab="totaldrawn"><span class="dot"></span>Total Drawn</button>
+      <button data-tab="gap"><span class="dot"></span>Gap Analysis</button>
+      <button data-tab="watchlist"><span class="dot"></span>Watchlist</button>
+      <button data-tab="backtest"><span class="dot"></span>Backtest</button>
+      <button data-tab="patternorigin"><span class="dot"></span>Pattern Origin</button>
+      <button data-tab="digitsession"><span class="dot"></span>Digit Session</button>
+      <button data-tab="convergence"><span class="dot"></span>Convergence</button>
+      <button data-tab="quads"><span class="dot"></span>🤑 Quads</button>
+      <button data-tab="triples"><span class="dot"></span>🎲 Triples</button>
+      <button data-tab="tqpred"><span class="dot"></span>🔮 T/Q Predictor</button>
+      <button data-tab="straightcal"><span class="dot"></span>🎯 Straight Calendar</button>
+      <button data-tab="digitdrought"><span class="dot"></span>💧 Digit Drought</button>
+      <button data-tab="statedna"><span class="dot"></span>🧬 State DNA</button>
+      <button data-tab="crossstate"><span class="dot"></span>🔗 Cross-State</button>
+      <button data-tab="dayrepeats"><span class="dot"></span>📅 Day Repeats</button>
+      <button data-tab="unseen"><span class="dot"></span>🔍 Unseen</button>
+      <button data-tab="mostdrawn"><span class="dot"></span>📡 Most Drawn</button>
+      <button data-tab="permmatcher"><span class="dot"></span>🔀 Perm Matcher</button>
+      <button data-tab="possearch"><span class="dot"></span>🔎 Position Search</button>
+      <button data-tab="posconverge"><span class="dot"></span>🎯 Position Convergence</button>
+      <button data-tab="posdayrepeat"><span class="dot"></span>📅 Pos Day Repeat</button>
+      <button data-tab="digitsearch"><span class="dot"></span>🔢 Digit Search</button>
+      <button data-tab="samedaydoubles"><span class="dot"></span>♊ Same-Day Doubles</button>
+    </div>
+
+    <div class="state-list">
+      <div class="heading">Active states</div>
+      <div id="activeStateList"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div class="tab-panel" id="tab-dashboard">
+      <div class="page-head">
+        <h1>Dashboard</h1>
+        <p>Most recent logged draw for each active state.</p>
+      </div>
+      <div class="ticker" id="tickerGrid"></div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="tab-panel" id="tab-results" style="display:none;">
+      <div class="page-head">
+        <h1>Results</h1>
+        <p>Every logged draw across active states.</p>
+      </div>
+      <div class="filters">
+        <select id="resultsStateFilter"><option value="ALL">All active states</option></select>
+        <select id="resultsPatternFilter">
+          <option value="ALL">All patterns</option>
+          <option value="S">Singles (S)</option>
+          <option value="D">Doubles (D)</option>
+          <option value="DD">Double-Double (DD)</option>
+          <option value="T">Triples (T)</option>
+          <option value="Q">Quads (Q)</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>State</th><th>Draw</th><th>Number</th><th>Pattern</th></tr></thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <!-- FREQUENCY -->
+    <div class="tab-panel" id="tab-frequency" style="display:none;">
+      <div class="page-head">
+        <h1>Frequency</h1>
+        <p>Digit frequency by position, across all logged draws for the selected state.</p>
+      </div>
+      <div class="filters freq-picker">
+        <select id="freqStateFilter"></select>
+      </div>
+      <div class="freq-grid" id="freqGrid"></div>
+    </div>
+
+    <!-- FREQ+ -->
+    <div class="tab-panel" id="tab-freqplus" style="display:none;">
+      <div class="page-head">
+        <h1>Freq+</h1>
+        <p>Boxed-combo frequency across active states, with sum/digit/pattern filters.</p>
+      </div>
+      <div class="filters">
+        <select id="fpStateF"><option value="ALL">All active states</option></select>
+        <select id="fpSumF"><option value="ALL">All sums</option></select>
+        <select id="fpPatF">
+          <option value="ALL">All patterns</option>
+          <option value="S">Singles (S)</option>
+          <option value="D">Doubles (D)</option>
+          <option value="DD">Double-Double (DD)</option>
+          <option value="T">Triples (T)</option>
+          <option value="Q">Quads (Q)</option>
+        </select>
+        <select id="fpMinF"></select>
+        <input type="text" id="fpDigitF" placeholder="Must contain digits (e.g. 22)" style="width:200px;">
+      </div>
+      <div id="fpCopyRow"></div>
+      <div class="ticker" id="fpGrid"></div>
+    </div>
+
+    <!-- HOT/COLD -->
+    <div class="tab-panel" id="tab-hotcold" style="display:none;">
+      <div class="page-head">
+        <h1>Hot / Cold</h1>
+        <p>Most-frequent boxed combos (Hot) vs combos overdue by sum &amp; digit-subset pattern (Cold).</p>
+      </div>
+      <div class="filters">
+        <select id="hcStateF"><option value="ALL">All active states</option></select>
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 10px;">🔥 Hot — top 20</h3>
+      <div class="ticker" id="hcHotGrid"></div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 10px;">🧊 Cold — overdue</h3>
+      <div class="ticker" id="hcColdGrid"></div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="tab-panel" id="tab-search" style="display:none;">
+      <div class="page-head">
+        <h1>Search</h1>
+        <p>2–3 digits: subset match (contains these digits). 4 digits: exact boxed match.</p>
+      </div>
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Enter 2–4 digits" style="width:160px;">
+        <select id="searchStateF"><option value="ALL">All active states</option></select>
+        <button onclick="runSearchP4()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Search</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+    <!-- TRENDS -->
+    <div class="tab-panel" id="tab-trends" style="display:none;">
+      <div class="page-head">
+        <h1>Trends</h1>
+        <p>Boxed combos and sums that repeated on consecutive draw days, per state.</p>
+      </div>
+      <div class="filters">
+        <select id="trStateF"><option value="ALL">All active states</option></select>
+        <select id="trMinRun"><option value="2">2+ day streak</option><option value="3">3+ day streak</option></select>
+      </div>
+      <div id="trContent"></div>
+    </div>
+
+    <!-- MONTHLY -->
+    <div class="tab-panel" id="tab-monthly" style="display:none;">
+      <div class="page-head">
+        <h1>Monthly</h1>
+        <p>Stats, top boxed patterns, and remix predictions (unseen combos built from two 3-of-4 digit subsets sharing 2 digits) for the selected scope.</p>
+      </div>
+      <div class="filters">
+        <select id="mlyStateF"><option value="ALL">All active states</option></select>
+        <select id="mlyMonthF"><option value="ALL">All history</option></select>
+      </div>
+      <div id="mlyContent"></div>
+    </div>
+
+    <!-- SMART GEN -->
+    <div class="tab-panel" id="tab-smartgen" style="display:none;">
+      <div class="page-head">
+        <h1>🧠 Smart Gen</h1>
+        <p>Generate boxed combos matching a target sum, optionally built only from digits in numbers you supply.</p>
+      </div>
+      <div class="filters">
+        <input type="text" id="sgSum" placeholder="Target sum(s) e.g. 14,20-22" style="width:200px;">
+        <input type="text" id="sgNums" placeholder="Source numbers (optional)" style="width:220px;">
+        <select id="sgPatF">
+          <option value="ALL">Any pattern</option>
+          <option value="S">Singles (S)</option>
+          <option value="D">Doubles (D)</option>
+          <option value="DD">Double-Double (DD)</option>
+          <option value="T">Triples (T)</option>
+          <option value="Q">Quads (Q)</option>
+        </select>
+        <button onclick="runSmartGenP4()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Generate</button>
+      </div>
+      <div id="sgResults"></div>
+    </div>
+
+    <!-- DATE SUM -->
+    <div class="tab-panel" id="tab-datesum" style="display:none;">
+      <div class="page-head">
+        <h1>📆 Date Sum</h1>
+        <p>Month + day → digit-root → qualifying sums → every boxed combo matching those sums.</p>
+      </div>
+      <div class="filters">
+        <input type="number" id="dsMo" placeholder="Month" min="1" max="12" style="width:90px;">
+        <input type="number" id="dsDay" placeholder="Day" min="1" max="31" style="width:90px;">
+        <button onclick="runDateSumP4()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Calculate</button>
+      </div>
+      <div id="dsSumInfo" style="color:var(--muted); font-size:13px; margin-bottom:14px;"></div>
+      <div id="dateSumResults"></div>
+    </div>
+
+    <!-- SUMS -->
+    <div class="tab-panel" id="tab-sumsall" style="display:none;">
+      <div class="page-head">
+        <h1>Σ Sums</h1>
+        <p>Every possible sum (0–36) with its combo count and how often it's actually hit.</p>
+      </div>
+      <div class="ticker" id="sumsAllGrid"></div>
+      <div id="sumsDetail" style="margin-top:20px;"></div>
+    </div>
+
+    <!-- TOTAL DRAWN -->
+    <div class="tab-panel" id="tab-totaldrawn" style="display:none;">
+      <div class="page-head">
+        <h1>🔢 Total Drawn</h1>
+        <p>Boxed combos grouped by how many times each has been drawn, all-time.</p>
+      </div>
+      <div class="ticker" id="totalDrawnGrid"></div>
+      <div id="totalDrawnDetail" style="margin-top:20px;"></div>
+    </div>
+
+    <!-- GAP ANALYSIS -->
+    <div class="tab-panel" id="tab-gap" style="display:none;">
+      <div class="page-head">
+        <h1>⏳ Gap Analysis</h1>
+        <p>How many draws since each digit / digit-pair / position-digit last appeared.</p>
+      </div>
+      <div class="filters">
+        <select id="gapStateF"><option value="ALL">All active states</option></select>
+      </div>
+      <div id="gapSummary" style="color:var(--muted);font-size:13px;margin-bottom:14px;"></div>
+      <div id="gapBody"></div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div class="tab-panel" id="tab-watchlist" style="display:none;">
+      <div class="page-head">
+        <h1>👁 Watchlist</h1>
+        <p>Numbers you're tracking, with all-time / year / month hit counts and delta. Saved locally in this browser.</p>
+      </div>
+      <div class="filters">
+        <input type="text" id="wlInput" placeholder="4-digit number" maxlength="4" style="width:140px;">
+        <button onclick="wlAdd()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600;">+ Watch</button>
+      </div>
+      <div id="wlList"></div>
+    </div>
+
+    <!-- BACKTEST -->
+    <div class="tab-panel" id="tab-backtest" style="display:none;">
+      <div class="page-head">
+        <h1>🧪 Backtest</h1>
+        <p>Rolling simulation: for each day in range, generate picks from data before that day only, then check what actually hit.</p>
+      </div>
+      <div class="filters">
+        <select id="btStateF"><option value="ALL">All active states</option></select>
+        <input type="date" id="btStart"><input type="date" id="btEnd">
+      </div>
+      <div class="filters" id="btStratRow"></div>
+      <button onclick="runBacktestP4()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; margin-bottom:16px;">🚀 Run Backtest</button>
+      <div id="btResults"></div>
+    </div>
+
+    <!-- PATTERN ORIGIN -->
+    <div class="tab-panel" id="tab-patternorigin" style="display:none;">
+      <div class="page-head">
+        <h1>🔍 Pattern Origin</h1>
+        <p>Browse all-time history for a pattern type by year → month → day, and see overlap with your active-state scope.</p>
+      </div>
+      <div class="filters">
+        <select id="poPatF">
+          <option value="ALL">All patterns</option>
+          <option value="S">Singles (S)</option>
+          <option value="D">Doubles (D)</option>
+          <option value="DD">Double-Double (DD)</option>
+          <option value="T">Triples (T)</option>
+          <option value="Q">Quads (Q)</option>
+        </select>
+      </div>
+      <div id="poContent"></div>
+    </div>
+
+    <!-- DIGIT SESSION -->
+    <div class="tab-panel" id="tab-digitsession" style="display:none;">
+      <div class="page-head">
+        <h1>🔢 Digit Session</h1>
+        <p>Digit distribution for one draw date/type vs. the historical baseline across all other dates.</p>
+      </div>
+      <div class="filters">
+        <select id="dsDateF"></select>
+        <select id="dsDrawF"><option value="ALL">All draw types</option></select>
+      </div>
+      <div id="dsContent"></div>
+    </div>
+
+    <!-- CONVERGENCE -->
+    <div class="tab-panel" id="tab-convergence" style="display:none;">
+      <div class="page-head">
+        <h1>🔗 Convergence</h1>
+        <p>Boxed combos drawn by multiple states within a day window of each other.</p>
+      </div>
+      <div class="filters">
+        <select id="cvWindowF"><option value="3">3 day window</option><option value="7" selected>7 day window</option><option value="14">14 day window</option></select>
+        <select id="cvMinF"><option value="2" selected>2+ states</option><option value="3">3+ states</option></select>
+      </div>
+      <div id="cvContent"></div>
+    </div>
+
+    <!-- QUADS -->
+    <div class="tab-panel" id="tab-quads" style="display:none;">
+      <div class="page-head">
+        <h1>🤑 Quads</h1>
+        <p>Every all-four-same-digit draw found in the data, by calendar day.</p>
+      </div>
+      <div id="quadsContent"></div>
+    </div>
+
+    <!-- TRIPLES -->
+    <div class="tab-panel" id="tab-triples" style="display:none;">
+      <div class="page-head">
+        <h1>🎲 Triples</h1>
+        <p>Position-rank pattern (ABCD) breakdown across every Triple (T) draw, overall and per triple-digit.</p>
+      </div>
+      <div class="filters">
+        <select id="tpStateF"><option value="ALL">All active states</option></select>
+        <select id="tpYearF"><option value="ALL">All years</option></select>
+      </div>
+      <div id="tpContent"></div>
+    </div>
+
+    <!-- T/Q PREDICTOR -->
+    <div class="tab-panel" id="tab-tqpred" style="display:none;">
+      <div class="page-head">
+        <h1>🔮 T/Q Predictor</h1>
+        <p>Calendar-day likelihood of a Triple or Quad draw, based on all-time history (renamed from Q/TD — 4-digit has no Triple-Double or Quint).</p>
+      </div>
+      <div id="tqContent"></div>
+    </div>
+
+    <!-- STRAIGHT CALENDAR -->
+    <div class="tab-panel" id="tab-straightcal" style="display:none;">
+      <div class="page-head">
+        <h1>🎯 Straight Calendar</h1>
+        <p>Calendar days where the exact same number has repeated straight across different months.</p>
+      </div>
+      <div id="straightCalContent"></div>
+    </div>
+
+    <!-- DIGIT DROUGHT -->
+    <div class="tab-panel" id="tab-digitdrought" style="display:none;">
+      <div class="page-head">
+        <h1>💧 Digit Drought</h1>
+        <p>Digits absent from each state's last 30 draws.</p>
+      </div>
+      <div id="digitDroughtContent"></div>
+    </div>
+
+    <!-- STATE DNA -->
+    <div class="tab-panel" id="tab-statedna" style="display:none;">
+      <div class="page-head">
+        <h1>🧬 State DNA</h1>
+        <p>Each state's pattern mix, sum bias, and consecutive/palindrome tendencies vs. the all-state average.</p>
+      </div>
+      <div id="stateDnaContent"></div>
+    </div>
+
+    <!-- CROSS-STATE -->
+    <div class="tab-panel" id="tab-crossstate" style="display:none;">
+      <div class="page-head">
+        <h1>🔗 Cross-State</h1>
+        <p>Same-day exact boxed-match rate between state pairs, and what other states draw when one hits a rare (T/Q) pattern.</p>
+      </div>
+      <div id="crossStateContent"></div>
+    </div>
+
+    <!-- DAY REPEATS -->
+    <div class="tab-panel" id="tab-dayrepeats" style="display:none;">
+      <div class="page-head">
+        <h1>📅 Day Repeats</h1>
+        <p>3-digit consecutive sub-sequences that recur on the same calendar day across different months.</p>
+      </div>
+      <div id="dayRepeatsContent"></div>
+    </div>
+
+    <!-- UNSEEN -->
+    <div class="tab-panel" id="tab-unseen" style="display:none;">
+      <div class="page-head">
+        <h1>🔍 Unseen</h1>
+        <p>Singles (S) and Doubles (D) combos never drawn straight-adjacent in each state — every permutation still unseen.</p>
+      </div>
+      <div class="filters">
+        <select id="unseenStateF"><option value="ALL">All active states</option></select>
+      </div>
+      <div id="unseenContent"></div>
+    </div>
+
+    <!-- MOST DRAWN -->
+    <div class="tab-panel" id="tab-mostdrawn" style="display:none;">
+      <div class="page-head">
+        <h1>📡 Most Drawn</h1>
+        <p>Track specific boxed values: hits this year, and what tends to precede/follow them in each state's draw sequence.</p>
+      </div>
+      <div class="filters">
+        <input type="text" id="mdInput" placeholder="4-digit numbers, comma separated" style="width:260px;">
+        <button onclick="mdSetList()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Track</button>
+      </div>
+      <div id="mdContent"></div>
+    </div>
+
+    <!-- PERM MATCHER -->
+    <div class="tab-panel" id="tab-permmatcher" style="display:none;">
+      <div class="page-head">
+        <h1>🔀 Perm Matcher</h1>
+        <p>Paste a reference list and a list of codes — find which codes have a permutation match in the reference list.</p>
+      </div>
+      <div class="filters" style="align-items:flex-start;">
+        <textarea id="pmList1" placeholder="Reference list (4-digit numbers)" style="width:280px;height:90px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px;font-family:var(--mono);"></textarea>
+        <textarea id="pmList2" placeholder="Codes to check" style="width:280px;height:90px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px;font-family:var(--mono);"></textarea>
+      </div>
+      <button onclick="runPermMatcherP4()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; margin:12px 0;">Match</button>
+      <div id="pmSummary" style="color:var(--muted); font-size:13px; margin-bottom:10px;"></div>
+      <div id="pmResults"></div>
+    </div>
+
+    <!-- POSITION SEARCH -->
+    <div class="tab-panel" id="tab-possearch" style="display:none;">
+      <div class="page-head">
+        <h1>🔎 Position Search</h1>
+        <p>Position + digit combos with a minimum historical hit count, filtered to a specific day/month/year.</p>
+      </div>
+      <div class="filters">
+        <select id="psSizeF"><option value="2">2-of-4</option><option value="3">3-of-4</option></select>
+        <input type="number" id="psMinHits" placeholder="Min hits" value="2" style="width:100px;">
+        <input type="text" id="psDay" placeholder="Day (1-31)" style="width:100px;">
+        <input type="text" id="psMonth" placeholder="Month (1-12)" style="width:110px;">
+        <input type="text" id="psYear" placeholder="Year" style="width:90px;">
+        <button onclick="renderPosSearchP4()" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Search</button>
+      </div>
+      <div id="psResults"></div>
+    </div>
+
+    <!-- POSITION CONVERGENCE -->
+    <div class="tab-panel" id="tab-posconverge" style="display:none;">
+      <div class="page-head">
+        <h1>🎯 Position Convergence</h1>
+        <p>Numbers pointed at by 3+ distinct near-miss draws sharing 3-of-4 positions, converging on a Triple or Quad.</p>
+      </div>
+      <div class="filters">
+        <select id="pcMinF"><option value="3">3+ pointers</option><option value="4">4+ pointers</option></select>
+      </div>
+      <div id="pcContent"></div>
+    </div>
+
+    <!-- POS DAY REPEAT -->
+    <div class="tab-panel" id="tab-posdayrepeat" style="display:none;">
+      <div class="page-head">
+        <h1>📅 Pos Day Repeat</h1>
+        <p>3-of-4 position/digit combos that hit 2+ times on the same calendar day, across all history.</p>
+      </div>
+      <div id="prContent"></div>
+    </div>
+
+    <!-- DIGIT SEARCH -->
+    <div class="tab-panel" id="tab-digitsearch" style="display:none;">
+      <div class="page-head">
+        <h1>🔢 Digit Search</h1>
+        <p>Top 2- and 3-digit subsets by frequency — click one to look it up in Search.</p>
+      </div>
+      <div id="digitSearchContent"></div>
+    </div>
+
+    <!-- SAME-DAY DOUBLES -->
+    <div class="tab-panel" id="tab-samedaydoubles" style="display:none;">
+      <div class="page-head">
+        <h1>♊ Same-Day Doubles</h1>
+        <p>Boxed values drawn 2+ times on the same calendar day (across states) — and how long until a 3rd hit.</p>
+      </div>
+      <div id="sdpSummary" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;"></div>
+      <div id="sdpContent"></div>
+    </div>
+
+    <!-- POSITION -->
+    <div class="tab-panel" id="tab-position" style="display:none;">
+      <div class="page-head">
+        <h1>Position</h1>
+        <p>Top position + digit combos (2-of-4 and 3-of-4). Click a combo to load it into the boxes; missing-position combos show what hasn't come yet.</p>
+      </div>
+      <div class="filters">
+        <select id="posStateF"><option value="ALL">All active states</option></select>
+        <select id="posYearF"><option value="ALL">All years</option></select>
+        <select id="posPatF">
+          <option value="ALL">All patterns (completions)</option>
+          <option value="S">Singles (S)</option>
+          <option value="D">Doubles (D)</option>
+          <option value="DD">Double-Double (DD)</option>
+          <option value="T">Triples (T)</option>
+          <option value="Q">Quads (Q)</option>
+        </select>
+      </div>
+      <div class="pos-boxes">
+        <input type="text" maxlength="1" id="posBox0"><input type="text" maxlength="1" id="posBox1">
+        <input type="text" maxlength="1" id="posBox2"><input type="text" maxlength="1" id="posBox3">
+        <button onclick="document.querySelectorAll('.pos-boxes input').forEach(i=>i.value='');renderPosition();" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0 12px;cursor:pointer;">Clear</button>
+      </div>
+      <div id="posContent"></div>
+    </div>
+
+    <!-- POSITIONS TODAY -->
+    <div class="tab-panel" id="tab-posToday" style="display:none;">
+      <div class="page-head">
+        <h1>Positions Today</h1>
+        <p>Position + digit combos that appeared in the most recent logged draw day, with year-to-date hit counts.</p>
+      </div>
+      <div class="filters">
+        <select id="ptStateF"><option value="ALL">All active states</option></select>
+      </div>
+      <div id="ptContent"></div>
+    </div>
+
+    <!-- DELTA -->
+    <div class="tab-panel" id="tab-delta" style="display:none;">
+      <div class="page-head">
+        <h1>Δ Delta</h1>
+        <p>Delta = |sum − occurrence count| for each boxed combo. Combos seen this month are highlighted.</p>
+      </div>
+      <div class="filters">
+        <select id="deltaStateF"><option value="ALL">All active states</option></select>
+      </div>
+      <div class="delta-grid" id="deltaGrid"></div>
+      <div id="deltaDetail" style="margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="pick4lens-data.js?v=1"></script>
+<script>
+  const activeCodes = Object.keys(P4_STATES).filter(c => P4_STATES[c].active);
+
+  function fmtDate(iso){
+    const [y,m,d] = iso.split("-");
+    return `${m}/${d}/${y.slice(2)}`;
+  }
+  function latestDate(code){
+    const dates = Object.keys(P4_DATA[code] || {});
+    return dates.sort().pop();
+  }
+
+  // ---- Pattern classification (port of lottolens' _getRepeatKey, 4-digit) ----
+  // Digit-count distribution -> S/D/DD/T/Q. TD and Qu don't exist at 4 digits
+  // (both need a 5th slot), so the 5-digit set of 7 collapses to these 5.
+  function getRepeatKey4(num){
+    const counts = {};
+    String(num).split('').forEach(d => counts[d] = (counts[d]||0)+1);
+    const vals = Object.values(counts).sort((a,b)=>b-a);
+    if (vals[0] === 4) return 'Q';
+    if (vals[0] === 3) return 'T';
+    if (vals[0] === 2 && vals[1] === 2) return 'DD';
+    if (vals[0] === 2) return 'D';
+    return 'S';
+  }
+  function patBadge(num){
+    const k = getRepeatKey4(num);
+    return `<span class="pat-badge pat-${k}">${k}</span>`;
+  }
+
+  // ---- Sidebar active-state list ----
+  const activeListEl = document.getElementById("activeStateList");
+  activeCodes.forEach(code=>{
+    const s = P4_STATES[code];
+    const div = document.createElement("div");
+    div.className = "state-chip";
+    div.innerHTML = `<b>${code}</b><span>${s.draws.length}/day</span>`;
+    activeListEl.appendChild(div);
+  });
+
+  // ---- Tab switching ----
+  document.querySelectorAll("#tabNav button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll("#tabNav button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".tab-panel").forEach(p=>p.style.display="none");
+      document.getElementById("tab-"+btn.dataset.tab).style.display="block";
+    });
+  });
+
+  // ---- Dashboard ticker ----
+  const tickerGrid = document.getElementById("tickerGrid");
+  activeCodes.forEach(code=>{
+    const s = P4_STATES[code];
+    const d = latestDate(code);
+    if(!d) return;
+    const nums = P4_DATA[code][d];
+    const card = document.createElement("div");
+    card.className = "ticker-card";
+    let rows = s.draws.map((lbl,i)=>`
+      <div class="draw-row"><span class="lbl">${lbl}</span><span class="num">${nums[i] ?? "—"}</span></div>
+    `).join("");
+    card.innerHTML = `
+      <div class="st"><span class="st-code">${code} · ${s.name}</span><span class="st-date">${fmtDate(d)}</span></div>
+      ${rows}
+    `;
+    tickerGrid.appendChild(card);
+  });
+
+  // ---- Results table ----
+  const resultsStateFilter = document.getElementById("resultsStateFilter");
+  activeCodes.forEach(code=>{
+    const opt = document.createElement("option");
+    opt.value = code; opt.textContent = `${code} — ${P4_STATES[code].name}`;
+    resultsStateFilter.appendChild(opt);
+  });
+
+  function buildResultsRows(filterCode){
+    const rows = [];
+    const codes = filterCode==="ALL" ? activeCodes : [filterCode];
+    codes.forEach(code=>{
+      const s = P4_STATES[code];
+      const dates = Object.keys(P4_DATA[code] || {}).sort().reverse();
+      dates.forEach(d=>{
+        const nums = P4_DATA[code][d];
+        s.draws.forEach((lbl,i)=>{
+          if(nums[i]) rows.push({date:d, code, name:s.name, lbl, num:nums[i]});
+        });
+      });
+    });
+    return rows;
+  }
+  const resultsPatternFilter = document.getElementById("resultsPatternFilter");
+  function renderResults(){
+    const body = document.getElementById("resultsBody");
+    let rows = buildResultsRows(resultsStateFilter.value);
+    const patF = resultsPatternFilter.value;
+    if(patF !== "ALL") rows = rows.filter(r => getRepeatKey4(r.num) === patF);
+    body.innerHTML = rows.map(r=>`
+      <tr>
+        <td>${fmtDate(r.date)}</td>
+        <td class="state">${r.code}</td>
+        <td>${r.lbl}</td>
+        <td class="num">${r.num}</td>
+        <td>${patBadge(r.num)}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="5" class="empty">No draws match.</td></tr>`;
+  }
+  resultsStateFilter.addEventListener("change", renderResults);
+  resultsPatternFilter.addEventListener("change", renderResults);
+  renderResults();
+
+  // ---- Frequency ----
+  const freqStateFilter = document.getElementById("freqStateFilter");
+  activeCodes.forEach(code=>{
+    const opt = document.createElement("option");
+    opt.value = code; opt.textContent = `${code} — ${P4_STATES[code].name}`;
+    freqStateFilter.appendChild(opt);
+  });
+
+  function computeFrequency(code){
+    // counts[position][digit] = n
+    const counts = [0,1,2,3].map(()=>Array(10).fill(0));
+    const dates = Object.keys(P4_DATA[code] || {});
+    dates.forEach(d=>{
+      P4_DATA[code][d].forEach(num=>{
+        for(let i=0;i<4;i++){
+          const digit = parseInt(num[i],10);
+          if(!isNaN(digit)) counts[i][digit]++;
+        }
+      });
+    });
+    return counts;
+  }
+  function renderFrequency(){
+    const code = freqStateFilter.value;
+    const counts = computeFrequency(code);
+    const max = Math.max(1, ...counts.flat());
+    const grid = document.getElementById("freqGrid");
+    const posLabels = ["1st digit","2nd digit","3rd digit","4th digit"];
+    grid.innerHTML = counts.map((col,posIdx)=>{
+      const bars = col.map((n,digit)=>`
+        <div class="freq-bar-row">
+          <span class="digit">${digit}</span>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:${(n/max*100)}%"></div></div>
+          <span class="count">${n}</span>
+        </div>
+      `).join("");
+      return `<div class="freq-col"><h3>${posLabels[posIdx]}</h3>${bars}</div>`;
+    }).join("");
+  }
+  freqStateFilter.addEventListener("change", renderFrequency);
+  renderFrequency();
+
+  // ================================================================
+  // SHARED DATA LAYER — flat row list built from P4_DATA, used by
+  // Freq+, Hot/Cold, and Search (mirrors lottolens' ALL/FILT arrays)
+  // ================================================================
+  function getPerms(digits){
+    const res = new Set();
+    (function p(c, r){
+      if(!r.length){ res.add(c); return; }
+      for(let i=0;i<r.length;i++) p(c+r[i], r.slice(0,i)+r.slice(i+1));
+    })('', digits);
+    return [...res].sort();
+  }
+  function sdP4(n){ return n.split('').reduce((s,d)=>s+parseInt(d,10), 0); }
+  function srtP4(n){ return n.split('').sort().join(''); }
+
+  let ALL_P4 = [];
+  (function buildAllRows(){
+    Object.keys(P4_STATES).forEach(code=>{
+      const s = P4_STATES[code];
+      const dates = P4_DATA[code] || {};
+      Object.keys(dates).forEach(d=>{
+        const nums = dates[d];
+        const ym = d.slice(0,7);
+        const day = parseInt(d.slice(8,10),10);
+        s.draws.forEach((lbl,i)=>{
+          if(!nums[i]) return;
+          const num = nums[i];
+          ALL_P4.push({
+            state: code, number: num, sorted: srtP4(num), sum: sdP4(num),
+            ym, day, date: d, draw: lbl, dk: d + '-' + lbl
+          });
+        });
+      });
+    });
+  })();
+  // FILT_P4 = ALL_P4 restricted to the 12 active starter states — the
+  // scope every analysis tab works from, same as lottolens' FILT.
+  const FILT_P4 = ALL_P4.filter(r => P4_STATES[r.state].active);
+
+  // ================================================================
+  // FREQ+ TAB
+  // ================================================================
+  const fpStateF = document.getElementById("fpStateF");
+  const fpSumF = document.getElementById("fpSumF");
+  const fpPatF = document.getElementById("fpPatF");
+  const fpMinF = document.getElementById("fpMinF");
+  const fpDigitF = document.getElementById("fpDigitF");
+  activeCodes.forEach(code=>{
+    const o = document.createElement("option");
+    o.value = code; o.textContent = `${code} — ${P4_STATES[code].name}`;
+    fpStateF.appendChild(o);
+  });
+  [...new Set(FILT_P4.map(r=>r.sum))].sort((a,b)=>a-b).forEach(s=>{
+    const o = document.createElement("option");
+    o.value = s; o.textContent = "Sum " + s;
+    fpSumF.appendChild(o);
+  });
+  let _fpMin = 1;
+
+  function renderFreqPlus(){
+    let src = FILT_P4.filter(r => fpStateF.value==="ALL" || r.state===fpStateF.value);
+    if(fpSumF.value !== "ALL") src = src.filter(r => r.sum === +fpSumF.value);
+    if(fpPatF.value !== "ALL") src = src.filter(r => getRepeatKey4(r.sorted) === fpPatF.value);
+    const digitRaw = (fpDigitF.value||"").trim().replace(/\s+/g,"");
+    const digitNeed = {};
+    digitRaw.split("").filter(d=>/^[0-9]$/.test(d)).forEach(d=>digitNeed[d]=(digitNeed[d]||0)+1);
+    if(Object.keys(digitNeed).length){
+      src = src.filter(r=>{
+        const cnt = {};
+        r.sorted.split("").forEach(d=>cnt[d]=(cnt[d]||0)+1);
+        return Object.entries(digitNeed).every(([d,n])=>(cnt[d]||0)>=n);
+      });
+    }
+
+    const freq = {};
+    src.forEach(r => freq[r.sorted] = (freq[r.sorted]||0)+1);
+
+    const maxCnt = Math.max(1, ...Object.values(freq));
+    const curMin = _fpMin;
+    fpMinF.innerHTML = "";
+    for(let n=1;n<=maxCnt;n++){
+      const o = document.createElement("option");
+      o.value = n; o.textContent = n + "+";
+      if(n===curMin) o.selected = true;
+      fpMinF.appendChild(o);
+    }
+    if(_fpMin > maxCnt) _fpMin = 1;
+
+    const sorted = Object.entries(freq).filter(([,c])=>c>=_fpMin)
+      .sort((a,b)=> b[1]!==a[1] ? b[1]-a[1] : a[0].localeCompare(b[0]));
+
+    const grid = document.getElementById("fpGrid");
+    grid.innerHTML = sorted.map(([sp,cnt])=>`
+      <div class="ticker-card">
+        <div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div>
+        <div class="draw-row"><span class="lbl">Count</span><span class="num">${cnt}x</span></div>
+        <div class="draw-row"><span class="lbl">Sum</span><span class="num">${sdP4(sp)}</span></div>
+      </div>
+    `).join("") || `<div class="empty">No data for this filter combination.</div>`;
+
+    const copyRow = document.getElementById("fpCopyRow");
+    copyRow.innerHTML = sorted.length
+      ? `<button style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:14px;" onclick="navigator.clipboard.writeText('${sorted.map(([sp])=>sp).join(' ')}')">📋 Copy ${sorted.length}</button>`
+      : "";
+  }
+  [fpStateF, fpSumF, fpPatF].forEach(el => el.addEventListener("change", renderFreqPlus));
+  fpMinF.addEventListener("change", ()=>{ _fpMin = +fpMinF.value; renderFreqPlus(); });
+  fpDigitF.addEventListener("input", renderFreqPlus);
+  renderFreqPlus();
+
+  // ================================================================
+  // HOT / COLD TAB
+  // Cold uses a 3-of-4 digit subset overlap (the 4-digit analog of
+  // lottolens' 4-of-5 subset check — one digit dropped instead of one).
+  // ================================================================
+  const hcStateF = document.getElementById("hcStateF");
+  activeCodes.forEach(code=>{
+    const o = document.createElement("option");
+    o.value = code; o.textContent = `${code} — ${P4_STATES[code].name}`;
+    hcStateF.appendChild(o);
+  });
+
+  function subsets3of4(sp){
+    const res = new Set();
+    for(let skip=0; skip<4; skip++) res.add(sp.split("").filter((_,i)=>i!==skip).sort().join(""));
+    return res;
+  }
+
+  function renderHotCold(){
+    const scoped = FILT_P4.filter(r => hcStateF.value==="ALL" || r.state===hcStateF.value);
+
+    // HOT: top 20 most frequent boxed combos in scope
+    const freq = {};
+    scoped.forEach(r => freq[r.sorted] = (freq[r.sorted]||0)+1);
+    const hot = Object.entries(freq).sort((a,b)=> b[1]!==a[1] ? b[1]-a[1] : a[0].localeCompare(b[0])).slice(0,20);
+
+    // Current month always from ALL_P4 (not affected by state filter)
+    let curYM = "";
+    ALL_P4.forEach(r => { if(!curYM || r.ym > curYM) curYM = r.ym; });
+    const curMonthSet = new Set(ALL_P4.filter(r=>r.ym===curYM).map(r=>r.sorted));
+
+    // Top sums (>=50% of peak) from ALL_P4
+    const sumFreq = {};
+    ALL_P4.forEach(r => sumFreq[r.sum] = (sumFreq[r.sum]||0)+1);
+    const peak = Math.max(...Object.values(sumFreq));
+    const topSums = new Set(Object.entries(sumFreq).filter(([,c])=>c>=peak*0.5).map(([s])=>+s));
+
+    // Top 3-of-4 subsets from scoped
+    const subFreq = {};
+    scoped.forEach(r => subsets3of4(r.sorted).forEach(sub => subFreq[sub]=(subFreq[sub]||0)+1));
+    const subEntries = Object.entries(subFreq).sort((a,b)=>b[1]-a[1]);
+    const subCut = subEntries.length>=5 ? subEntries[4][1] : 0;
+    const topSub = new Set(subCut>0 ? subEntries.filter(x=>x[1]>=subCut).map(x=>x[0]) : []);
+
+    // Per-combo total count + last-seen (always from ALL_P4)
+    const totalCount = {}, lastSeen = {};
+    ALL_P4.forEach(r=>{
+      totalCount[r.sorted] = (totalCount[r.sorted]||0)+1;
+      if(!lastSeen[r.sorted] || r.ym > lastSeen[r.sorted]) lastSeen[r.sorted] = r.ym;
+    });
+
+    const cold = Object.entries(totalCount).filter(([sp,cnt])=>{
+      if(cnt < 2 || curMonthSet.has(sp) || !topSums.has(sdP4(sp)) || !topSub.size) return false;
+      return [...subsets3of4(sp)].some(sub => topSub.has(sub));
+    }).sort((a,b)=> b[1]!==a[1] ? b[1]-a[1] : a[0].localeCompare(b[0]));
+
+    // "never drawn straight" helper: which permutations of a boxed combo
+    // have actually been seen as an exact draw, for the scoped state(s)
+    const seenStraights = new Map();
+    (hcStateF.value==="ALL" ? ALL_P4 : ALL_P4.filter(r=>r.state===hcStateF.value)).forEach(r=>{
+      if(!seenStraights.has(r.sorted)) seenStraights.set(r.sorted, new Set());
+      seenStraights.get(r.sorted).add(r.number);
+    });
+
+    function card(sp, cnt, emoji){
+      const perms = getPerms(sp);
+      const seen = seenStraights.get(sp) || new Set();
+      const neverSeen = perms.filter(p=>!seen.has(p));
+      return `
+        <div class="ticker-card">
+          <div class="st"><span class="st-code">${emoji} ${sp}</span>${patBadge(sp)}</div>
+          <div class="draw-row"><span class="lbl">Sum</span><span class="num">${sdP4(sp)}</span></div>
+          <div class="draw-row"><span class="lbl">Drawn</span><span class="num">${cnt}x</span></div>
+          ${neverSeen.length ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">🧊 ${neverSeen.length} straight${neverSeen.length>1?"s":""} never drawn</div>` : ""}
+        </div>
+      `;
+    }
+
+    document.getElementById("hcHotGrid").innerHTML = hot.map(([sp,cnt])=>card(sp,cnt,"🔥")).join("")
+      || `<div class="empty">No draws logged yet.</div>`;
+    document.getElementById("hcColdGrid").innerHTML = cold.map(([sp,cnt])=>card(sp,cnt,"🧊")).join("")
+      || `<div class="empty">No combos currently qualify as cold (needs sum + subset history to build up).</div>`;
+  }
+  hcStateF.addEventListener("change", renderHotCold);
+  renderHotCold();
+
+  // ================================================================
+  // SEARCH TAB
+  // 2–3 digits -> subset match (draw's digits must contain these, with
+  // multiplicity). 4 digits -> exact boxed match on the normalized value.
+  // ================================================================
+  const searchStateF = document.getElementById("searchStateF");
+  activeCodes.forEach(code=>{
+    const o = document.createElement("option");
+    o.value = code; o.textContent = `${code} — ${P4_STATES[code].name}`;
+    searchStateF.appendChild(o);
+  });
+
+  function runSearchP4(){
+    const q = (document.getElementById("searchInput").value||"").replace(/\D/g,"").trim();
+    const out = document.getElementById("searchResults");
+    if(!q){ out.innerHTML = `<div class="empty">Enter a number to search.</div>`; return; }
+    const stSel = searchStateF.value;
+    const scope = ALL_P4.filter(r => stSel==="ALL" || r.state===stSel);
+
+    if(q.length>=2 && q.length<=3){
+      const qDigits = q.split("").sort();
+      const matches = scope.filter(r=>{
+        let rem = r.sorted.split("");
+        for(const d of qDigits){
+          const i = rem.indexOf(d);
+          if(i===-1) return false;
+          rem.splice(i,1);
+        }
+        return true;
+      });
+      if(!matches.length){ out.innerHTML = `<div class="empty">No draws found containing digits <b>${q}</b>.</div>`; return; }
+      const byNorm = {};
+      matches.forEach(r=>{ (byNorm[r.sorted] ??= []).push(r); });
+      const keys = Object.keys(byNorm).sort();
+      out.innerHTML = `
+        <div class="empty" style="margin-bottom:14px;">Draws containing digits <b style="color:var(--text)">${q}</b> · ${matches.length} draws · ${keys.length} normalized values</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+        ${keys.map(sp=>{
+          const rows = byNorm[sp].sort((a,b)=>b.dk.localeCompare(a.dk));
+          return `
+            <div class="ticker-card">
+              <div class="st"><span class="st-code">${sp}</span><span>${patBadge(sp)} · Σ${sdP4(sp)} · ${rows.length}x</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                ${rows.map(r=>`<span style="font-size:11px;font-family:var(--mono);background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;">${r.state} ${fmtDate(r.date)} · ${r.draw} · ${r.number}</span>`).join("")}
+              </div>
+            </div>
+          `;
+        }).join("")}
+        </div>
+      `;
+      return;
+    }
+
+    if(q.length===4){
+      const qs = srtP4(q);
+      const matches = scope.filter(r=>r.sorted===qs).sort((a,b)=>b.dk.localeCompare(a.dk));
+      out.innerHTML = matches.length ? `
+        <div class="empty" style="margin-bottom:14px;">Boxed match for <b style="color:var(--text)">${qs}</b> · ${matches.length} draws</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${matches.map(r=>`<span style="font-size:12px;font-family:var(--mono);background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:4px 9px;">${r.state} ${fmtDate(r.date)} · ${r.draw} · <b style="color:var(--amber)">${r.number}</b></span>`).join("")}
+        </div>
+      ` : `<div class="empty">No draws found matching <b>${qs}</b>.</div>`;
+      return;
+    }
+
+    out.innerHTML = `<div class="empty">Enter 2 to 4 digits.</div>`;
+  }
+  searchStateF.addEventListener("change", runSearchP4);
+  document.getElementById("searchInput").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearchP4(); });
+
+  // ================================================================
+  // POSITION TAB
+  // 4 positions instead of 5 -> combos of size 2 and 3 (size 4 would
+  // just be an exact straight match, already covered by Search).
+  // ================================================================
+  const posStateF = document.getElementById("posStateF");
+  const posYearF = document.getElementById("posYearF");
+  const posPatF = document.getElementById("posPatF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    posStateF.appendChild(o);
+  });
+  [...new Set(FILT_P4.map(r=>r.date.slice(0,4)))].sort().reverse().forEach(y=>{
+    const o=document.createElement("option"); o.value=y; o.textContent=y;
+    posYearF.appendChild(o);
+  });
+
+  function combosOf(arr,k){
+    const out=[];
+    (function rec(start,cur){
+      if(cur.length===k){ out.push(cur.slice()); return; }
+      for(let i=start;i<arr.length;i++){ cur.push(arr[i]); rec(i+1,cur); cur.pop(); }
+    })(0,[]);
+    return out;
+  }
+  function topNWithTies(obj,n){
+    const arr = Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+    if(arr.length<=n) return arr;
+    const cutoff = arr[n-1][1];
+    return arr.filter(([,c])=>c>=cutoff);
+  }
+  function renderPosBoxes(key, size){
+    const [posStr, digStr] = key.split("|");
+    const posSet = new Set(posStr.split("").map(Number));
+    let out = "";
+    for(let i=0;i<4;i++){
+      const filled = posSet.has(i);
+      const ch = filled ? digStr[posStr.indexOf(String(i))] : "·";
+      out += `<span class="digitbox${filled?" filled":""}">${ch}</span>`;
+    }
+    return out;
+  }
+  function haventComeFor3(key, scopeRows, scopeNumSet){
+    const [posStr, digStr] = key.split("|");
+    const posArr = posStr.split("").map(Number);
+    const missingPos = [0,1,2,3].find(p=>!posArr.includes(p));
+    const knownDigits = digStr.split("");
+    const knownCounts = {};
+    knownDigits.forEach(d=>knownCounts[d]=(knownCounts[d]||0)+1);
+    const allDistinct = Object.values(knownCounts).every(c=>c===1);
+    function buildNum(x){
+      const arr = Array(4);
+      posArr.forEach((p,i)=>arr[p]=knownDigits[i]);
+      arr[missingPos] = String(x);
+      return arr.join("");
+    }
+    const order = { Q:0, T:1, DD:2, D:3 };
+    const results = [];
+    if(allDistinct){
+      const anyDoubled = knownDigits.some(d=>
+        scopeRows.some(r=>{
+          for(let i=0;i<posArr.length;i++) if(r.number[posArr[i]]!==knownDigits[i]) return false;
+          return r.number.split("").filter(ch=>ch===d).length>=2;
+        })
+      );
+      if(!anyDoubled){
+        knownDigits.forEach(d=>{
+          const num = buildNum(d);
+          if(!scopeNumSet.has(num)) results.push({number:num, type:getRepeatKey4(num)});
+        });
+      }
+      // a brand-new 4th distinct digit always yields Singles here — nothing to add.
+    } else {
+      for(let x=0;x<=9;x++){
+        const num = buildNum(String(x));
+        const pat = getRepeatKey4(num);
+        if((pat==="DD"||pat==="T"||pat==="Q") && !scopeNumSet.has(num)) results.push({number:num, type:pat});
+      }
+    }
+    results.sort((a,b)=>(order[a.type]??9)-(order[b.type]??9));
+    return results;
+  }
+
+  function applyPosPattern(key){
+    document.querySelectorAll(".pos-boxes input").forEach(i=>i.value="");
+    const [posStr, digStr] = key.split("|");
+    posStr.split("").map(Number).forEach((p,idx)=>{
+      document.getElementById("posBox"+p).value = digStr[idx];
+    });
+    renderPosition();
+  }
+  window.applyPosPattern = applyPosPattern;
+
+  function renderPosition(){
+    const stF = posStateF.value, yrF = posYearF.value, patF = posPatF.value;
+    let scope = FILT_P4.filter(r => stF==="ALL" || r.state===stF);
+    if(yrF!=="ALL") scope = scope.filter(r => r.date.startsWith(yrF));
+    const scopeNumSet = new Set(scope.map(r=>r.number));
+
+    const POS=[0,1,2,3], pos2=combosOf(POS,2), pos3=combosOf(POS,3);
+    const counts2={}, counts3={};
+    scope.forEach(r=>{
+      pos2.forEach(p=>{ const k=p.join("")+"|"+p.map(i=>r.number[i]).join(""); counts2[k]=(counts2[k]||0)+1; });
+      pos3.forEach(p=>{ const k=p.join("")+"|"+p.map(i=>r.number[i]).join(""); counts3[k]=(counts3[k]||0)+1; });
+    });
+    let top2 = topNWithTies(counts2, 8);
+    let top3 = topNWithTies(counts3, 8);
+    if(patF!=="ALL"){
+      top3 = top3.filter(([k]) => haventComeFor3(k, scope, scopeNumSet).some(h=>h.type===patF));
+    }
+
+    function section(label, items){
+      if(!items.length) return "";
+      let h = `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 0 8px;">${label} — ${items.length} combo${items.length!==1?"s":""}</div>`;
+      items.forEach(([key,cnt],i)=>{
+        h += `<div class="combo-row" onclick="applyPosPattern('${key}')">
+          <span class="rank">#${i+1}</span>
+          <span>${renderPosBoxes(key)}</span>
+          <span class="hits">${cnt}x</span>
+        </div>`;
+        if(label.startsWith("3-of-4")){
+          const hc = haventComeFor3(key, scope, scopeNumSet);
+          if(hc.length){
+            h += `<div class="hasnt-come">${hc.map(h2=>`<span>${h2.number} <span class="pat-badge pat-${h2.type}" style="margin-left:3px;">${h2.type}</span></span>`).join("")}</div>`;
+          }
+        }
+      });
+      return h;
+    }
+
+    document.getElementById("posContent").innerHTML =
+      section("2-of-4 Positions", top2) + section("3-of-4 Positions", top3)
+      || `<div class="empty">No draws logged yet in this scope.</div>`;
+  }
+  [posStateF, posYearF, posPatF].forEach(el => el.addEventListener("change", renderPosition));
+  renderPosition();
+
+  // ================================================================
+  // POSITIONS TODAY
+  // ================================================================
+  const ptStateF = document.getElementById("ptStateF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    ptStateF.appendChild(o);
+  });
+
+  function renderPosToday(){
+    const stF = ptStateF.value;
+    const now = new Date();
+    const todayKey = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+    const curYear = String(now.getFullYear());
+
+    let scope = FILT_P4.filter(r => r.date.startsWith(curYear));
+    if(stF!=="ALL") scope = scope.filter(r=>r.state===stF);
+
+    const allDates = [...new Set(FILT_P4.map(r=>r.date))].sort().reverse();
+    let activeKey = FILT_P4.some(r=>r.date===todayKey) ? todayKey : allDates.find(d=>d<todayKey);
+    if(!activeKey){ document.getElementById("ptContent").innerHTML = `<div class="empty">No draws logged yet.</div>`; return; }
+
+    const todayRows = scope.filter(r=>r.date===activeKey);
+    if(!todayRows.length){ document.getElementById("ptContent").innerHTML = `<div class="empty">No draws logged for ${fmtDate(activeKey)} in this scope.</div>`; return; }
+
+    const POS=[0,1,2,3], pos2=combosOf(POS,2), pos3=combosOf(POS,3);
+    const counts2={}, counts3={}, today2={}, today3={};
+    scope.forEach(r=>{
+      pos2.forEach(p=>{ const k=p.join("")+"|"+p.map(i=>r.number[i]).join(""); counts2[k]=(counts2[k]||0)+1; });
+      pos3.forEach(p=>{ const k=p.join("")+"|"+p.map(i=>r.number[i]).join(""); counts3[k]=(counts3[k]||0)+1; });
+    });
+    todayRows.forEach(r=>{
+      pos2.forEach(p=>{ today2[p.join("")+"|"+p.map(i=>r.number[i]).join("")]=1; });
+      pos3.forEach(p=>{ today3[p.join("")+"|"+p.map(i=>r.number[i]).join("")]=1; });
+    });
+    const top2 = Object.entries(counts2).filter(([k])=>today2[k]).sort((a,b)=>b[1]-a[1]);
+    const top3 = Object.entries(counts3).filter(([k])=>today3[k]).sort((a,b)=>b[1]-a[1]);
+
+    function section(label, items){
+      if(!items.length) return "";
+      let h = `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 0 8px;">${label} · YTD hits</div>`;
+      items.forEach(([key,cnt],i)=>{
+        h += `<div class="combo-row"><span class="rank">#${i+1}</span><span>${renderPosBoxes(key)}</span><span class="hits">${cnt}x YTD</span></div>`;
+      });
+      return h;
+    }
+    document.getElementById("ptContent").innerHTML =
+      `<div class="empty" style="margin-bottom:4px;">Showing ${fmtDate(activeKey)}${activeKey===todayKey?" (today)":" (most recent draw day)"}</div>`
+      + section("2-of-4 Positions", top2) + section("3-of-4 Positions", top3);
+  }
+  ptStateF.addEventListener("change", renderPosToday);
+  renderPosToday();
+
+  // ================================================================
+  // DELTA TAB — Δ = |sum − occurrence count| per boxed combo
+  // ================================================================
+  const deltaStateF = document.getElementById("deltaStateF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    deltaStateF.appendChild(o);
+  });
+
+  function renderDelta(){
+    const stF = deltaStateF.value;
+    const src = FILT_P4.filter(r => stF==="ALL" || r.state===stF);
+    const freq = {};
+    src.forEach(r => freq[r.sorted] = (freq[r.sorted]||0)+1);
+    const deltaData = Object.entries(freq).map(([sp,cnt])=>({
+      sorted: sp, sum: sdP4(sp), count: cnt, delta: Math.abs(sdP4(sp)-cnt)
+    }));
+    const byDelta = {};
+    deltaData.forEach(r => (byDelta[r.delta] ??= []).push(r));
+
+    let curYM = ""; FILT_P4.forEach(r=>{ if(!curYM||r.ym>curYM) curYM=r.ym; });
+    const monthSet = new Set(FILT_P4.filter(r=>r.ym===curYM).map(r=>r.sorted));
+
+    const deltaVals = Object.keys(byDelta).map(Number).sort((a,b)=>a-b);
+    document.getElementById("deltaGrid").innerHTML = deltaVals.map(dv=>{
+      const combos = byDelta[dv];
+      const seenCount = combos.filter(r=>monthSet.has(r.sorted)).length;
+      const isHot = seenCount>0;
+      return `<div class="delta-tile${isHot?" hot":""}" onclick="showDeltaDetail(${dv},'${stF}')">
+        <div class="dv">Δ${dv}</div>
+        <div class="dc">${combos.length} combos</div>
+        ${isHot ? `<div class="dm">${seenCount} this month 🔥</div>` : ""}
+      </div>`;
+    }).join("") || `<div class="empty">No data.</div>`;
+    window._deltaByDelta = byDelta;
+  }
+  function showDeltaDetail(dv, stF){
+    const combos = (window._deltaByDelta[dv]||[]).sort((a,b)=>a.sorted.localeCompare(b.sorted));
+    document.getElementById("deltaDetail").innerHTML = `
+      <div class="empty" style="margin-bottom:8px;">Δ${dv} — ${combos.length} combo${combos.length!==1?"s":""}${stF!=="ALL"?" · "+stF:""}</div>
+      <div class="ticker">${combos.map(r=>`
+        <div class="ticker-card">
+          <div class="st"><span class="st-code">${r.sorted}</span>${patBadge(r.sorted)}</div>
+          <div class="draw-row"><span class="lbl">Sum</span><span class="num">${r.sum}</span></div>
+          <div class="draw-row"><span class="lbl">Count</span><span class="num">${r.count}x</span></div>
+        </div>
+      `).join("")}</div>
+    `;
+  }
+  window.showDeltaDetail = showDeltaDetail;
+  deltaStateF.addEventListener("change", renderDelta);
+  renderDelta();
+
+  // ================================================================
+  // TRENDS — consecutive-day streaks of a boxed combo or sum, per state.
+  // The streak-finding math (findRuns/daysBetween) never depended on
+  // digit length, so this ports directly.
+  // ================================================================
+  const trStateF = document.getElementById("trStateF");
+  const trMinRun = document.getElementById("trMinRun");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    trStateF.appendChild(o);
+  });
+
+  function daysBetween(d1,d2){ return (new Date(d2) - new Date(d1)) / 86400000; }
+  function findRuns(dates, minRun){
+    const u = [...new Set(dates)].sort();
+    const runs = []; let run = [u[0]];
+    for(let i=1;i<u.length;i++){
+      if(daysBetween(u[i-1],u[i])===1) run.push(u[i]);
+      else { if(run.length>=minRun) runs.push([...run]); run=[u[i]]; }
+    }
+    if(run.length>=minRun) runs.push(run);
+    return runs;
+  }
+  function predictNext(sp){
+    const perms = getPerms(sp);
+    const hist = {};
+    ALL_P4.forEach(r=>{ if(r.sorted===sp) hist[r.number]=(hist[r.number]||0)+1; });
+    let curYM=""; ALL_P4.forEach(r=>{ if(!curYM||r.ym>curYM) curYM=r.ym; });
+    const thisMo = new Set(ALL_P4.filter(r=>r.ym===curYM).map(r=>r.number));
+    return perms.map(c=>{
+      const hf = hist[c]||0, dtm = thisMo.has(c);
+      return { combo:c, hf, score: hf*2 + (dtm?0:3) };
+    }).sort((a,b)=>b.score-a.score)[0];
+  }
+
+  function renderTrends(){
+    const stF = trStateF.value, minRun = +trMinRun.value;
+    const states = stF==="ALL" ? activeCodes : [stF];
+    const spTrends = [], sumTrends = [];
+
+    states.forEach(sc=>{
+      const rows = FILT_P4.filter(r=>r.state===sc);
+      const spDays = {}; rows.forEach(r=>(spDays[r.sorted] ??= []).push(r.date));
+      Object.entries(spDays).forEach(([sp,dates])=>{
+        findRuns(dates, minRun).forEach(run=>{
+          spTrends.push({ state:sc, sp, run, pred: predictNext(sp) });
+        });
+      });
+      const sumDays = {}; rows.forEach(r=>(sumDays[r.sum] ??= []).push(r.date));
+      Object.entries(sumDays).forEach(([sum,dates])=>{
+        findRuns(dates, minRun).forEach(run=>{
+          sumTrends.push({ state:sc, sum, run });
+        });
+      });
+    });
+
+    const c = document.getElementById("trContent");
+    if(!spTrends.length && !sumTrends.length){
+      c.innerHTML = `<div class="empty">No ${minRun}+ day streaks yet — needs more consecutive dates logged to surface anything.</div>`;
+      return;
+    }
+    let h = "";
+    if(spTrends.length){
+      h += `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Boxed combo streaks</h3><div class="ticker">`;
+      h += spTrends.map(t=>`
+        <div class="ticker-card">
+          <div class="st"><span class="st-code">${t.state} · ${t.sp}</span>${patBadge(t.sp)}</div>
+          <div class="draw-row"><span class="lbl">Streak</span><span class="num">${t.run.length}d</span></div>
+          <div class="draw-row"><span class="lbl">${fmtDate(t.run[0])}–${fmtDate(t.run[t.run.length-1])}</span></div>
+          ${t.pred ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">Top pick: <span style="color:var(--amber);font-family:var(--mono);">${t.pred.combo}</span></div>` : ""}
+        </div>
+      `).join("");
+      h += `</div>`;
+    }
+    if(sumTrends.length){
+      h += `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 10px;">Sum streaks</h3><div class="ticker">`;
+      h += sumTrends.map(t=>`
+        <div class="ticker-card">
+          <div class="st"><span class="st-code">${t.state} · Σ${t.sum}</span></div>
+          <div class="draw-row"><span class="lbl">Streak</span><span class="num">${t.run.length}d</span></div>
+          <div class="draw-row"><span class="lbl">${fmtDate(t.run[0])}–${fmtDate(t.run[t.run.length-1])}</span></div>
+        </div>
+      `).join("");
+      h += `</div>`;
+    }
+    c.innerHTML = h;
+  }
+  [trStateF, trMinRun].forEach(el=>el.addEventListener("change", renderTrends));
+  renderTrends();
+
+  // ================================================================
+  // MONTHLY
+  // ================================================================
+  const mlyStateF = document.getElementById("mlyStateF");
+  const mlyMonthF = document.getElementById("mlyMonthF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    mlyStateF.appendChild(o);
+  });
+  [...new Set(FILT_P4.map(r=>r.ym))].sort().reverse().forEach(ym=>{
+    const o=document.createElement("option"); o.value=ym; o.textContent=ym;
+    mlyMonthF.appendChild(o);
+  });
+
+  function renderMonthly(){
+    const stF = mlyStateF.value, ymF = mlyMonthF.value;
+    let src = FILT_P4.filter(r => stF==="ALL" || r.state===stF);
+    if(ymF!=="ALL") src = src.filter(r=>r.ym===ymF);
+
+    const c = document.getElementById("mlyContent");
+    if(!src.length){ c.innerHTML = `<div class="empty">No draws in this scope.</div>`; return; }
+
+    const sums = src.map(r=>r.sum);
+    const avg = Math.round(sums.reduce((a,b)=>a+b,0)/sums.length);
+    const spFreq = {}; src.forEach(r=>spFreq[r.sorted]=(spFreq[r.sorted]||0)+1);
+    const topSP = Object.entries(spFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+    // 3-of-4 digit-subset frequency (the 4-digit analog of lottolens' "4-digit pairs")
+    const subFreq = {};
+    src.forEach(r => subsets3of4(r.sorted).forEach(s => subFreq[s]=(subFreq[s]||0)+1));
+    const subSorted = Object.entries(subFreq).sort((a,b)=>b[1]-a[1]);
+    const subCutoff = subSorted.length>=10 ? subSorted[9][1] : (subSorted[subSorted.length-1]?.[1]||0);
+    const topSubs = subSorted.filter(([,c])=>c>=subCutoff).map(([s])=>s);
+
+    // Remix: combine two top 3-digit subsets sharing 2 digits + 1 unique each -> new 4-digit combo
+    const seenSet = new Set(src.map(r=>r.sorted));
+    const remixes = new Set();
+    for(let i=0;i<topSubs.length;i++) for(let j=0;j<topSubs.length;j++){
+      if(i===j) continue;
+      const p1 = topSubs[i].split(""), p2c = topSubs[j].split("");
+      const copy1 = [...p1], shared = [];
+      p2c.forEach(d=>{ const idx=copy1.indexOf(d); if(idx!==-1){ shared.push(d); copy1.splice(idx,1); } });
+      const p2unique = [...p2c];
+      shared.forEach(d=>{ const idx=p2unique.indexOf(d); if(idx!==-1) p2unique.splice(idx,1); });
+      if(shared.length===2 && p2unique.length===1){
+        const combined = [...p1, p2unique[0]].sort().join("");
+        if(combined.length===4 && !seenSet.has(combined)) remixes.add(combined);
+      }
+    }
+
+    let h = `
+      <div class="ticker" style="margin-bottom:24px;">
+        <div class="ticker-card"><div class="st"><span class="st-code">Total Draws</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${src.length}</span></div></div>
+        <div class="ticker-card"><div class="st"><span class="st-code">Avg Sum</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${avg}</span></div></div>
+        <div class="ticker-card"><div class="st"><span class="st-code">Min / Max Sum</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${Math.min(...sums)} / ${Math.max(...sums)}</span></div></div>
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Top boxed combos</h3>
+      <div class="ticker" style="margin-bottom:24px;">
+        ${topSP.map(([sp,c])=>`<div class="ticker-card"><div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div><div class="draw-row"><span class="lbl">Count</span><span class="num">${c}x</span></div></div>`).join("")}
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Remix predictions <span style="color:var(--muted);font-weight:400;text-transform:none;">— unseen combos from two hot 3-digit subsets sharing 2 digits</span></h3>
+      <div class="ticker">
+        ${[...remixes].sort().map(sp=>`<div class="ticker-card"><div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div><div class="draw-row"><span class="lbl">Sum</span><span class="num">${sdP4(sp)}</span></div></div>`).join("") || `<div class="empty">Not enough subset data yet to remix.</div>`}
+      </div>
+    `;
+    c.innerHTML = h;
+  }
+  [mlyStateF, mlyMonthF].forEach(el=>el.addEventListener("change", renderMonthly));
+  renderMonthly();
+
+  // ================================================================
+  // SMART GEN
+  // ================================================================
+  function parseSumInputP4(raw){
+    if(!raw || !raw.trim()) return null;
+    const sums = new Set();
+    raw.split(",").forEach(p=>{
+      const t = p.trim();
+      const range = t.match(/^(\d+)-(\d+)$/);
+      if(range){
+        const a=+range[1], b=+range[2];
+        for(let i=Math.min(a,b); i<=Math.max(a,b); i++) if(i>=0&&i<=36) sums.add(i);
+      } else if(/^\d+$/.test(t)){
+        const n=+t; if(n>=0&&n<=36) sums.add(n);
+      }
+    });
+    return sums.size ? [...sums].sort((a,b)=>a-b) : null;
+  }
+  function runSmartGenP4(){
+    const targetSums = parseSumInputP4(document.getElementById("sgSum").value.trim());
+    const rawNums = document.getElementById("sgNums").value.trim();
+    const patF = document.getElementById("sgPatF").value;
+    const container = document.getElementById("sgResults");
+    const sourceNums = rawNums.split(/[\s,]+/).map(s=>s.trim()).filter(s=>/^\d{4}$/.test(s));
+
+    if(!sourceNums.length && !targetSums){
+      container.innerHTML = `<div class="empty">Enter a target sum or source numbers.</div>`;
+      return;
+    }
+
+    const results = new Set();
+    if(!sourceNums.length){
+      for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) for(let c=b;c<=9;c++) for(let d=c;d<=9;d++){
+        if(!targetSums || targetSums.includes(a+b+c+d)) results.add(`${a}${b}${c}${d}`);
+      }
+    } else {
+      const pool = [];
+      sourceNums.forEach(n=>pool.push(...n.split("").map(Number)));
+      pool.sort((a,b)=>a-b);
+      (function rec(start,chosen){
+        if(chosen.length===4){
+          const sum = chosen.reduce((a,b)=>a+b,0);
+          if(!targetSums || targetSums.includes(sum)) results.add(chosen.join(""));
+          return;
+        }
+        for(let i=start;i<pool.length;i++){
+          if(i>start && pool[i]===pool[i-1]) continue;
+          chosen.push(pool[i]); rec(i+1,chosen); chosen.pop();
+        }
+      })(0,[]);
+    }
+
+    let arr = [...results];
+    if(patF!=="ALL") arr = arr.filter(sp=>getRepeatKey4(sp)===patF);
+    if(!arr.length){ container.innerHTML = `<div class="empty">No combinations found for those criteria.</div>`; return; }
+
+    const freqMap = {};
+    FILT_P4.forEach(r=>{ if(results.has(r.sorted)) freqMap[r.sorted]=(freqMap[r.sorted]||0)+1; });
+    arr.sort((a,b)=> (freqMap[b]||0)-(freqMap[a]||0) || a.localeCompare(b));
+
+    container.innerHTML = `
+      <div style="margin-bottom:12px;"><button style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;" onclick="navigator.clipboard.writeText('${arr.join(' ')}')">📋 Copy ${arr.length}</button></div>
+      <div class="ticker">
+        ${arr.map(sp=>`
+          <div class="ticker-card">
+            <div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div>
+            <div class="draw-row"><span class="lbl">Sum</span><span class="num">${sdP4(sp)}</span></div>
+            <div class="draw-row"><span class="lbl">Seen</span><span class="num">${freqMap[sp]||0}x</span></div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // ================================================================
+  // DATE SUM
+  // ================================================================
+  function digitSumReduce(n){ while(n>=10){ let s=0; while(n>0){ s+=n%10; n=Math.floor(n/10); } n=s; } return n; }
+  function getQualifyingSums(D){
+    const qs = [];
+    for(let s=0;s<=36;s++){ const ones=s%10; if(ones===D || digitSumReduce(s)===D) qs.push(s); }
+    return [...new Set(qs)].sort((a,b)=>a-b);
+  }
+  function getSumCombos4(target){
+    const combos = new Set();
+    for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) for(let c=b;c<=9;c++) for(let d=c;d<=9;d++){
+      if(a+b+c+d===target) combos.add(`${a}${b}${c}${d}`);
+    }
+    return [...combos];
+  }
+  function runDateSumP4(){
+    const mo = parseInt(document.getElementById("dsMo").value)||0;
+    const day = parseInt(document.getElementById("dsDay").value)||0;
+    const info = document.getElementById("dsSumInfo");
+    if(!mo||!day||day<1||day>31){ info.textContent="Enter a valid month and day."; document.getElementById("dateSumResults").innerHTML=""; return; }
+    const rawSum = mo+day, onesDigit = rawSum%10;
+    const qualSums = getQualifyingSums(onesDigit);
+    info.innerHTML = `<b style="color:var(--text)">${mo}/${day}</b> → ${mo}+${day}=${rawSum} → ones digit = <b style="color:var(--amber)">${onesDigit}</b> → qualifying sums: <b style="color:var(--text)">${qualSums.join(", ")}</b>`;
+
+    const allCombos = new Set();
+    qualSums.forEach(s => getSumCombos4(s).forEach(sp=>allCombos.add(sp)));
+    const arr = [...allCombos].sort();
+    const freqMap = {};
+    FILT_P4.forEach(r=>{ if(allCombos.has(r.sorted)) freqMap[r.sorted]=(freqMap[r.sorted]||0)+1; });
+
+    const bySum = {};
+    arr.forEach(sp=>(bySum[sdP4(sp)] ??= []).push(sp));
+    const sortedSums = Object.keys(bySum).map(Number).sort((a,b)=>a-b);
+
+    document.getElementById("dateSumResults").innerHTML = `
+      <div class="empty" style="margin-bottom:10px;">${arr.length} normalized numbers match these sums</div>
+      ${sortedSums.map(s=>`
+        <div style="margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Sum ${s} — ${bySum[s].length} combos</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${bySum[s].map(sp=>{
+              const e = sp.split("").filter(d=>+d%2===0).length;
+              const eo = `${e}E${4-e}O`;
+              const cnt = freqMap[sp]||0;
+              return `<span style="font-family:var(--mono);font-size:12px;background:${cnt>0?"var(--panel)":"var(--panel-2)"};border:1px solid var(--border);border-radius:5px;padding:3px 8px;">${sp} ${patBadge(sp)} <span style="color:var(--muted);">${eo}</span>${cnt>0?` <span style="color:var(--amber);">${cnt}x</span>`:""}</span>`;
+            }).join("")}
+          </div>
+        </div>
+      `).join("")}
+    `;
+  }
+
+  // ================================================================
+  // SUMS (0–36)
+  // ================================================================
+  function renderSumsAll(){
+    const freqMap = {}; FILT_P4.forEach(r=>freqMap[r.sum]=(freqMap[r.sum]||0)+1);
+    let curYM=""; ALL_P4.forEach(r=>{ if(!curYM||r.ym>curYM) curYM=r.ym; });
+    const monthCount = {}; ALL_P4.filter(r=>r.ym===curYM).forEach(r=>monthCount[r.sum]=(monthCount[r.sum]||0)+1);
+
+    let h = "";
+    for(let s=0;s<=36;s++){
+      const cnt = freqMap[s]||0, mCount = monthCount[s]||0;
+      const combos = getSumCombos4(s);
+      h += `<div class="ticker-card" style="cursor:pointer;" onclick="showSumDetail(${s})">
+        <div class="st"><span class="st-code">Σ${s}</span><span style="font-size:11px;color:var(--muted);">${combos.length} combos</span></div>
+        <div class="draw-row"><span class="lbl">In scope</span><span class="num">${cnt}x</span></div>
+        <div class="draw-row"><span class="lbl">This month</span><span class="num">${mCount}x</span></div>
+      </div>`;
+    }
+    document.getElementById("sumsAllGrid").innerHTML = h;
+  }
+  function showSumDetail(s){
+    const combos = getSumCombos4(s);
+    const freqMap = {}; FILT_P4.forEach(r=>{ if(r.sum===s) freqMap[r.sorted]=(freqMap[r.sorted]||0)+1; });
+    const drawn = combos.filter(sp=>freqMap[sp]);
+    document.getElementById("sumsDetail").innerHTML = `
+      <div class="empty" style="margin-bottom:10px;">Sum ${s} — ${drawn.length} of ${combos.length} combos drawn in scope</div>
+      <div class="ticker">${drawn.map(sp=>`<div class="ticker-card"><div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div><div class="draw-row"><span class="lbl">Count</span><span class="num">${freqMap[sp]}x</span></div></div>`).join("") || `<div class="empty">None drawn yet.</div>`}</div>
+    `;
+  }
+  window.showSumDetail = showSumDetail;
+  renderSumsAll();
+
+  // ================================================================
+  // TOTAL DRAWN — grouped by all-time occurrence count
+  // ================================================================
+  function renderTotalDrawn(){
+    const freqAll = {}; ALL_P4.forEach(r=>freqAll[r.sorted]=(freqAll[r.sorted]||0)+1);
+    let curYM=""; ALL_P4.forEach(r=>{ if(!curYM||r.ym>curYM) curYM=r.ym; });
+    const monthSet = new Set(ALL_P4.filter(r=>r.ym===curYM).map(r=>r.sorted));
+    const byCount = {};
+    Object.entries(freqAll).forEach(([sp,cnt])=>(byCount[cnt] ??= []).push(sp));
+    const counts = Object.keys(byCount).map(Number).sort((a,b)=>b-a);
+
+    document.getElementById("totalDrawnGrid").innerHTML = counts.map(cnt=>{
+      const combos = byCount[cnt];
+      const seen = combos.filter(sp=>monthSet.has(sp)).length;
+      return `<div class="ticker-card" style="cursor:pointer;${seen?"border-color:var(--amber-dim);":""}" onclick="showTotalDrawnDetail(${cnt})">
+        <div class="st"><span class="st-code">${cnt}x</span></div>
+        <div class="draw-row"><span class="lbl">Combos</span><span class="num">${combos.length}</span></div>
+        ${seen ? `<div style="font-size:11px;color:var(--amber);margin-top:4px;">${seen} seen this month 🔥</div>` : ""}
+      </div>`;
+    }).join("") || `<div class="empty">No data.</div>`;
+    window._tdByCount = byCount;
+  }
+  function showTotalDrawnDetail(cnt){
+    const combos = (window._tdByCount[cnt]||[]).sort();
+    document.getElementById("totalDrawnDetail").innerHTML = `
+      <div class="empty" style="margin-bottom:10px;">Drawn exactly ${cnt}x — ${combos.length} combos</div>
+      <div class="ticker">${combos.map(sp=>`<div class="ticker-card"><div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div><div class="draw-row"><span class="lbl">Sum</span><span class="num">${sdP4(sp)}</span></div></div>`).join("")}</div>
+    `;
+  }
+  window.showTotalDrawnDetail = showTotalDrawnDetail;
+  renderTotalDrawn();
+
+  // ================================================================
+  // GAP ANALYSIS
+  // Digit-gap and pair-gap math never depended on digit count (loops
+  // over 0-9); only the position loop shrinks from 5 to 4.
+  // ================================================================
+  const gapStateF = document.getElementById("gapStateF");
+  const gapMode = document.getElementById("gapMode");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    gapStateF.appendChild(o);
+  });
+  function gapColor(gap,avg){
+    const ratio = gap/Math.max(avg,1);
+    if(ratio>=3) return "#ef4444";
+    if(ratio>=2) return "#f97316";
+    if(ratio>=1.5) return "#eab308";
+    if(ratio<=0.3) return "#10b981";
+    if(ratio<=0.6) return "#3b82f6";
+    return "var(--muted)";
+  }
+  function heatBar(gap,avg,maxGap){
+    const pct = Math.min(100, Math.round(gap/Math.max(maxGap,1)*100));
+    return `<div style="height:5px;border-radius:3px;background:var(--panel-2);margin-top:5px;"><div style="height:5px;border-radius:3px;background:${gapColor(gap,avg)};width:${pct}%"></div></div>`;
+  }
+  function renderGap(){
+    const stF = gapStateF.value;
+    let src = stF==="ALL" ? FILT_P4 : FILT_P4.filter(r=>r.state===stF);
+    const sorted = [...src].sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:0);
+    const total = sorted.length;
+    const summary = document.getElementById("gapSummary");
+    const body = document.getElementById("gapBody");
+    if(!total){ summary.textContent="No draws match current filters."; body.innerHTML=""; return; }
+    summary.textContent = `Analyzing ${total} draws · most recent: ${fmtDate(sorted[total-1].date)} ${sorted[total-1].state}`;
+
+    const lastSeen = {};
+    sorted.forEach((r,i)=>{ for(let p=0;p<4;p++) lastSeen[`${p}-${r.number[p]}`]=i; });
+    const posData = [];
+    for(let pos=0;pos<4;pos++){
+      const avg = total/10, rows=[];
+      for(let d=0;d<=9;d++){
+        const last = lastSeen[`${pos}-${d}`]??-1;
+        rows.push({d, gap: last===-1?total:total-last-1});
+      }
+      rows.sort((a,b)=>b.gap-a.gap);
+      posData.push(rows);
+    }
+    // Deterministic remix: cycle top-5-per-position candidates into combos
+    const topN = posData.map(rows=>rows.slice(0,5));
+    const seen = new Set(), preds = [];
+    for(let i=0;i<10 && preds.length<10;i++){
+      let num="";
+      for(let pos=0;pos<4;pos++){ const pool=topN[pos]; num+=String(pool[(i+pos)%pool.length].d); }
+      if(!seen.has(num)){ seen.add(num); preds.push(num); }
+    }
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+        ${posData.map((rows,pos)=>{
+          const avg = total/10, maxGap = rows[0].gap;
+          return `<div>
+            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Position ${pos+1}</div>
+            ${rows.map(r=>`
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <span style="font-family:var(--mono);width:14px;">${r.d}</span>
+                <div style="flex:1;">${heatBar(r.gap,avg,maxGap)}</div>
+                <span style="font-size:11px;color:var(--muted);width:26px;text-align:right;">${r.gap}</span>
+              </div>
+            `).join("")}
+          </div>`;
+        }).join("")}
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Deterministic remix predictions (top overdue digit per position, cycled)</div>
+      <div class="ticker">${preds.map(sp=>`<div class="ticker-card"><div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div></div>`).join("")}</div>
+    `;
+  }
+  gapStateF.addEventListener("change", renderGap);
+  renderGap();
+
+  // ================================================================
+  // WATCHLIST — persisted in this browser's localStorage
+  // ================================================================
+  const WL_KEY = "p4l_watchlist";
+  function wlLoad(){ try{ return JSON.parse(localStorage.getItem(WL_KEY)||"[]"); }catch(e){ return []; } }
+  function wlSave(list){ try{ localStorage.setItem(WL_KEY, JSON.stringify(list)); }catch(e){} }
+  function wlAdd(){
+    const inp = document.getElementById("wlInput");
+    const raw = (inp.value||"").replace(/\D/g,"").trim();
+    if(raw.length!==4) return;
+    const sp = srtP4(raw);
+    const list = wlLoad();
+    if(!list.find(w=>w.sp===sp)){ list.push({num:raw, sp, added:new Date().toISOString()}); wlSave(list); }
+    inp.value = "";
+    wlRender();
+  }
+  function wlRemove(sp){ wlSave(wlLoad().filter(w=>w.sp!==sp)); wlRender(); }
+  function wlRender(){
+    const el = document.getElementById("wlList");
+    const list = wlLoad();
+    if(!list.length){ el.innerHTML = `<div class="empty">No numbers watched yet. Add one above.</div>`; return; }
+    let curYM=""; ALL_P4.forEach(r=>{ if(!curYM||r.ym>curYM) curYM=r.ym; });
+    const curYear = curYM.slice(0,4);
+    el.innerHTML = `<div class="ticker">${list.map(w=>{
+      const all = ALL_P4.filter(r=>r.sorted===w.sp);
+      const cnt = all.length;
+      const yearCnt = all.filter(r=>r.ym.startsWith(curYear)).length;
+      const monthCnt = all.filter(r=>r.ym===curYM).length;
+      const last = all.length ? [...all].sort((a,b)=>b.date.localeCompare(a.date))[0] : null;
+      const delta = Math.abs(sdP4(w.sp) - cnt);
+      return `<div class="ticker-card"${monthCnt>0?' style="border-color:var(--amber-dim);"':''}>
+        <div class="st"><span class="st-code">${w.sp}</span>${patBadge(w.sp)}
+          <button onclick="wlRemove('${w.sp}')" style="background:none;border:none;color:var(--muted);cursor:pointer;">✕</button>
+        </div>
+        <div class="draw-row"><span class="lbl">All-time</span><span class="num">${cnt}x</span></div>
+        <div class="draw-row"><span class="lbl">${curYear}</span><span class="num">${yearCnt}x</span></div>
+        <div class="draw-row"><span class="lbl">Δ</span><span class="num">${delta}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Last: ${last ? fmtDate(last.date)+" "+last.state : "Never"}</div>
+        ${monthCnt>0 ? `<div style="font-size:11px;color:var(--amber);margin-top:2px;">🔥 hit this month</div>` : ""}
+      </div>`;
+    }).join("")}</div>`;
+  }
+  window.wlAdd = wlAdd;
+  window.wlRemove = wlRemove;
+  wlRender();
+
+  // ================================================================
+  // BACKTEST
+  // Rolling day-by-day simulation. Strategies port almost mechanically
+  // from lottolens — mostly frequency/sum/gap math that never depended
+  // on digit count, plus the pattern strategy swapped to S/D/DD/T/Q.
+  // ================================================================
+  const btStateF = document.getElementById("btStateF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    btStateF.appendChild(o);
+  });
+  const BT_STRATS = [
+    ["frequency","📊 Frequency"], ["delta","Σ Delta (Δ≤2)"], ["expdelta","EΔ=0"],
+    ["sum","🔥 Top Sums"], ["gap","⏳ Gap Picks"], ["pattern","📐 Pattern"],
+    ["totaldrawn","🔢 Total Drawn"], ["overdue","⏰ Overdue"], ["hotstreak","🔥 Hot Streak (30d)"], ["watchlist","👁 Watchlist"]
+  ];
+  const btStratRow = document.getElementById("btStratRow");
+  BT_STRATS.forEach(([key,label])=>{
+    const b = document.createElement("button");
+    b.textContent = label; b.dataset.strat = key; b.dataset.active = "1";
+    b.style.cssText = "background:var(--panel-2);border:1px solid var(--amber-dim);color:var(--amber);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;";
+    b.onclick = ()=>{
+      const on = b.dataset.active==="1";
+      b.dataset.active = on?"0":"1";
+      b.style.borderColor = on?"var(--border)":"var(--amber-dim)";
+      b.style.color = on?"var(--muted)":"var(--amber)";
+    };
+    btStratRow.appendChild(b);
+  });
+
+  function btGeneratePicks(strat, trainData, currentDate){
+    const freq = {}; trainData.forEach(r=>freq[r.sorted]=(freq[r.sorted]||0)+1);
+    if(strat==="frequency") return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([sp])=>sp);
+    if(strat==="delta") return Object.entries(freq).filter(([sp,c])=>c>=3&&Math.abs(sdP4(sp)-c)<=2).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([sp])=>sp);
+    if(strat==="expdelta") return Object.entries(freq).filter(([sp,c])=>Math.abs(sdP4(sp)-(c+1))===0).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([sp])=>sp);
+    if(strat==="sum"){
+      const sumFreq={}; trainData.forEach(r=>sumFreq[r.sum]=(sumFreq[r.sum]||0)+1);
+      const topSums = new Set(Object.entries(sumFreq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([s])=>+s));
+      const sf={}; trainData.filter(r=>topSums.has(r.sum)).forEach(r=>sf[r.sorted]=(sf[r.sorted]||0)+1);
+      return Object.entries(sf).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([sp])=>sp);
+    }
+    if(strat==="gap"){
+      const gSorted = [...trainData].sort((a,b)=>a.date<b.date?-1:1);
+      const gTotal = gSorted.length, gLastSeen = {};
+      gSorted.forEach((r,i)=>{ for(let p=0;p<4;p++) gLastSeen[p+"-"+r.number[p]]=i; });
+      const gPosData = [];
+      for(let pos=0;pos<4;pos++){
+        const rows=[]; for(let d=0;d<=9;d++){ const last=gLastSeen[pos+"-"+d]??-1; rows.push({d, gap:last===-1?gTotal:gTotal-last-1}); }
+        rows.sort((a,b)=>b.gap-a.gap); gPosData.push(rows);
+      }
+      const gSeen = new Set(), picks=[];
+      for(let i=0;i<10&&picks.length<10;i++){
+        let num=""; for(let pos=0;pos<4;pos++) num+=String(gPosData[pos][(i+pos)%gPosData[pos].length].d);
+        if(!gSeen.has(num)){ gSeen.add(num); picks.push({num, sp:srtP4(num)}); }
+      }
+      return picks;
+    }
+    if(strat==="pattern"){
+      const picks=[], seen=new Set();
+      ["S","D","DD","T","Q"].forEach(pat=>{
+        const pf={}; trainData.filter(r=>getRepeatKey4(r.sorted)===pat).forEach(r=>pf[r.sorted]=(pf[r.sorted]||0)+1);
+        Object.entries(pf).sort((a,b)=>b[1]-a[1]).slice(0,20).forEach(([sp])=>{ if(!seen.has(sp)){ seen.add(sp); picks.push(sp); } });
+      });
+      return picks;
+    }
+    if(strat==="totaldrawn"){
+      const af={}; ALL_P4.filter(r=>r.date<currentDate).forEach(r=>af[r.sorted]=(af[r.sorted]||0)+1);
+      return Object.entries(af).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([sp])=>sp);
+    }
+    if(strat==="overdue"){
+      const sorted2 = [...trainData].sort((a,b)=>a.date<b.date?-1:1);
+      const total2 = sorted2.length, lastIdx={};
+      sorted2.forEach((r,i)=>lastIdx[r.sorted]=i);
+      const seen2=new Set(), overdue=[];
+      sorted2.forEach(r=>{
+        if(!seen2.has(r.sorted)){
+          seen2.add(r.sorted);
+          if((freq[r.sorted]||0)>=5) overdue.push({sp:r.sorted, gap: total2-lastIdx[r.sorted]-1});
+        }
+      });
+      return overdue.sort((a,b)=>b.gap-a.gap).slice(0,20).map(o=>o.sp);
+    }
+    if(strat==="hotstreak"){
+      const d30 = new Date(currentDate); d30.setDate(d30.getDate()-30);
+      const d30Str = d30.toISOString().slice(0,10);
+      const hf={}; trainData.filter(r=>r.date>=d30Str).forEach(r=>hf[r.sorted]=(hf[r.sorted]||0)+1);
+      return Object.entries(hf).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([sp])=>sp);
+    }
+    if(strat==="watchlist") return wlLoad().map(w=>w.sp);
+    return [];
+  }
+
+  function runBacktestP4(){
+    const startD = document.getElementById("btStart").value;
+    const endD = document.getElementById("btEnd").value;
+    const stF = btStateF.value;
+    const res = document.getElementById("btResults");
+    if(!startD || !endD){ res.innerHTML = `<div class="empty">Select a start and end date.</div>`; return; }
+    if(startD >= endD){ res.innerHTML = `<div class="empty">Start date must be before end date.</div>`; return; }
+
+    const activeStrats = [...btStratRow.querySelectorAll("button")].filter(b=>b.dataset.active==="1").map(b=>b.dataset.strat);
+    const allSrc = stF==="ALL" ? FILT_P4 : FILT_P4.filter(r=>r.state===stF);
+    const testData = allSrc.filter(r=>r.date>=startD && r.date<=endD).sort((a,b)=>a.date<b.date?-1:1);
+    if(!testData.length){ res.innerHTML = `<div class="empty">No draws in selected date range.</div>`; return; }
+
+    const testDates = [...new Set(testData.map(r=>r.date))].sort();
+    const results = {};
+    activeStrats.forEach(s => results[s] = { straight:0, boxed:0, picksEverMade: new Set() });
+
+    testDates.forEach(d=>{
+      const trainData = allSrc.filter(r=>r.date<d);
+      if(!trainData.length) return;
+      const dayDraws = testData.filter(r=>r.date===d);
+      activeStrats.forEach(strat=>{
+        const picks = btGeneratePicks(strat, trainData, d);
+        if(!picks || !picks.length) return;
+        const sortedPicks = picks.map(p => typeof p==="object" ? p.sp : p);
+        sortedPicks.forEach(sp => results[strat].picksEverMade.add(sp));
+        dayDraws.forEach(r=>{
+          if(strat==="gap"){
+            const exactPicks = picks.map(p=>p.num);
+            if(exactPicks.includes(r.number)) results[strat].straight++;
+            else if(sortedPicks.includes(r.sorted)) results[strat].boxed++;
+          } else {
+            if(sortedPicks.includes(r.sorted)){
+              if(picks.includes(r.number)) results[strat].straight++;
+              else results[strat].boxed++;
+            }
+          }
+        });
+      });
+    });
+
+    const stratLabel = Object.fromEntries(BT_STRATS);
+    res.innerHTML = `
+      <div class="empty" style="margin-bottom:12px;">${testData.length} draws tested across ${testDates.length} days</div>
+      <div class="ticker">
+        ${activeStrats.map(s=>{
+          const r = results[s];
+          const hitRate = testData.length ? (((r.straight+r.boxed)/testData.length)*100).toFixed(1) : "0.0";
+          return `<div class="ticker-card">
+            <div class="st"><span class="st-code">${stratLabel[s]||s}</span></div>
+            <div class="draw-row"><span class="lbl">Straight hits</span><span class="num">${r.straight}</span></div>
+            <div class="draw-row"><span class="lbl">Boxed hits</span><span class="num">${r.boxed}</span></div>
+            <div class="draw-row"><span class="lbl">Hit rate</span><span class="num">${hitRate}%</span></div>
+          </div>`;
+        }).join("")}
+      </div>
+    `;
+  }
+  window.runBacktestP4 = runBacktestP4;
+
+  // ================================================================
+  // PATTERN ORIGIN
+  // Scoped to the single-state "Way 1" browsing mode for now — the
+  // Way 1/Way 2/Both cross-state comparison engine in your source is
+  // its own substantial feature; flagging it as a later pass rather
+  // than guessing at a port.
+  // ================================================================
+  const poPatF = document.getElementById("poPatF");
+  function renderPatternOrigin(){
+    const pat = poPatF.value;
+    const src = pat==="ALL" ? ALL_P4.slice() : ALL_P4.filter(r=>getRepeatKey4(r.sorted)===pat);
+    const c = document.getElementById("poContent");
+    if(!src.length){ c.innerHTML = `<div class="empty">No ${pat} draws found.</div>`; return; }
+
+    const filtSortedSet = FILT_P4.map(r=>r.sorted);
+    const byYear = {};
+    src.forEach(r=>{
+      const yr = r.date.slice(0,4);
+      (byYear[yr] ??= { months:new Set(), recs:[] });
+      byYear[yr].months.add(r.ym);
+      byYear[yr].recs.push(r);
+    });
+    Object.keys(byYear).forEach(yr=>{
+      byYear[yr].matchCount = byYear[yr].recs.reduce((acc,r)=>acc + filtSortedSet.filter(s=>s===r.sorted).length, 0);
+    });
+    const years = Object.keys(byYear).filter(yr=>byYear[yr].matchCount>0).sort((a,b)=>byYear[b].matchCount-byYear[a].matchCount);
+    if(!years.length){ c.innerHTML = `<div class="empty">No matches found in current active-state scope.</div>`; return; }
+    const maxCnt = Math.max(...years.map(y=>byYear[y].matchCount));
+
+    window._poByYear = byYear;
+    c.innerHTML = `
+      <div class="empty" style="margin-bottom:14px;">Years where historical ${pat==="ALL"?"":pat+" "}draws share boxed values with your active-state scope</div>
+      <div class="ticker">
+        ${years.map(yr=>{
+          const d = byYear[yr];
+          const heat = Math.round(d.matchCount/maxCnt*100);
+          return `<div class="ticker-card" style="cursor:pointer;${heat>=80?"border-color:var(--amber-dim);":""}" onclick="poShowMonths('${yr}')">
+            <div class="st"><span class="st-code">${yr}</span></div>
+            <div class="draw-row"><span class="lbl">${d.months.size} months</span><span class="num">${d.matchCount}x</span></div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div id="poDrilldown" style="margin-top:20px;"></div>
+    `;
+  }
+  function poShowMonths(yr){
+    const recs = window._poByYear[yr].recs;
+    const byYm = {};
+    recs.forEach(r => (byYm[r.ym] ??= []).push(r));
+    const months = Object.keys(byYm).sort().reverse();
+    document.getElementById("poDrilldown").innerHTML = `
+      <div class="empty" style="margin-bottom:10px;">${yr} — by month</div>
+      <div class="ticker">${months.map(ym=>`
+        <div class="ticker-card">
+          <div class="st"><span class="st-code">${ym}</span></div>
+          <div class="draw-row"><span class="lbl">Draws</span><span class="num">${byYm[ym].length}</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+            ${byYm[ym].map(r=>`<span style="font-family:var(--mono);font-size:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;">${r.state} ${fmtDate(r.date)} ${r.number}</span>`).join("")}
+          </div>
+        </div>
+      `).join("")}</div>
+    `;
+  }
+  window.poShowMonths = poShowMonths;
+  poPatF.addEventListener("change", renderPatternOrigin);
+  renderPatternOrigin();
+
+  // ================================================================
+  // DIGIT SESSION — fully digit-count-agnostic: it pools every digit
+  // drawn on a date/draw-type and compares to a historical baseline,
+  // so this ports with no math changes, only the state-count threshold
+  // for a "valid baseline day" relaxed (your source required 8+
+  // states; with 12 starter states, sparse data needs a lower bar).
+  // ================================================================
+  const dsDateF = document.getElementById("dsDateF");
+  const dsDrawF = document.getElementById("dsDrawF");
+  [...new Set(P4STATES_ALL_DRAW_LABELS())].forEach(lbl=>{
+    const o=document.createElement("option"); o.value=lbl; o.textContent=lbl;
+    dsDrawF.appendChild(o);
+  });
+  function P4STATES_ALL_DRAW_LABELS(){
+    const set = new Set();
+    activeCodes.forEach(c=>P4_STATES[c].draws.forEach(l=>set.add(l)));
+    return set;
+  }
+  const allDatesDesc = [...new Set(FILT_P4.map(r=>r.date))].sort().reverse();
+  allDatesDesc.forEach((d,i)=>{
+    const o=document.createElement("option"); o.value=d; o.textContent=(i===0?"Most recent: ":"")+fmtDate(d);
+    dsDateF.appendChild(o);
+  });
+
+  function renderDigitSession(){
+    if(!allDatesDesc.length){ document.getElementById("dsContent").innerHTML=`<div class="empty">No data.</div>`; return; }
+    const d = dsDateF.value || allDatesDesc[0];
+    const drawF = dsDrawF.value;
+    const sessRecs = drawF==="ALL" ? FILT_P4.filter(r=>r.date===d) : FILT_P4.filter(r=>r.date===d && r.draw===drawF);
+    const c = document.getElementById("dsContent");
+    if(!sessRecs.length){ c.innerHTML = `<div class="empty">No ${drawF} draws found for ${fmtDate(d)}.</div>`; return; }
+
+    const sessDigits = sessRecs.map(r=>r.number).join("");
+    const sessCounts = {}; for(let i=0;i<=9;i++) sessCounts[i]=0;
+    sessDigits.split("").forEach(dg=>sessCounts[+dg]++);
+    const totalDigits = sessDigits.length;
+
+    const histRecs = drawF==="ALL" ? FILT_P4.filter(r=>r.date!==d) : FILT_P4.filter(r=>r.draw===drawF && r.date!==d);
+    const histByDate = {};
+    histRecs.forEach(r=>{
+      (histByDate[r.date] ??= { digits:"", states:new Set() });
+      histByDate[r.date].digits += r.number;
+      histByDate[r.date].states.add(r.state);
+    });
+    // Relaxed from lottolens' 8+ states (we have 12 starters total, sparse early data)
+    const histDays = Object.values(histByDate).filter(dd=>dd.states.size>=1);
+    const histDigitAvg = {};
+    for(let i=0;i<=9;i++){
+      const total = histDays.reduce((acc,dd)=>acc + dd.digits.split("").filter(x=>x===String(i)).length/dd.digits.length, 0);
+      histDigitAvg[i] = histDays.length ? total/histDays.length : 0.1;
+    }
+
+    const analysis = [];
+    for(let i=0;i<=9;i++){
+      const actual = sessCounts[i]/totalDigits, baseline = histDigitAvg[i];
+      analysis.push({ digit:i, count:sessCounts[i], actual, baseline, delta: actual-baseline });
+    }
+    analysis.sort((a,b)=>b.delta-a.delta);
+
+    c.innerHTML = `
+      <div class="empty" style="margin-bottom:14px;">${fmtDate(d)} · ${drawF==="ALL"?"all draw types":drawF} · ${sessRecs.length} draws · ${totalDigits} digits</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+        ${[...Array(10).keys()].map(i=>{
+          const a = analysis.find(x=>x.digit===i);
+          const isSupp = a.count<=1, isElev = a.count>=Math.ceil(totalDigits/10)+3;
+          return `<div class="ticker-card" style="${isSupp?"border-color:#3b3030;":isElev?"border-color:var(--amber-dim);":""}text-align:center;">
+            <div style="font-family:var(--mono);font-weight:800;font-size:20px;">${i}</div>
+            <div style="font-size:12px;color:var(--muted);">${a.count}x (${(a.actual*100).toFixed(1)}%)</div>
+            <div style="font-size:11px;color:${a.delta>0.02?"var(--amber)":a.delta<-0.02?"#c1502e":"var(--muted)"};">baseline ${(a.baseline*100).toFixed(1)}%</div>
+            ${isSupp?'<div style="font-size:10px;color:var(--muted);">❄️ LOW</div>':isElev?'<div style="font-size:10px;color:var(--amber);">🔥 HIGH</div>':""}
+          </div>`;
+        }).join("")}
+      </div>
+    `;
+  }
+  [dsDateF, dsDrawF].forEach(el=>el.addEventListener("change", renderDigitSession));
+  renderDigitSession();
+
+  // ================================================================
+  // CONVERGENCE — direct port, purely date/state/sorted-value based.
+  // ================================================================
+  const cvWindowF = document.getElementById("cvWindowF");
+  const cvMinF = document.getElementById("cvMinF");
+  function renderConvergence(){
+    const windowDays = +cvWindowF.value, minStates = +cvMinF.value;
+    const src = FILT_P4;
+    const allDates = [...new Set(src.map(r=>r.date))].sort().reverse();
+    const c = document.getElementById("cvContent");
+    if(!allDates.length){ c.innerHTML = `<div class="empty">No data.</div>`; return; }
+    const latestDate = allDates[0];
+
+    const bySorted = {};
+    src.forEach(r=>(bySorted[r.sorted] ??= []).push(r));
+
+    const clusters = [];
+    Object.entries(bySorted).forEach(([sp,draws])=>{
+      const sortedDraws = [...draws].sort((a,b)=>b.date.localeCompare(a.date));
+      for(let i=0;i<sortedDraws.length;i++){
+        const anchor = new Date(sortedDraws[i].date);
+        const windowDraws = sortedDraws.filter(r=>Math.abs((anchor-new Date(r.date))/86400000)<=windowDays);
+        const states = new Set(windowDraws.map(r=>r.state));
+        if(states.size>=minStates){
+          clusters.push({ sp, draws:windowDraws, states, latestDate:windowDraws[0].date, earliestDate:windowDraws[windowDraws.length-1].date, stateCount:states.size });
+          break;
+        }
+      }
+    });
+    const seen = new Set();
+    const unique = clusters.filter(cl=>{ if(seen.has(cl.sp)) return false; seen.add(cl.sp); return true; })
+      .sort((a,b)=> b.stateCount-a.stateCount || b.latestDate.localeCompare(a.latestDate));
+
+    if(!unique.length){ c.innerHTML = `<div class="empty">No convergences found with current settings.</div>`; return; }
+
+    const recentSet = new Set(allDates.slice(0,3));
+    const travelingNow = unique.filter(cl=>recentSet.has(cl.latestDate));
+    const historical = unique.filter(cl=>!recentSet.has(cl.latestDate));
+
+    function list(items){
+      return `<div style="display:flex;flex-direction:column;gap:8px;">${items.map(cl=>{
+        const span = Math.round((new Date(cl.latestDate)-new Date(cl.earliestDate))/86400000);
+        return `<div class="ticker-card">
+          <div class="st"><span class="st-code">${cl.sp}</span>${patBadge(cl.sp)}<span style="font-size:11px;color:var(--muted);">${cl.stateCount} states · ${span===0?"same day":span+"d span"}</span></div>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-top:6px;">
+            ${[...cl.draws].sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`
+              <div style="font-size:11px;color:var(--muted);"><span style="color:var(--text);font-weight:600;">${r.state}</span> ${fmtDate(r.date)} · ${r.draw} · <span style="font-family:var(--mono);color:var(--amber);">${r.number}</span> · Σ${r.sum}</div>
+            `).join("")}
+          </div>
+        </div>`;
+      }).join("")}</div>`;
+    }
+    let h = `<div class="empty" style="margin-bottom:14px;">${unique.length} boxed values drawn by ${minStates}+ states within ${windowDays} days</div>`;
+    if(travelingNow.length) h += `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">🚀 Active now (last 3 days)</h3>` + list(travelingNow);
+    if(historical.length) h += `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px;">📚 Historical (${historical.length})</h3>` + list(historical);
+    c.innerHTML = h;
+  }
+  [cvWindowF, cvMinF].forEach(el=>el.addEventListener("change", renderConvergence));
+  renderConvergence();
+
+  // ================================================================
+  // QUADS — your source hardcodes a personally-curated list of every
+  // 2026 quad/opposite it had found by hand. There's no algorithm to
+  // port there — it's historical trivia specific to lottolens' own
+  // data. For Pick 4 this instead computes real Q-pattern occurrences
+  // live from your logged draws.
+  // ================================================================
+  function renderQuads(){
+    const quads = ALL_P4.filter(r => getRepeatKey4(r.sorted)==="Q");
+    const c = document.getElementById("quadsContent");
+    if(!quads.length){ c.innerHTML = `<div class="empty">No Quad (Q) draws logged yet.</div>`; return; }
+    const hitCount = {};
+    quads.forEach(r => hitCount[r.day] = (hitCount[r.day]||0)+1);
+
+    let h = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;">`;
+    for(let day=1;day<=31;day++){
+      const cnt = hitCount[day]||0;
+      h += `<div style="background:var(--panel);border:1px solid ${cnt?"var(--amber-dim)":"var(--border)"};border-radius:8px;padding:10px 6px;text-align:center;">
+        <div style="font-family:var(--mono);font-weight:700;font-size:16px;">${day}</div>
+        <div style="font-size:11px;color:${cnt?"var(--amber)":"var(--muted)"};margin-top:2px;">${cnt?cnt+"x":"—"}</div>
+      </div>`;
+    }
+    h += `</div><h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">All quad draws</h3><div class="ticker">`;
+    h += quads.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`
+      <div class="ticker-card"><div class="st"><span class="st-code">${r.number}</span>${patBadge(r.number)}</div>
+      <div class="draw-row"><span class="lbl">${r.state}</span><span class="num">${fmtDate(r.date)}</span></div>
+      <div class="draw-row"><span class="lbl">${r.draw}</span></div></div>
+    `).join("") + `</div>`;
+    c.innerHTML = h;
+  }
+  renderQuads();
+
+  // ================================================================
+  // TRIPLES — position-rank (ABCD) pattern breakdown for T draws.
+  // Direct 4-position analog of your getPatTypeFn (ABCDE, 120 perms):
+  // here it's ABCD, 24 perms.
+  // ================================================================
+  function getPosPattern4(num){
+    const vals = num.split("").map(Number);
+    const order = vals.map((v,i)=>({v,i})).sort((a,b)=> a.v!==b.v ? a.v-b.v : a.i-b.i);
+    const result = Array(4);
+    order.forEach(({i},rank)=>{ result[i] = String.fromCharCode(65+rank); });
+    return result.join("");
+  }
+  const tpStateF = document.getElementById("tpStateF");
+  const tpYearF = document.getElementById("tpYearF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    tpStateF.appendChild(o);
+  });
+  [...new Set(ALL_P4.map(r=>r.date.slice(0,4)))].sort().reverse().forEach(y=>{
+    const o=document.createElement("option"); o.value=y; o.textContent=y;
+    tpYearF.appendChild(o);
+  });
+
+  function tripleDigit(num){
+    const counts={}; num.split("").forEach(d=>counts[d]=(counts[d]||0)+1);
+    for(const d in counts) if(counts[d]===3) return d;
+    return null;
+  }
+  function renderTriples(){
+    const stF = tpStateF.value, yrF = tpYearF.value;
+    let src = stF==="ALL" ? ALL_P4 : ALL_P4.filter(r=>r.state===stF);
+    if(yrF!=="ALL") src = src.filter(r=>r.date.startsWith(yrF));
+    const triples = src.filter(r=>getRepeatKey4(r.number)==="T");
+    const c = document.getElementById("tpContent");
+    if(!triples.length){ c.innerHTML = `<div class="empty">No triples in this scope.</div>`; return; }
+
+    const overallPats = {};
+    triples.forEach(r => overallPats[getPosPattern4(r.number)] = (overallPats[getPosPattern4(r.number)]||0)+1);
+    const sortedOverall = Object.entries(overallPats).sort((a,b)=>b[1]-a[1]);
+
+    const perDigit = {};
+    for(let d=0;d<=9;d++) perDigit[String(d)] = { total:0 };
+    triples.forEach(r=>{
+      const td = tripleDigit(r.number);
+      if(td!==null) perDigit[td].total++;
+    });
+
+    c.innerHTML = `
+      <div class="ticker" style="margin-bottom:20px;">
+        <div class="ticker-card"><div class="st"><span class="st-code">Total Triples</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${triples.length}</span></div></div>
+        <div class="ticker-card"><div class="st"><span class="st-code">Distinct ABCD patterns</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${sortedOverall.length} / 24</span></div></div>
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Top position patterns (any triple digit)</h3>
+      <div class="ticker" style="margin-bottom:20px;">
+        ${sortedOverall.slice(0,10).map(([pat,cnt])=>`<div class="ticker-card"><div class="st"><span class="st-code">${pat}</span></div><div class="draw-row"><span class="lbl">Count</span><span class="num">${cnt}</span></div></div>`).join("")}
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">By triple digit</h3>
+      <div class="ticker">
+        ${Object.entries(perDigit).filter(([,d])=>d.total>0).map(([digit,d])=>`<div class="ticker-card"><div class="st"><span class="st-code">${digit}${digit}${digit}x</span></div><div class="draw-row"><span class="lbl">Count</span><span class="num">${d.total}</span></div></div>`).join("") || `<div class="empty">None.</div>`}
+      </div>
+    `;
+  }
+  [tpStateF, tpYearF].forEach(el=>el.addEventListener("change", renderTriples));
+  renderTriples();
+
+  // ================================================================
+  // T/Q PREDICTOR (was Q/TD Predictor) — day-of-month likelihood of a
+  // Triple or Quad draw. Direct port; TD/Qu simply don't exist at 4
+  // digits so the "or" pair becomes T-or-Q instead of Q-or-TD.
+  // ================================================================
+  function renderTQPredictor(){
+    const dayStats = {};
+    for(let d=1;d<=31;d++) dayStats[d] = { T:0, Q:0, total:0 };
+    ALL_P4.forEach(r=>{
+      const pat = getRepeatKey4(r.sorted);
+      dayStats[r.day].total++;
+      if(pat==="T") dayStats[r.day].T++;
+      if(pat==="Q") dayStats[r.day].Q++;
+    });
+    function rate(day){ const s=dayStats[day]; return s.total ? (s.T+s.Q)/s.total*100 : 0; }
+    const allRates = Object.keys(dayStats).map(d=>rate(+d)).filter(r=>r>0);
+    const avgRate = allRates.length ? allRates.reduce((a,b)=>a+b,0)/allRates.length : 0;
+    const topDays = new Set(Object.keys(dayStats).map(d=>+d).sort((a,b)=>rate(b)-rate(a)).slice(0,5));
+
+    document.getElementById("tqContent").innerHTML = `
+      <div class="empty" style="margin-bottom:10px;">⭐ = top 5 all-time · 🔥 = above average (${avgRate.toFixed(2)}%)</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;">
+        ${Array.from({length:31},(_,i)=>i+1).map(day=>{
+          const s = dayStats[day], r = rate(day), isTop = topDays.has(day), isHot = r>avgRate;
+          return `<div class="ticker-card" style="text-align:center;${isTop?"border-color:var(--amber-dim);":isHot?"border-color:#3b3a2e;":""}">
+            <div style="font-family:var(--mono);font-weight:700;font-size:15px;">${day}</div>
+            <div style="font-size:11px;color:${isTop?"var(--amber)":isHot?"var(--text)":"var(--muted)"};">${isTop?"⭐":isHot?"🔥":""} ${r.toFixed(1)}%</div>
+            <div style="font-size:10px;color:var(--muted);">T:${s.T} Q:${s.Q}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    `;
+  }
+  renderTQPredictor();
+
+  // ================================================================
+  // STRAIGHT CALENDAR — direct port, purely date/number based (no
+  // digit-count dependency at all).
+  // ================================================================
+  function renderStraightCalendar(){
+    const c = document.getElementById("straightCalContent");
+    const allDates = [...new Set(FILT_P4.map(r=>r.date))].sort().reverse();
+    if(!allDates.length){ c.innerHTML = `<div class="empty">No data.</div>`; return; }
+
+    const byNumber = {};
+    FILT_P4.forEach(r => (byNumber[r.number] ??= []).push(r));
+    const dayMatches = {}; for(let d=1;d<=31;d++) dayMatches[d]=[];
+    FILT_P4.forEach(r=>{
+      const rDD = r.date.slice(8,10), rMMDD = r.date.slice(5,7)+"-"+rDD;
+      (byNumber[r.number]||[]).forEach(p=>{
+        if(p===r || p.date>=r.date) return;
+        const pDD = p.date.slice(8,10), pMMDD = p.date.slice(5,7)+"-"+pDD;
+        if(pDD===rDD && pMMDD!==rMMDD) dayMatches[r.day].push({current:r, previous:p});
+      });
+    });
+    const dayStats = {};
+    for(let d=1;d<=31;d++){
+      const eventSet = new Set();
+      dayMatches[d].forEach(m => eventSet.add(m.current.state+"-"+m.current.date+"-"+m.current.draw));
+      dayStats[d] = { total: eventSet.size };
+    }
+    const totals = Object.values(dayStats).map(s=>s.total).filter(t=>t>0);
+    const avgTotal = totals.length ? totals.reduce((a,b)=>a+b,0)/totals.length : 0;
+    const topDays = new Set(Object.keys(dayStats).map(d=>+d).sort((a,b)=>dayStats[b].total-dayStats[a].total).slice(0,5));
+    const totalStraights = Object.values(dayStats).reduce((a,s)=>a+s.total,0);
+
+    c.innerHTML = `
+      <div class="ticker" style="margin-bottom:20px;">
+        <div class="ticker-card"><div class="st"><span class="st-code">Total straights</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${totalStraights}</span></div></div>
+        <div class="ticker-card"><div class="st"><span class="st-code">Avg per day</span></div><div class="draw-row"><span class="num" style="font-size:20px;">${avgTotal.toFixed(1)}</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;">
+        ${Array.from({length:31},(_,i)=>i+1).map(day=>{
+          const s = dayStats[day], isTop = topDays.has(day), isHot = s.total>avgTotal;
+          return `<div class="ticker-card" style="text-align:center;cursor:pointer;${isTop?"border-color:var(--amber-dim);":""}" onclick="showStraightCalDay(${day})">
+            <div style="font-family:var(--mono);font-weight:700;font-size:15px;">${day}</div>
+            <div style="font-size:11px;color:${isTop?"var(--amber)":"var(--muted)"};">${isTop?"⭐":isHot?"🔥":""} ${s.total}x</div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div id="straightCalDetail" style="margin-top:20px;"></div>
+    `;
+    window._scalDayMatches = dayMatches;
+  }
+  function showStraightCalDay(day){
+    const matches = window._scalDayMatches[day] || [];
+    document.getElementById("straightCalDetail").innerHTML = matches.length ? `
+      <div class="empty" style="margin-bottom:10px;">Day ${day} — ${matches.length} straight repeat${matches.length!==1?"s":""}</div>
+      <div class="ticker">${matches.map(m=>`
+        <div class="ticker-card"><div class="st"><span class="st-code">${m.current.number}</span></div>
+        <div class="draw-row"><span class="lbl">${m.current.state}</span><span class="num">${fmtDate(m.current.date)}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Previously: ${fmtDate(m.previous.date)} ${m.previous.state}</div>
+        </div>
+      `).join("")}</div>
+    ` : `<div class="empty">No straight repeats on this day.</div>`;
+  }
+  window.showStraightCalDay = showStraightCalDay;
+  renderStraightCalendar();
+
+  // ================================================================
+  // DIGIT DROUGHT — direct port, digit-count-agnostic (loops 0-9).
+  // ================================================================
+  function renderDigitDrought(){
+    const WINDOW = 30;
+    const c = document.getElementById("digitDroughtContent");
+    let anyDrought = false;
+    let h = `<div class="empty" style="margin-bottom:14px;">🔴 absent 20+ draws · 🟠 absent 10–19 · 🟡 absent 5–9 (last ${WINDOW} draws per state)</div>`;
+    activeCodes.forEach(st=>{
+      const stDraws = [...ALL_P4.filter(r=>r.state===st)].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,WINDOW);
+      if(!stDraws.length) return;
+      const lastSeen = {}; for(let i=0;i<=9;i++) lastSeen[i]=WINDOW;
+      stDraws.forEach((r,idx)=>{ for(const d of r.number){ if(lastSeen[+d]===WINDOW) lastSeen[+d]=idx; } });
+      const droughts = Object.entries(lastSeen).map(([d,ago])=>({d:+d,ago})).filter(x=>x.ago>=5).sort((a,b)=>b.ago-a.ago);
+      if(!droughts.length) return;
+      anyDrought = true;
+      h += `<div class="ticker-card" style="margin-bottom:10px;">
+        <div class="st"><span class="st-code">${st}</span><span style="font-size:11px;color:var(--muted);">last ${stDraws.length} · ${stDraws[0].number} ${fmtDate(stDraws[0].date)}</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">
+          ${droughts.map(({d,ago})=>{
+            const emoji = ago>=20?"🔴":ago>=10?"🟠":"🟡";
+            return `<span style="font-family:var(--mono);background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:12px;">${d} ${emoji} ${ago>=WINDOW?WINDOW+"+":ago}x ago</span>`;
+          }).join("")}
+        </div>
+      </div>`;
+    });
+    if(!anyDrought) h += `<div class="empty">No droughts ≥5 draws detected across active states.</div>`;
+    c.innerHTML = h;
+  }
+  renderDigitDrought();
+
+  // ================================================================
+  // STATE DNA — direct port. hasConsec's loop bound moves from 3
+  // (checking 3 starting points in 5 sorted digits) to 2 (in 4 sorted
+  // digits); digit-count-per-draw is *4 instead of *5.
+  // ================================================================
+  function renderStateDNA(){
+    function hasConsec(num){
+      const d = num.split("").map(Number).sort((a,b)=>a-b);
+      for(let i=0;i<2;i++) if(d[i+1]-d[i]===1 && d[i+2]-d[i+1]===1) return true;
+      return false;
+    }
+    function isPalin(n){ return n===n.split("").reverse().join(""); }
+
+    const allPats = { S:0, D:0, DD:0, T:0, Q:0 };
+    let allTotal=0, allSumTotal=0, allConsec=0, allPalin=0;
+    ALL_P4.forEach(r=>{
+      allPats[getRepeatKey4(r.sorted)] = (allPats[getRepeatKey4(r.sorted)]||0)+1;
+      allTotal++; allSumTotal += r.sum;
+      if(hasConsec(r.number)) allConsec++;
+      if(isPalin(r.number)) allPalin++;
+    });
+
+    let h = "";
+    activeCodes.forEach(st=>{
+      const stDraws = ALL_P4.filter(r=>r.state===st);
+      if(!stDraws.length) return;
+      const total = stDraws.length;
+      const pats = {}; stDraws.forEach(r=>pats[getRepeatKey4(r.sorted)]=(pats[getRepeatKey4(r.sorted)]||0)+1);
+      const avgSum = stDraws.reduce((a,r)=>a+r.sum,0)/total;
+      const consecPct = stDraws.filter(r=>hasConsec(r.number)).length/total*100;
+      const palinPct = stDraws.filter(r=>isPalin(r.number)).length/total*100;
+      const uniqueRatio = new Set(stDraws.map(r=>r.sorted)).size/total*100;
+
+      const traits = [];
+      if(palinPct>1.2) traits.push("🔁 Palindrome-prone");
+      if(consecPct>26) traits.push("🔗 Consec-heavy");
+      if(avgSum<16) traits.push("Σ Low-sum bias");
+      if(avgSum>20) traits.push("Σ High-sum bias");
+      if(uniqueRatio<50) traits.push("♻️ High repeats");
+
+      h += `<div class="ticker-card" style="margin-bottom:10px;">
+        <div class="st"><span class="st-code">${st}</span><span style="font-size:11px;color:var(--muted);">${total} draws</span></div>
+        ${traits.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">${traits.map(t=>`<span style="font-size:10px;background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;">${t}</span>`).join("")}</div>` : ""}
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+          ${["S","D","DD","T","Q"].map(pat=>{
+            const cnt = pats[pat]||0, pct = cnt/total*100, allPct = (allPats[pat]||0)/allTotal*100, diff = pct-allPct;
+            const arrow = diff>0.5?"↑":diff<-0.5?"↓":"";
+            return `<span class="pat-badge pat-${pat}" style="display:inline-flex;flex-direction:column;align-items:center;padding:3px 8px;">${pat} ${pct.toFixed(1)}% <span style="font-size:9px;">${arrow}${Math.abs(diff).toFixed(1)}</span></span>`;
+          }).join("")}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Avg sum ${avgSum.toFixed(1)} · Consec ${consecPct.toFixed(1)}% · Palindrome ${palinPct.toFixed(1)}% · Unique ${uniqueRatio.toFixed(0)}%</div>
+      </div>`;
+    });
+    document.getElementById("stateDnaContent").innerHTML = h || `<div class="empty">No data.</div>`;
+  }
+  renderStateDNA();
+
+  // ================================================================
+  // CROSS-STATE — direct port (pure date/state/sorted-value logic).
+  // Threshold for "enough shared days to trust a rate" relaxed from
+  // your 100+ down to 5+, since 12 states with days of data won't
+  // clear 100 for a long while; trigger patterns drop TD (no 4-digit analog).
+  // ================================================================
+  function renderCrossState(){
+    const byDate = {};
+    FILT_P4.forEach(r => (byDate[r.date] ??= []).push(r));
+    const pairMatches = {}, pairDays = {};
+    Object.values(byDate).forEach(dayDraws=>{
+      const states = [...new Set(dayDraws.map(r=>r.state))];
+      for(let i=0;i<states.length;i++) for(let j=i+1;j<states.length;j++){
+        const key = states[i]+"|"+states[j];
+        pairDays[key] = (pairDays[key]||0)+1;
+        const sA = new Set(dayDraws.filter(r=>r.state===states[i]).map(r=>r.sorted));
+        const sB = new Set(dayDraws.filter(r=>r.state===states[j]).map(r=>r.sorted));
+        if([...sA].some(x=>sB.has(x))) pairMatches[key]=(pairMatches[key]||0)+1;
+      }
+    });
+    const pairRates = Object.keys(pairDays).filter(k=>pairDays[k]>=5)
+      .map(k=>({ pair:k, rate:(pairMatches[k]||0)/pairDays[k]*100, matches:pairMatches[k]||0, days:pairDays[k] }))
+      .sort((a,b)=>b.rate-a.rate);
+
+    let h = `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">🎯 Same-day exact boxed-match rate</h3><div class="ticker" style="margin-bottom:24px;">`;
+    h += pairRates.slice(0,15).map(({pair,rate,matches,days})=>{
+      const [a,b] = pair.split("|");
+      return `<div class="ticker-card"${rate>0.35?' style="border-color:var(--amber-dim);"':""}>
+        <div class="st"><span class="st-code">${a} ↔ ${b}</span></div>
+        <div class="draw-row"><span class="num" style="font-size:16px;">${rate.toFixed(2)}%</span></div>
+        <div style="font-size:11px;color:var(--muted);">${matches}x / ${days} shared days</div>
+      </div>`;
+    }).join("") || `<div class="empty">Not enough shared days yet across states.</div>`;
+    h += `</div>`;
+
+    // Pattern trigger: when state A draws T or Q, what does each other state draw same day?
+    h += `<h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">⚡ Pattern trigger (T/Q days)</h3>`;
+    activeCodes.forEach(trigSt=>{
+      const trigDates = [...new Set(FILT_P4.filter(r=>r.state===trigSt && ["T","Q"].includes(getRepeatKey4(r.sorted))).map(r=>r.date))];
+      if(!trigDates.length) return;
+      const otherPats = {};
+      trigDates.forEach(d=>{
+        FILT_P4.filter(r=>r.date===d && r.state!==trigSt).forEach(r=>{
+          const pat = getRepeatKey4(r.sorted);
+          (otherPats[r.state] ??= {})[pat] = (otherPats[r.state][pat]||0)+1;
+        });
+      });
+      if(!Object.keys(otherPats).length) return;
+      h += `<div class="ticker-card" style="margin-bottom:8px;">
+        <div class="st"><span class="st-code">${trigSt} → others</span><span style="font-size:11px;color:var(--muted);">${trigDates.length} T/Q day${trigDates.length!==1?"s":""}</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+          ${Object.entries(otherPats).map(([st,pats])=>`<span style="font-size:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;"><b>${st}</b> ${Object.entries(pats).map(([p,c])=>`${p}:${c}`).join(" ")}</span>`).join("")}
+        </div>
+      </div>`;
+    });
+    document.getElementById("crossStateContent").innerHTML = h;
+  }
+  renderCrossState();
+
+  // ================================================================
+  // DAY REPEATS — direct port; get3seqs is already length-agnostic.
+  // ================================================================
+  function renderDayRepeats(){
+    function get3seqs(num){
+      const seqs = new Set();
+      for(let i=0;i<=num.length-3;i++) seqs.add(num.slice(i,i+3));
+      return seqs;
+    }
+    const dayData = {};
+    for(let day=1;day<=31;day++){
+      const dayDraws = FILT_P4.filter(r=>r.day===day);
+      const seqMap = {};
+      dayDraws.forEach(r=>{
+        const seenThisDraw = new Set();
+        get3seqs(r.number).forEach(seq=>{
+          if(seenThisDraw.has(seq)) return;
+          seenThisDraw.add(seq);
+          (seqMap[seq] ??= []).push(r);
+        });
+      });
+      const hits = Object.entries(seqMap)
+        .filter(([,insts])=>new Set(insts.map(r=>r.ym)).size>=2)
+        .map(([seq,insts])=>({ seq, insts: insts.sort((a,b)=>a.ym.localeCompare(b.ym)), months: new Set(insts.map(r=>r.ym)).size }))
+        .sort((a,b)=>b.months-a.months || b.insts.length-a.insts.length);
+      dayData[day] = { hits, total: dayDraws.length };
+    }
+    window._dayRepeatsData = dayData;
+    const maxHits = Math.max(...Object.values(dayData).map(d=>d.hits.length),1);
+    const totalCases = Object.values(dayData).reduce((s,d)=>s+d.hits.length,0);
+
+    document.getElementById("dayRepeatsContent").innerHTML = `
+      <div class="empty" style="margin-bottom:14px;">${totalCases} total sequence repeats found</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;">
+        ${Array.from({length:31},(_,i)=>i+1).map(day=>{
+          const d = dayData[day], cnt = d.hits.length;
+          return `<div class="ticker-card" style="text-align:center;cursor:pointer;${cnt?"border-color:var(--amber-dim);":""}" onclick="showDayRepeatDetail(${day})">
+            <div style="font-family:var(--mono);font-weight:700;font-size:15px;">${day}</div>
+            <div style="font-size:11px;color:${cnt?"var(--amber)":"var(--muted)"};">${cnt||"—"}</div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div id="dayRepeatDetail" style="margin-top:20px;"></div>
+    `;
+  }
+  function showDayRepeatDetail(day){
+    const hits = window._dayRepeatsData[day].hits;
+    document.getElementById("dayRepeatDetail").innerHTML = hits.length ? `
+      <div class="empty" style="margin-bottom:10px;">Day ${day} — ${hits.length} recurring sequences</div>
+      <div class="ticker">${hits.map(h=>`
+        <div class="ticker-card"><div class="st"><span class="st-code">${h.seq}</span><span style="font-size:11px;color:var(--muted);">${h.months} months</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">${h.insts.map(r=>`${r.state} ${fmtDate(r.date)} ${r.number}`).join(" · ")}</div></div>
+      `).join("")}</div>
+    ` : `<div class="empty">No repeats on this day.</div>`;
+  }
+  window.showDayRepeatDetail = showDayRepeatDetail;
+  renderDayRepeats();
+
+  // ================================================================
+  // UNSEEN — 210 Singles (C(10,4)) + 324 Doubles (9×C(9,2)) for 4
+  // digits, vs. lottolens' 252 Singles (C(10,5)) + 840 Doubles.
+  // ================================================================
+  const unseenStateF = document.getElementById("unseenStateF");
+  activeCodes.forEach(code=>{
+    const o=document.createElement("option"); o.value=code; o.textContent=`${code} — ${P4_STATES[code].name}`;
+    unseenStateF.appendChild(o);
+  });
+  function allSingles4(){
+    const out = [];
+    for(let a=0;a<=9;a++) for(let b=a+1;b<=9;b++) for(let c=b+1;c<=9;c++) for(let d=c+1;d<=9;d++) out.push(`${a}${b}${c}${d}`);
+    return out;
+  }
+  function allDoubles4(){
+    const out = [];
+    for(let p=0;p<=9;p++){
+      const rest = [0,1,2,3,4,5,6,7,8,9].filter(x=>x!==p);
+      for(let i=0;i<rest.length;i++) for(let j=i+1;j<rest.length;j++) out.push([p,p,rest[i],rest[j]].sort().join(""));
+    }
+    return out.sort();
+  }
+  function renderUnseen(){
+    const stF = unseenStateF.value;
+    const targetStates = stF==="ALL" ? activeCodes : [stF];
+    const singles = allSingles4(), doubles = allDoubles4();
+    const seenS = {}, seenD = {};
+    activeCodes.forEach(st=>{ seenS[st]=new Set(); seenD[st]=new Set(); });
+    ALL_P4.forEach(r=>{
+      if(!seenS[r.state]) return;
+      const pat = getRepeatKey4(r.sorted);
+      if(pat==="S") seenS[r.state].add(r.sorted);
+      else if(pat==="D") seenD[r.state].add(r.sorted);
+    });
+    function section(st, all, seen, label){
+      const unseen = all.filter(s=>!seen.has(s));
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;">${label}</span>
+          <span style="font-size:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;">${seen.size} seen</span>
+          ${unseen.length ? `<span style="font-size:11px;background:#3a1f1a;color:#fca5a5;border-radius:5px;padding:1px 7px;">${unseen.length} unseen</span>` : `<span style="font-size:11px;background:#1c2e21;color:#86efac;border-radius:5px;padding:1px 7px;">✅ all seen</span>`}
+        </div>
+        ${unseen.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${unseen.map(s=>`<span style="font-family:var(--mono);font-size:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;">${s}</span>`).join("")}</div>` : ""}
+      </div>`;
+    }
+    document.getElementById("unseenContent").innerHTML = targetStates.map(st=>`
+      <div class="ticker-card" style="margin-bottom:12px;">
+        <div class="st"><span class="st-code">${st}</span></div>
+        ${section(st, singles, seenS[st], "Singles (S)")}
+        ${section(st, doubles, seenD[st], "Doubles (D)")}
+      </div>
+    `).join("");
+  }
+  unseenStateF.addEventListener("change", renderUnseen);
+  renderUnseen();
+
+  // ================================================================
+  // MOST DRAWN — user-tracked boxed values: hits this year, what
+  // precedes/follows in each state's chronological sequence.
+  // ================================================================
+  let _mdList = [];
+  function mdSetList(){
+    const raw = document.getElementById("mdInput").value;
+    _mdList = [...new Set((raw.match(/\d{4}/g)||[]).map(srtP4))];
+    renderMostDrawn();
+  }
+  window.mdSetList = mdSetList;
+  function renderMostDrawn(){
+    const c = document.getElementById("mdContent");
+    if(!_mdList.length){ c.innerHTML = `<div class="empty">Enter numbers above to track (e.g. 1234, 5566).</div>`; return; }
+    let curYear = ""; ALL_P4.forEach(r=>{ const y=r.date.slice(0,4); if(y>curYear) curYear=y; });
+    const yearRows = ALL_P4.filter(r=>r.date.startsWith(curYear));
+    const byState = {};
+    yearRows.forEach(r=>(byState[r.state] ??= []).push(r));
+    Object.values(byState).forEach(arr=>arr.sort((a,b)=>a.date.localeCompare(b.date) || (a.draw<b.draw?-1:1)));
+
+    const trackedSet = new Set(_mdList);
+    const stats = {}; _mdList.forEach(s=>stats[s]={hits:0, followed:{}, preceded:{}});
+    Object.values(byState).forEach(arr=>{
+      arr.forEach((r,i)=>{
+        if(!trackedSet.has(r.sorted)) return;
+        stats[r.sorted].hits++;
+        if(i>0) stats[r.sorted].preceded[arr[i-1].sorted] = (stats[r.sorted].preceded[arr[i-1].sorted]||0)+1;
+        if(i<arr.length-1) stats[r.sorted].followed[arr[i+1].sorted] = (stats[r.sorted].followed[arr[i+1].sorted]||0)+1;
+      });
+    });
+
+    c.innerHTML = `<div class="empty" style="margin-bottom:14px;">${curYear} — tracking ${_mdList.length} value${_mdList.length!==1?"s":""}</div><div class="ticker">${_mdList.map(sp=>{
+      const s = stats[sp];
+      const topFollow = Object.entries(s.followed).sort((a,b)=>b[1]-a[1])[0];
+      const topPrec = Object.entries(s.preceded).sort((a,b)=>b[1]-a[1])[0];
+      return `<div class="ticker-card">
+        <div class="st"><span class="st-code">${sp}</span>${patBadge(sp)}</div>
+        <div class="draw-row"><span class="lbl">Hits ${curYear}</span><span class="num">${s.hits}</span></div>
+        ${topPrec ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">Often follows: <span style="color:var(--amber);">${topPrec[0]}</span></div>` : ""}
+        ${topFollow ? `<div style="font-size:11px;color:var(--muted);">Often followed by: <span style="color:var(--amber);">${topFollow[0]}</span></div>` : ""}
+      </div>`;
+    }).join("")}</div>`;
+  }
+  renderMostDrawn();
+
+  // ================================================================
+  // PERM MATCHER — direct port, \d{5} → \d{4}.
+  // ================================================================
+  function runPermMatcherP4(){
+    const list1 = new Set((document.getElementById("pmList1").value.match(/\b\d{4}\b/g))||[]);
+    const list2raw = document.getElementById("pmList2").value.match(/\b\d{4}\b/g)||[];
+    const list2 = [...new Set(list2raw)];
+    const summary = document.getElementById("pmSummary"), c = document.getElementById("pmResults");
+    if(!list1.size || !list2.length){ summary.textContent=""; c.innerHTML = `<div class="empty">Paste numbers into both lists first.</div>`; return; }
+    const results = [];
+    list2.forEach(code=>{
+      const matches = getPerms(code).filter(p=>list1.has(p)).sort();
+      if(matches.length) results.push({code, matches});
+    });
+    if(!results.length){ summary.textContent = `0 of ${list2.length} codes matched`; c.innerHTML = `<div class="empty">No permutation matches found.</div>`; return; }
+    const allMatches = [...new Set(results.flatMap(r=>r.matches))];
+    summary.textContent = `${results.length} of ${list2.length} codes matched · ${allMatches.length} unique matches`;
+    c.innerHTML = results.map(({code,matches})=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:7px;margin-bottom:6px;">
+        <span style="font-family:var(--mono);color:var(--muted);min-width:50px;">${code}</span><span>→</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">${matches.map(m=>`<span style="font-family:var(--mono);font-weight:700;color:var(--amber);">${m}</span>`).join("")}</div>
+      </div>
+    `).join("");
+  }
+  window.runPermMatcherP4 = runPermMatcherP4;
+
+  // ================================================================
+  // POSITION SEARCH — position combos with min-hits, filtered to a
+  // specific day/month/year (vs. Position tab's live "top" browsing).
+  // ================================================================
+  function renderPosSearchP4(){
+    const size = +document.getElementById("psSizeF").value;
+    const minHits = parseInt(document.getElementById("psMinHits").value)||1;
+    const day = document.getElementById("psDay").value.trim();
+    const month = document.getElementById("psMonth").value.trim();
+    const year = document.getElementById("psYear").value.trim();
+    const c = document.getElementById("psResults");
+    if(!day && !month && !year){ c.innerHTML = `<div class="empty">Set at least one date filter.</div>`; return; }
+
+    let dateRows = FILT_P4;
+    if(year) dateRows = dateRows.filter(r=>r.date.startsWith(year));
+    if(month) dateRows = dateRows.filter(r=>+r.date.slice(5,7)===+month);
+    if(day) dateRows = dateRows.filter(r=>+r.date.slice(8,10)===+day);
+    if(!dateRows.length){ c.innerHTML = `<div class="empty">No draws for that date criteria.</div>`; return; }
+
+    const combos = combosOf([0,1,2,3], size);
+    const counts = {};
+    combos.forEach(p=>FILT_P4.forEach(r=>{ const k=p.join("")+"|"+p.map(i=>r.number[i]).join(""); counts[k]=(counts[k]||0)+1; }));
+    const dateKeys = new Set();
+    combos.forEach(p=>dateRows.forEach(r=>dateKeys.add(p.join("")+"|"+p.map(i=>r.number[i]).join(""))));
+
+    const results = Object.entries(counts).filter(([k,cnt])=>cnt>=minHits && dateKeys.has(k)).sort((a,b)=>b[1]-a[1]);
+    c.innerHTML = results.length ? `<div class="empty" style="margin-bottom:10px;">${results.length} combos</div><div class="ticker">${results.map(([k,cnt])=>`
+      <div class="ticker-card"><div class="st"><span>${renderPosBoxes(k)}</span><span class="num">${cnt}x</span></div></div>
+    `).join("")}</div>` : `<div class="empty">No ${size}-digit position combos with ${minHits}+ hits found for that date.</div>`;
+  }
+  window.renderPosSearchP4 = renderPosSearchP4;
+
+  // ================================================================
+  // POSITION CONVERGENCE — numbers pointed at by 3+ distinct near-miss
+  // draws sharing 3-of-4 positions, converging on a T or Q target
+  // (your source used T/TD/Q/Qu; TD/Qu don't exist at 4 digits).
+  // ================================================================
+  function renderPosConverge(){
+    const minPointers = +document.getElementById("pcMinF").value;
+    const c = document.getElementById("pcContent");
+    c.innerHTML = `<div class="empty">Computing...</div>`;
+    setTimeout(()=>{
+      const pos3 = combosOf([0,1,2,3],3);
+      const targetPosMap = {};
+      FILT_P4.forEach(r=>{
+        const num = r.number;
+        pos3.forEach(p=>{
+          const missingPos = [0,1,2,3].find(x=>!p.includes(x));
+          const digits = p.map(i=>num[i]).join("");
+          const posStr = p.join("");
+          for(let x=0;x<=9;x++){
+            const arr = Array(4);
+            p.forEach((pi,idx)=>arr[pi]=digits[idx]);
+            arr[missingPos] = String(x);
+            const target = arr.join("");
+            const pat = getRepeatKey4(target);
+            if(pat!=="T" && pat!=="Q") continue;
+            (targetPosMap[target] ??= new Set()).add(posStr+"|"+digits);
+          }
+        });
+      });
+      const results = Object.entries(targetPosMap).filter(([,s])=>s.size>=minPointers).sort((a,b)=>b[1].size-a[1].size);
+      c.innerHTML = results.length ? `<div class="empty" style="margin-bottom:10px;">${results.length} converging targets</div><div class="ticker">${results.slice(0,60).map(([num,pointers])=>`
+        <div class="ticker-card"><div class="st"><span class="st-code">${num}</span>${patBadge(num)}</div><div class="draw-row"><span class="lbl">Pointers</span><span class="num">${pointers.size}</span></div></div>
+      `).join("")}</div>` : `<div class="empty">No convergences found at this threshold yet.</div>`;
+    }, 10);
+  }
+  window.renderPosConverge = renderPosConverge;
+  document.getElementById("pcMinF").addEventListener("change", renderPosConverge);
+  renderPosConverge();
+
+  // ================================================================
+  // POS DAY REPEAT — 3-of-4 position combos hitting 2+ times on the
+  // same calendar day, across all history.
+  // ================================================================
+  function renderPosDayRepeat(){
+    const pos3 = combosOf([0,1,2,3],3);
+    const keyMap = {};
+    FILT_P4.forEach(r=>{
+      const dayNum = r.day;
+      pos3.forEach(p=>{
+        const digits = p.map(i=>r.number[i]).join("");
+        const k = p.join("")+"|"+digits+"|"+dayNum;
+        (keyMap[k] ??= []).push(r);
+      });
+    });
+    const results = [];
+    Object.keys(keyMap).forEach(k=>{
+      const occs = keyMap[k];
+      if(occs.length<2) return;
+      const [pos,dig,day] = k.split("|");
+      occs.sort((a,b)=>a.date.localeCompare(b.date));
+      results.push({ pos, dig, day:+day, hits:occs.length, occs });
+    });
+    results.sort((a,b)=>a.day-b.day || a.pos.localeCompare(b.pos));
+
+    document.getElementById("prContent").innerHTML = results.length ? `
+      <div class="empty" style="margin-bottom:10px;">${results.length} combos</div>
+      <div class="ticker">${results.map(r=>`
+        <div class="ticker-card">
+          <div class="st"><span>Day ${r.day}</span><span>${renderPosBoxes(r.pos+"|"+r.dig)}</span><span class="num">${r.hits}x</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">${r.occs.map(o=>`${o.state} ${fmtDate(o.date)} ${o.number}`).join(" · ")}</div>
+        </div>
+      `).join("")}</div>
+    ` : `<div class="empty">No repeats yet — needs more history.</div>`;
+  }
+  renderPosDayRepeat();
+
+  // ================================================================
+  // DIGIT SEARCH — top 2/3-digit subsets by frequency, feeding into Search.
+  // ================================================================
+  function renderDigitSearchTab(){
+    const d2 = {}, d3 = {};
+    FILT_P4.forEach(r=>{
+      const n = r.number;
+      const seen2 = new Set(), seen3 = new Set();
+      for(let i=0;i<4;i++) for(let j=i+1;j<4;j++){ const k=[n[i],n[j]].sort().join(""); if(!seen2.has(k)){seen2.add(k); d2[k]=(d2[k]||0)+1;} }
+      for(let i=0;i<4;i++) for(let j=i+1;j<4;j++) for(let k2=j+1;k2<4;k2++){ const k=[n[i],n[j],n[k2]].sort().join(""); if(!seen3.has(k)){seen3.add(k); d3[k]=(d3[k]||0)+1;} }
+    });
+    function topN(obj,n){ return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+    function badges(entries){
+      return entries.map(([combo,cnt])=>`<span style="cursor:pointer;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-weight:700;font-size:13px;" onclick="document.getElementById('searchInput').value='${combo}';document.querySelector('[data-tab=search]').click();runSearchP4();">${combo} <span style="font-size:10px;color:var(--muted);">${cnt}x</span></span>`).join("");
+    }
+    document.getElementById("digitSearchContent").innerHTML = `
+      <div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--muted);margin-bottom:6px;">2-digit</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${badges(topN(d2,5))}</div></div>
+      <div><div style="font-size:12px;color:var(--muted);margin-bottom:6px;">3-digit</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${badges(topN(d3,8))}</div></div>
+    `;
+  }
+  renderDigitSearchTab();
+
+  // ================================================================
+  // SAME-DAY DOUBLES — boxed value drawn 2+ times same day, track
+  // days until a 3rd hit. Direct port, purely date/sorted-value based.
+  // ================================================================
+  function renderSameDayDoubles(){
+    const byDateSorted = {};
+    FILT_P4.forEach(r=>{ const k=r.date+"|"+r.sorted; (byDateSorted[k] ??= {date:r.date, sorted:r.sorted, occs:[]}).occs.push(r); });
+    const doubles = Object.values(byDateSorted).filter(x=>x.occs.length>=2).sort((a,b)=>a.date.localeCompare(b.date));
+
+    const allByDate = {}; ALL_P4.forEach(r=>(allByDate[r.date] ??= []).push(r));
+    const allDates = Object.keys(allByDate).sort();
+    const cutoff = allDates[allDates.length-1];
+
+    const rows = doubles.map(x=>{
+      const dt = new Date(x.date+"T12:00:00Z");
+      let hit = null;
+      for(let delta=1; delta<=400; delta++){
+        const nd = new Date(dt); nd.setUTCDate(nd.getUTCDate()+delta);
+        const ndk = nd.toISOString().slice(0,10);
+        if(ndk>cutoff) break;
+        const matches = (allByDate[ndk]||[]).filter(r=>r.sorted===x.sorted);
+        if(matches.length){ hit = { date:ndk, delta, draw:matches[0] }; break; }
+      }
+      return { date:x.date, sorted:x.sorted, occs:x.occs, hit };
+    });
+    const found = rows.filter(r=>r.hit).length;
+    const pct = rows.length ? Math.round(found/rows.length*100) : 0;
+
+    document.getElementById("sdpSummary").innerHTML = `
+      <div class="ticker-card"><div class="st"><span class="st-code">${rows.length}</span></div><div style="font-size:11px;color:var(--muted);">Total doubles</div></div>
+      <div class="ticker-card"><div class="st"><span class="st-code" style="color:var(--amber);">${found}</span></div><div style="font-size:11px;color:var(--muted);">3rd hit found</div></div>
+      <div class="ticker-card"><div class="st"><span class="st-code">${rows.length-found}</span></div><div style="font-size:11px;color:var(--muted);">Still waiting</div></div>
+      <div class="ticker-card"><div class="st"><span class="st-code">${pct}%</span></div><div style="font-size:11px;color:var(--muted);">Hit rate</div></div>
+    `;
+    document.getElementById("sdpContent").innerHTML = `<div class="ticker">${rows.map(r=>`
+      <div class="ticker-card">
+        <div class="st"><span class="st-code">${r.sorted}</span>${patBadge(r.sorted)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">${fmtDate(r.date)}: ${r.occs.map(o=>o.state+" "+o.number).join(", ")}</div>
+        ${r.hit ? `<div style="font-size:11px;color:var(--amber);margin-top:4px;">3rd hit: ${fmtDate(r.hit.date)} ${r.hit.draw.state} ${r.hit.draw.number} (+${r.hit.delta}d)</div>` : `<div style="font-size:11px;color:var(--muted);margin-top:4px;">Still waiting</div>`}
+      </div>
+    `).join("") || `<div class="empty">No same-day doubles yet.</div>`}</div>`;
+  }
+  renderSameDayDoubles();
+</script>
+</body>
+</html>
