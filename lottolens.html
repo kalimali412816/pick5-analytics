@@ -3444,7 +3444,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=424"></script>
+<script src="lottolens-data.js?v=425"></script>
 <script>
 
 // ================================================================
@@ -22855,8 +22855,6 @@ function _renderPosSearch(){
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
   if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
-  if(psDayF!=='ALL') scopeRows=scopeRows.filter(r=>parseInt(r.dk.slice(8,10),10)===parseInt(psDayF,10));
-  if(psSumVals.length) scopeRows=scopeRows.filter(r=>psSumVals.includes(r.sum));
 
   if(!scopeRows.length){
     document.getElementById('psTopCombos').innerHTML='<div class="es">No draws match the selected filters.</div>';
@@ -23002,14 +23000,28 @@ function _renderPosSearch(){
   function renderTopSection(label,items,emoji){
     if(!items||!items.length) return '';
     const is4=(label==='4-Digit Positions');
-    // Apply pattern filter: only show combos with matching hasn't-come items
+    // Apply pattern filter
     if(_psPatInternal){
       items=items.filter(function(item){
         const hcCheck=is4?haventComeFor4(item[0]):[];
         return hcCheck.some(function(h){return _psPatInternal.includes(h.type);});
       });
     }
-    if(!items.length) return '<div class="es" style="padding:20px;">No combos match the selected pattern filter.</div>';
+    // Apply day filter: only show combos that have appeared on the selected day
+    // (but preserve full hit count from original items)
+    if(psDayF!=='ALL'){
+      items=items.filter(function(item){
+        const key=item[0];
+        const [posStr,digStr]=key.split('|');
+        if(!posStr||!digStr) return false;
+        // Check if this combo appeared on this day of month in scopeRows
+        return scopeRows.some(function(r){
+          return parseInt(r.dk.slice(8,10),10)===parseInt(psDayF,10) &&
+            posStr.split('').every(function(p,i){return r.number[+p]===digStr[i];});
+        });
+      });
+    }
+    if(!items.length) return '<div class="es" style="padding:20px;">No combos match the selected filters.</div>';
     const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
     const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
     const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
@@ -23037,7 +23049,10 @@ function _renderPosSearch(){
       if(is4){
         const hcRaw=haventComeFor4(key);
         let hc=_psPatInternal?hcRaw.filter(function(h){return _psPatInternal.includes(h.type);}):hcRaw;
-        if(psSumVals.length) hc=hc.filter(function(h){return psSumVals.includes(h.number.split('').reduce(function(a,d){return a+(+d);},0));});
+        if(psSumVals.length) hc=hc.filter(function(h){
+          const s=h.number.split('').reduce(function(a,d){return a+(+d);},0);
+          return psSumVals.includes(s);
+        });
         if(hc.length){
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
