@@ -1285,6 +1285,18 @@ tr:hover td{background:var(--b0);}
           <option value="Q">Q</option>
           <option value="Qu">Qu</option>
         </select>
+        <select id="psDay" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Days</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+          <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+          <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
+          <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
+          <option value="31">31</option>
+        </select>
+        <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearch()"
+          style="width:120px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:'DM Sans',sans-serif;" />
       </div>
     </div>
     <div style="padding:16px;border-bottom:1px solid var(--g2);">
@@ -3432,7 +3444,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=422"></script>
+<script src="lottolens-data.js?v=423"></script>
 <script>
 
 // ================================================================
@@ -22826,6 +22838,9 @@ function _renderPosSearch(){
   const psPatF=document.getElementById('psPatFilter')?.value||'ALL';
   const _psPatMap={'ALL':null,'S':['Singles'],'D':['Doubles'],'DD':['DD'],'T':['Triples'],'TD':['TD'],'Q':['Quads'],'Qu':['Qu']};
   const _psPatInternal=_psPatMap[psPatF]||null;
+  const psDayF=document.getElementById('psDay')?.value||'ALL';
+  const psSumFRaw=(document.getElementById('psSumF')?.value||'').trim();
+  const psSumVals=psSumFRaw?psSumFRaw.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
 
   // Read pattern
   const pat=[];
@@ -22840,6 +22855,8 @@ function _renderPosSearch(){
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
   if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
+  if(psDayF!=='ALL') scopeRows=scopeRows.filter(r=>+r.dk.slice(8,10)===+psDayF);
+  if(psSumVals.length) scopeRows=scopeRows.filter(r=>psSumVals.includes(r.sum!==undefined?r.sum:r.number.split('').reduce(function(a,d){return a+(+d);},0)));
 
   // Build positional combinations counts
   const POS=[0,1,2,3,4];
@@ -23015,7 +23032,8 @@ function _renderPosSearch(){
       s+=`</div>`;
       if(is4){
         const hcRaw=haventComeFor4(key);
-        const hc=_psPatInternal?hcRaw.filter(function(h){return _psPatInternal.includes(h.type);}):hcRaw;
+        let hc=_psPatInternal?hcRaw.filter(function(h){return _psPatInternal.includes(h.type);}):hcRaw;
+        if(psSumVals.length) hc=hc.filter(function(h){return psSumVals.includes(h.number.split('').reduce(function(a,d){return a+(+d);},0));});
         if(hc.length){
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
