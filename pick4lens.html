@@ -4,23 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pick 4 Lens</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#14110F;
-    --panel:#1E1A16;
-    --panel-2:#262019;
-    --border:#332C22;
-    --text:#F2EDE4;
-    --muted:#94897B;
-    --amber:#E8A33D;
-    --amber-dim:#7A5A28;
-    --green:#7A9B7E;
-    --rust:#C1502E;
-    --mono:'IBM Plex Mono', monospace;
-    --display:'Space Grotesk', sans-serif;
-    --body:'Manrope', sans-serif;
+    /* Same palette/tokens as Pick5 Analytics (lottolens.html) — light blue/white theme */
+    --bg:#f0f4fb;
+    --panel:#ffffff;
+    --panel-2:#f3f4f6;
+    --border:#d1d5db;
+    --text:#111827;
+    --muted:#6b7280;
+    --amber:#2563eb;       /* primary accent — blue, matching lottolens' --b5 */
+    --amber-dim:#93c5fd;   /* highlight border — light blue, matching --b3 */
+    --hot:#f59e0b;         /* genuine "hot/this month" accent, matching --ac */
+    --green:#16a34a;
+    --rust:#dc2626;
+    --mono:'DM Mono', monospace;
+    --display:'Playfair Display', serif;
+    --body:'DM Sans', sans-serif;
+    --shadow:0 4px 24px rgba(37,99,235,.10);
   }
   *{box-sizing:border-box;}
   body{
@@ -28,53 +30,41 @@
     font-family:var(--body); min-height:100vh;
   }
   a{color:inherit;}
-  .app{display:flex; min-height:100vh;}
 
-  /* ---------- SIDEBAR ---------- */
-  .sidebar{
-    width:230px; flex-shrink:0; background:var(--panel);
-    border-right:1px solid var(--border); padding:28px 20px;
-    display:flex; flex-direction:column; gap:28px;
-  }
-  .brand{display:flex; flex-direction:column; gap:2px;}
-  .brand .mark{font-family:var(--display); font-weight:700; font-size:22px; letter-spacing:.2px;}
-  .brand .mark span{color:var(--amber);}
-  .brand .sub{font-size:12px; color:var(--muted);}
-  .nav{display:flex; flex-direction:column; gap:4px;}
-  .nav button{
-    all:unset; cursor:pointer; padding:10px 12px; border-radius:6px;
-    font-family:var(--body); font-weight:600; font-size:14px; color:var(--muted);
-    display:flex; align-items:center; gap:10px;
-  }
-  .nav button:hover{background:var(--panel-2); color:var(--text);}
-  .nav button.active{background:var(--panel-2); color:var(--amber);}
-  .nav .dot{width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.7;}
+  /* ---------- HEADER ---------- */
+  header{background:linear-gradient(135deg,#0a1628,#1a3a6e); color:#fff; box-shadow:0 8px 40px rgba(37,99,235,.18); position:sticky; top:0; z-index:200;}
+  .hi{max-width:1500px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .logo{display:flex; align-items:center; gap:10px;}
+  .logo-icon{width:38px; height:38px; background:var(--hot); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:19px;}
+  .logo h1{font-family:var(--display); font-size:1.3rem; font-weight:700; line-height:1.1; margin:0;}
+  .logo h1 span{color:var(--hot);}
+  .logo p{font-size:.7rem; color:#93c5fd; margin:0;}
+  .active-states{margin-left:auto; display:flex; gap:5px; flex-wrap:wrap; max-width:520px;}
+  .active-states span{font-family:var(--mono); font-size:10.5px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); border-radius:4px; padding:2px 6px; color:#dbeafe;}
 
-  .state-list{display:flex; flex-direction:column; gap:2px; margin-top:-6px;}
-  .state-list .heading{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 6px 2px;}
-  .state-chip{
-    font-family:var(--mono); font-size:12px; color:var(--muted);
-    display:flex; justify-content:space-between; padding:4px 2px;
-  }
-  .state-chip b{color:var(--text); font-weight:600;}
+  /* ---------- TAB STRIP ---------- */
+  .tabs{display:flex; gap:5px; flex-wrap:wrap; margin:16px auto 18px; max-width:1500px; padding:0 20px;}
+  .tab{padding:7px 13px; border-radius:7px; font-size:.78rem; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:#374151; transition:all .15s; font-family:var(--body);}
+  .tab.active{background:var(--amber); color:#fff; border-color:var(--amber);}
+  .tab:hover:not(.active){background:#eff6ff; border-color:var(--amber-dim);}
 
   /* ---------- MAIN ---------- */
-  .main{flex:1; padding:32px 40px; max-width:1100px;}
-  .page-head{margin-bottom:24px;}
-  .page-head h1{font-family:var(--display); font-size:26px; margin:0 0 4px;}
+  .main{max-width:1500px; margin:0 auto; padding:0 20px 40px;}
+  .page-head{margin-bottom:20px;}
+  .page-head h1{font-family:var(--display); font-size:24px; margin:0 0 4px; color:#111827;}
   .page-head p{margin:0; color:var(--muted); font-size:14px;}
 
-  /* Ticker */
+  /* Card grid (Dashboard, Results tiles, etc.) */
   .ticker{
     display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
     gap:12px; margin-bottom:32px;
   }
   .ticker-card{
-    background:var(--panel); border:1px solid var(--border); border-radius:8px;
-    padding:14px 16px;
+    background:var(--panel); border:1px solid var(--border); border-radius:9px;
+    padding:14px 16px; box-shadow:var(--shadow); border-left:4px solid var(--amber);
   }
-  .ticker-card .st{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
-  .ticker-card .st-code{font-family:var(--display); font-weight:700; font-size:15px;}
+  .ticker-card .st{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; flex-wrap:wrap; gap:4px;}
+  .ticker-card .st-code{font-family:var(--mono); font-weight:700; font-size:15px; color:#1a3a6e;}
   .ticker-card .st-date{font-size:11px; color:var(--muted); font-family:var(--mono);}
   .draw-row{display:flex; justify-content:space-between; align-items:center; padding:3px 0;}
   .draw-row .lbl{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
@@ -83,28 +73,29 @@
     color:var(--amber); font-variant-numeric:tabular-nums;
   }
 
-  /* Table (Results) */
-  .filters{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
-  select, input[type=date]{
-    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
-    padding:8px 10px; border-radius:6px; font-family:var(--body); font-size:13px;
+  /* Filters row + table (Results) */
+  .filters{background:#fff; border-radius:11px; padding:12px 16px; box-shadow:var(--shadow); margin-bottom:18px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  select, input[type=date], input[type=text], input[type=number], textarea{
+    background:var(--panel-2); border:1.5px solid var(--border); color:var(--text);
+    padding:6px 10px; border-radius:7px; font-family:var(--body); font-size:.82rem; outline:none;
   }
-  table{width:100%; border-collapse:collapse; font-size:13px;}
+  select:focus, input:focus, textarea:focus{border-color:var(--amber);}
+  table{width:100%; border-collapse:collapse; font-size:13px; background:#fff; border-radius:9px; overflow:hidden; box-shadow:var(--shadow);}
   thead th{
     text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
-    color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--border);
+    color:#1a3a6e; background:#eff6ff; padding:8px 10px; border-bottom:2px solid #dbeafe;
   }
   tbody td{padding:9px 10px; border-bottom:1px solid var(--border);}
-  tbody tr:hover{background:var(--panel);}
+  tbody tr:hover td{background:#eff6ff;}
   td.num, td.state{font-family:var(--mono);}
   td.num{color:var(--amber); letter-spacing:2px; font-weight:600;}
   td.state{font-weight:700;}
   .pat-badge{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:4px; font-family:var(--body);}
-  .pat-S{background:#1e2a3f; color:#93c5fd; border:1px solid #2c4568;}
-  .pat-D{background:#1c2e21; color:#86efac; border:1px solid #2d4a35;}
-  .pat-DD{background:#332c14; color:#fde047; border:1px solid #4d431f;}
-  .pat-T{background:#3a1f2a; color:#f9a8d4; border:1px solid #55293b;}
-  .pat-Q{background:#3a1f1a; color:#fca5a5; border:1px solid #552b24;}
+  .pat-S{background:#dbeafe; color:#1e40af;}
+  .pat-D{background:#dcfce7; color:#166534;}
+  .pat-DD{background:#fef9c3; color:#854d0e;}
+  .pat-T{background:#fce7f3; color:#9d174d;}
+  .pat-Q{background:#fee2e2; color:#991b1b;}
 
   /* Frequency */
   .freq-picker{margin-bottom:20px;}
@@ -117,93 +108,91 @@
   .freq-bar-row .count{width:20px; text-align:right; font-family:var(--mono); font-size:11px; color:var(--muted);}
 
   .empty{color:var(--muted); font-size:13px; padding:20px 0;}
+  h3{color:#1a3a6e;}
 
   /* Position tab */
   .pos-boxes{display:flex; gap:6px; margin:10px 0;}
   .pos-boxes input{
     width:38px; height:40px; text-align:center; font-family:var(--mono); font-size:16px;
-    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    background:var(--panel-2); border:1.5px solid var(--border); border-radius:6px; color:var(--text);
   }
   .combo-row{
     display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--border);
-    border-radius:7px; padding:7px 10px; margin-bottom:6px; cursor:pointer; font-size:13px;
+    border-radius:7px; padding:7px 10px; margin-bottom:6px; cursor:pointer; font-size:13px; box-shadow:var(--shadow);
   }
-  .combo-row:hover{border-color:var(--amber-dim);}
+  .combo-row:hover{border-color:var(--amber);}
   .combo-row .rank{color:var(--amber); font-weight:700; min-width:26px; font-family:var(--mono);}
   .combo-row .digitbox{
     display:inline-flex; align-items:center; justify-content:center; width:22px; height:26px;
-    border:1px solid var(--border); border-radius:4px; font-family:var(--mono); font-size:13px; margin-right:2px;
+    border:1.5px solid var(--border); border-radius:4px; font-family:var(--mono); font-size:13px; margin-right:2px;
   }
-  .combo-row .digitbox.filled{border-color:var(--amber-dim); background:#2a2013; color:var(--amber); font-weight:700;}
+  .combo-row .digitbox.filled{border-color:var(--amber); background:#eff6ff; color:var(--amber); font-weight:700;}
   .combo-row .hits{margin-left:auto; color:var(--muted); font-size:12px;}
   .hasnt-come{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
   .hasnt-come span{font-family:var(--mono); font-size:11px; background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:2px 7px;}
 
   .delta-grid{display:flex; flex-wrap:wrap; gap:10px;}
   .delta-tile{
-    background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px 16px;
-    text-align:center; min-width:90px; cursor:pointer;
+    background:var(--panel); border:1.5px solid var(--border); border-radius:9px; padding:12px 16px;
+    text-align:center; min-width:90px; cursor:pointer; box-shadow:var(--shadow);
   }
-  .delta-tile.hot{border-color:var(--amber-dim); background:#241c10;}
-  .delta-tile .dv{font-family:var(--mono); font-weight:700; font-size:18px;}
+  .delta-tile.hot{border-color:var(--hot); border-width:2px; background:#fffbeb;}
+  .delta-tile .dv{font-family:var(--mono); font-weight:700; font-size:18px; color:#1a3a6e;}
   .delta-tile .dc{font-size:12px; color:var(--muted); margin-top:2px;}
-  .delta-tile .dm{font-size:10.5px; color:var(--amber); margin-top:2px; font-weight:600;}
+  .delta-tile .dm{font-size:10.5px; color:var(--hot); margin-top:2px; font-weight:600;}
 </style>
 </head>
 <body>
 
-<div class="app">
-  <div class="sidebar">
-    <div class="brand">
-      <div class="mark">Pick<span>4</span>Lens</div>
-      <div class="sub">4-digit draw analytics</div>
+<header>
+  <div class="hi">
+    <div class="logo">
+      <div class="logo-icon">🎲</div>
+      <div><h1>Pick<span>4</span>Lens</h1><p>4-Digit Multi-State Lottery Intelligence</p></div>
     </div>
-
-    <div class="nav" id="tabNav">
-      <button data-tab="dashboard" class="active"><span class="dot"></span>Dashboard</button>
-      <button data-tab="results"><span class="dot"></span>Results</button>
-      <button data-tab="frequency"><span class="dot"></span>Frequency</button>
-      <button data-tab="freqplus"><span class="dot"></span>Freq+</button>
-      <button data-tab="hotcold"><span class="dot"></span>Hot/Cold</button>
-      <button data-tab="search"><span class="dot"></span>Search</button>
-      <button data-tab="position"><span class="dot"></span>Position</button>
-      <button data-tab="posToday"><span class="dot"></span>Positions Today</button>
-      <button data-tab="delta"><span class="dot"></span>Delta</button>
-      <button data-tab="trends"><span class="dot"></span>Trends</button>
-      <button data-tab="monthly"><span class="dot"></span>Monthly</button>
-      <button data-tab="smartgen"><span class="dot"></span>Smart Gen</button>
-      <button data-tab="datesum"><span class="dot"></span>Date Sum</button>
-      <button data-tab="sumsall"><span class="dot"></span>Σ Sums</button>
-      <button data-tab="totaldrawn"><span class="dot"></span>Total Drawn</button>
-      <button data-tab="gap"><span class="dot"></span>Gap Analysis</button>
-      <button data-tab="watchlist"><span class="dot"></span>Watchlist</button>
-      <button data-tab="backtest"><span class="dot"></span>Backtest</button>
-      <button data-tab="patternorigin"><span class="dot"></span>Pattern Origin</button>
-      <button data-tab="digitsession"><span class="dot"></span>Digit Session</button>
-      <button data-tab="convergence"><span class="dot"></span>Convergence</button>
-      <button data-tab="quads"><span class="dot"></span>🤑 Quads</button>
-      <button data-tab="triples"><span class="dot"></span>🎲 Triples</button>
-      <button data-tab="tqpred"><span class="dot"></span>🔮 T/Q Predictor</button>
-      <button data-tab="straightcal"><span class="dot"></span>🎯 Straight Calendar</button>
-      <button data-tab="digitdrought"><span class="dot"></span>💧 Digit Drought</button>
-      <button data-tab="statedna"><span class="dot"></span>🧬 State DNA</button>
-      <button data-tab="crossstate"><span class="dot"></span>🔗 Cross-State</button>
-      <button data-tab="dayrepeats"><span class="dot"></span>📅 Day Repeats</button>
-      <button data-tab="unseen"><span class="dot"></span>🔍 Unseen</button>
-      <button data-tab="mostdrawn"><span class="dot"></span>📡 Most Drawn</button>
-      <button data-tab="permmatcher"><span class="dot"></span>🔀 Perm Matcher</button>
-      <button data-tab="possearch"><span class="dot"></span>🔎 Position Search</button>
-      <button data-tab="posconverge"><span class="dot"></span>🎯 Position Convergence</button>
-      <button data-tab="posdayrepeat"><span class="dot"></span>📅 Pos Day Repeat</button>
-      <button data-tab="digitsearch"><span class="dot"></span>🔢 Digit Search</button>
-      <button data-tab="samedaydoubles"><span class="dot"></span>♊ Same-Day Doubles</button>
-    </div>
-
-    <div class="state-list">
-      <div class="heading">Active states</div>
-      <div id="activeStateList"></div>
-    </div>
+    <div class="active-states" id="activeStateList"></div>
   </div>
+</header>
+
+<div class="tabs" id="tabNav">
+  <button class="tab active" data-tab="dashboard">🏠 Dashboard</button>
+  <button class="tab" data-tab="results">📅 Results</button>
+  <button class="tab" data-tab="frequency">📊 Frequency</button>
+  <button class="tab" data-tab="freqplus">📊 Freq+</button>
+  <button class="tab" data-tab="hotcold">🔥 Hot/Cold</button>
+  <button class="tab" data-tab="search">🔍 Search</button>
+  <button class="tab" data-tab="position">🎯 Position</button>
+  <button class="tab" data-tab="posToday">📅 Positions Today</button>
+  <button class="tab" data-tab="delta">Σ Delta</button>
+  <button class="tab" data-tab="trends">📈 Trends</button>
+  <button class="tab" data-tab="monthly">📆 Monthly</button>
+  <button class="tab" data-tab="smartgen">🧠 Smart Gen</button>
+  <button class="tab" data-tab="datesum">📆 Date Sum</button>
+  <button class="tab" data-tab="sumsall">Σ Sums</button>
+  <button class="tab" data-tab="totaldrawn">🔢 Total Drawn</button>
+  <button class="tab" data-tab="gap">⏳ Gap Analysis</button>
+  <button class="tab" data-tab="watchlist">👁 Watchlist</button>
+  <button class="tab" data-tab="backtest">🧪 Backtest</button>
+  <button class="tab" data-tab="patternorigin">🔍 Pattern Origin</button>
+  <button class="tab" data-tab="digitsession">🔢 Digit Session</button>
+  <button class="tab" data-tab="convergence">🔗 Convergence</button>
+  <button class="tab" data-tab="quads">🤑 Quads</button>
+  <button class="tab" data-tab="triples">🎲 Triples</button>
+  <button class="tab" data-tab="tqpred">🔮 T/Q Predictor</button>
+  <button class="tab" data-tab="straightcal">🎯 Straight Calendar</button>
+  <button class="tab" data-tab="digitdrought">💧 Digit Drought</button>
+  <button class="tab" data-tab="statedna">🧬 State DNA</button>
+  <button class="tab" data-tab="crossstate">🔗 Cross-State</button>
+  <button class="tab" data-tab="dayrepeats">📅 Day Repeats</button>
+  <button class="tab" data-tab="unseen">🔍 Unseen</button>
+  <button class="tab" data-tab="mostdrawn">📡 Most Drawn</button>
+  <button class="tab" data-tab="permmatcher">🔀 Perm Matcher</button>
+  <button class="tab" data-tab="possearch">🔎 Position Search</button>
+  <button class="tab" data-tab="posconverge">🎯 Position Convergence</button>
+  <button class="tab" data-tab="posdayrepeat">📅 Pos Day Repeat</button>
+  <button class="tab" data-tab="digitsearch">🔢 Digit Search</button>
+  <button class="tab" data-tab="samedaydoubles">♊ Same-Day Doubles</button>
+</div>
 
   <div class="main">
     <!-- DASHBOARD -->
@@ -696,7 +685,6 @@
       <div id="deltaDetail" style="margin-top:20px;"></div>
     </div>
   </div>
-</div>
 
 <script src="pick4lens-data.js?v=1"></script>
 <script>
@@ -729,15 +717,9 @@
     return `<span class="pat-badge pat-${k}">${k}</span>`;
   }
 
-  // ---- Sidebar active-state list ----
+  // ---- Header active-state chips ----
   const activeListEl = document.getElementById("activeStateList");
-  activeCodes.forEach(code=>{
-    const s = P4_STATES[code];
-    const div = document.createElement("div");
-    div.className = "state-chip";
-    div.innerHTML = `<b>${code}</b><span>${s.draws.length}/day</span>`;
-    activeListEl.appendChild(div);
-  });
+  activeListEl.innerHTML = activeCodes.map(code=>`<span>${code} · ${P4_STATES[code].draws.length}/day</span>`).join("");
 
   // ---- Tab switching ----
   document.querySelectorAll("#tabNav button").forEach(btn=>{
@@ -2120,7 +2102,7 @@
         ${[...Array(10).keys()].map(i=>{
           const a = analysis.find(x=>x.digit===i);
           const isSupp = a.count<=1, isElev = a.count>=Math.ceil(totalDigits/10)+3;
-          return `<div class="ticker-card" style="${isSupp?"border-color:#3b3030;":isElev?"border-color:var(--amber-dim);":""}text-align:center;">
+          return `<div class="ticker-card" style="${isSupp?"border-color:var(--rust);":isElev?"border-color:var(--hot);":""}text-align:center;">
             <div style="font-family:var(--mono);font-weight:800;font-size:20px;">${i}</div>
             <div style="font-size:12px;color:var(--muted);">${a.count}x (${(a.actual*100).toFixed(1)}%)</div>
             <div style="font-size:11px;color:${a.delta>0.02?"var(--amber)":a.delta<-0.02?"#c1502e":"var(--muted)"};">baseline ${(a.baseline*100).toFixed(1)}%</div>
@@ -2314,7 +2296,7 @@
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;">
         ${Array.from({length:31},(_,i)=>i+1).map(day=>{
           const s = dayStats[day], r = rate(day), isTop = topDays.has(day), isHot = r>avgRate;
-          return `<div class="ticker-card" style="text-align:center;${isTop?"border-color:var(--amber-dim);":isHot?"border-color:#3b3a2e;":""}">
+          return `<div class="ticker-card" style="text-align:center;${isTop?"border-color:var(--hot);":isHot?"border-color:var(--amber-dim);":""}">
             <div style="font-family:var(--mono);font-weight:700;font-size:15px;">${day}</div>
             <div style="font-size:11px;color:${isTop?"var(--amber)":isHot?"var(--text)":"var(--muted)"};">${isTop?"⭐":isHot?"🔥":""} ${r.toFixed(1)}%</div>
             <div style="font-size:10px;color:var(--muted);">T:${s.T} Q:${s.Q}</div>
@@ -2634,7 +2616,7 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="font-size:11px;color:var(--muted);text-transform:uppercase;">${label}</span>
           <span style="font-size:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;">${seen.size} seen</span>
-          ${unseen.length ? `<span style="font-size:11px;background:#3a1f1a;color:#fca5a5;border-radius:5px;padding:1px 7px;">${unseen.length} unseen</span>` : `<span style="font-size:11px;background:#1c2e21;color:#86efac;border-radius:5px;padding:1px 7px;">✅ all seen</span>`}
+          ${unseen.length ? `<span style="font-size:11px;background:#fee2e2;color:#991b1b;border-radius:5px;padding:1px 7px;">${unseen.length} unseen</span>` : `<span style="font-size:11px;background:#dcfce7;color:#166534;border-radius:5px;padding:1px 7px;">✅ all seen</span>`}
         </div>
         ${unseen.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${unseen.map(s=>`<span style="font-family:var(--mono);font-size:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;">${s}</span>`).join("")}</div>` : ""}
       </div>`;
