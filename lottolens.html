@@ -3444,7 +3444,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=423"></script>
+<script src="lottolens-data.js?v=424"></script>
 <script>
 
 // ================================================================
@@ -22855,9 +22855,13 @@ function _renderPosSearch(){
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
   if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
-  if(psDayF!=='ALL') scopeRows=scopeRows.filter(r=>+r.dk.slice(8,10)===+psDayF);
-  if(psSumVals.length) scopeRows=scopeRows.filter(r=>psSumVals.includes(r.sum!==undefined?r.sum:r.number.split('').reduce(function(a,d){return a+(+d);},0)));
+  if(psDayF!=='ALL') scopeRows=scopeRows.filter(r=>parseInt(r.dk.slice(8,10),10)===parseInt(psDayF,10));
+  if(psSumVals.length) scopeRows=scopeRows.filter(r=>psSumVals.includes(r.sum));
 
+  if(!scopeRows.length){
+    document.getElementById('psTopCombos').innerHTML='<div class="es">No draws match the selected filters.</div>';
+    return;
+  }
   // Build positional combinations counts
   const POS=[0,1,2,3,4];
   function combos(arr,k){
@@ -22996,7 +23000,7 @@ function _renderPosSearch(){
   }
 
   function renderTopSection(label,items,emoji){
-    if(!items.length) return '';
+    if(!items||!items.length) return '';
     const is4=(label==='4-Digit Positions');
     // Apply pattern filter: only show combos with matching hasn't-come items
     if(_psPatInternal){
@@ -23005,7 +23009,7 @@ function _renderPosSearch(){
         return hcCheck.some(function(h){return _psPatInternal.includes(h.type);});
       });
     }
-    if(!items.length) return '';
+    if(!items.length) return '<div class="es" style="padding:20px;">No combos match the selected pattern filter.</div>';
     const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
     const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
     const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
