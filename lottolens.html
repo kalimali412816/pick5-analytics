@@ -3444,7 +3444,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=430"></script>
+<script src="lottolens-data.js?v=431"></script>
 <script>
 
 // ================================================================
@@ -21820,6 +21820,16 @@ function renderNextDayIntel(){
   h+=`<button onclick="_copyToClipboard('${filtered.map(function(r){return r.number;}).join(' ')}',this)"
     style="padding:2px 9px;font-size:.68rem;font-weight:700;background:var(--g1);color:var(--g7);border:1.5px solid var(--g4);border-radius:5px;cursor:pointer;">
     📋 All (${filtered.length})</button>`;
+  // Unique: one number per sorted value
+  const _seenSorted=new Set();
+  const _uniqueNums=filtered.filter(function(r){
+    if(_seenSorted.has(r.sorted)) return false;
+    _seenSorted.add(r.sorted);
+    return true;
+  });
+  h+=`<button onclick="_copyToClipboard('${_uniqueNums.map(function(r){return r.number;}).join(' ')}',this)"
+    style="padding:2px 9px;font-size:.68rem;font-weight:700;background:#dbeafe;color:#1e40af;border:1.5px solid #93c5fd;border-radius:5px;cursor:pointer;">
+    📋 Unique (${_uniqueNums.length})</button>`;
   h+=`</div>`;
 
   // Dupe banner
