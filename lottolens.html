@@ -3182,6 +3182,63 @@ tr:hover td{background:var(--b0);}
       </div>
     </div>
     <div id="sdp4Body" style="padding:0 16px 16px;"></div>
+
+    <!-- Same-Day 3-Pos Matches -->
+    <div class="ch" style="margin-top:0;border-top:2px solid var(--g2);">
+      <div>
+        <h3>🔗 Same-Day 3-Position Matches</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Days where 2+ draws share the same 3 digit-positions</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="sdp3Year" onchange="_renderSDP3()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="all">All Years</option>
+        </select>
+        <select id="sdp3Limit" onchange="_renderSDP3()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+    </div>
+    <div id="sdp3Body" style="padding:0 16px 16px;"></div>
+
+    <!-- Position Streak -->
+    <div class="ch" style="margin-top:0;border-top:2px solid var(--g2);">
+      <div>
+        <h3>🔥 Position Streak</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Position combos with the most hits in a single month — across all months</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="sdpStreakDigits" onchange="_renderPosStreak()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="4">4-Digit</option>
+          <option value="3">3-Digit</option>
+        </select>
+        <select id="sdpStreakTop" onchange="_renderPosStreak()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="20">Top 20</option>
+          <option value="50">Top 50</option>
+        </select>
+      </div>
+    </div>
+    <div id="sdpStreakBody" style="padding:0 16px 16px;"></div>
+
+    <!-- Hot Position Pairs -->
+    <div class="ch" style="margin-top:0;border-top:2px solid var(--g2);">
+      <div>
+        <h3>🤝 Hot Position Pairs</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Which state pairs most frequently share 4-position combos on the same day</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="sdpPairsYear" onchange="_renderPosPairs()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="all">All Years</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+    </div>
+    <div id="sdpPairsBody" style="padding:0 16px 16px;"></div>
+
   </div>
 </div>
 <div id="panel-triplePredictor" class="panel">
@@ -3458,7 +3515,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=435"></script>
+<script src="lottolens-data.js?v=438"></script>
 <script>
 
 // ================================================================
@@ -11105,7 +11162,7 @@ function renderCur(){
   else if(curTab==='permMatcher'){_renderPermMatcher();}
   else if(curTab==='posTrips'){_renderPosTrips();}
   else if(curTab==='digitSearch'){_renderDigitSearch();}
-  else if(curTab==='sameDayPerm'){_renderSameDayPerm();_renderSDP4();}
+  else if(curTab==='sameDayPerm'){_renderSameDayPerm();_renderSDP4();_renderSDP3();_renderPosStreak();_renderPosPairs();}
   else if(curTab==='triplePredictor'){_renderTriplePredictor();}
   else if(curTab==='nextDayIntel'){renderNextDayIntel();}
   else if(curTab==='posFilter'){_renderPosFilter();}
@@ -21943,6 +22000,252 @@ function renderNextDayIntel(){
 
 
 
+
+// ── Same-Day 3-Position Matches ──────────────────────────────
+function _renderSDP3(){
+  const el=document.getElementById('sdp3Body');
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:12px 0;">Building...</div>';
+  const yrF=document.getElementById('sdp3Year')?.value||'2026';
+  const limitF=document.getElementById('sdp3Limit')?.value||'50';
+
+  const draws=[];
+  Object.keys(RD).forEach(function(state){
+    Object.entries(RD[state].data).forEach(function([ym,month]){
+      if(yrF!=='all'&&!ym.startsWith(yrF)) return;
+      Object.entries(month).forEach(function([day,nums]){
+        const dk=ym+'-'+day.padStart(2,'0');
+        nums.forEach(function(num,j){draws.push({state,dk,num,draw:j===0?'midday':'evening'});});
+      });
+    });
+  });
+
+  function combos3(){
+    const out=[];
+    for(let a=0;a<3;a++)for(let b=a+1;b<4;b++)for(let c=b+1;c<5;c++)out.push([a,b,c]);
+    return out;
+  }
+  const c3=combos3();
+  const byDay={};
+  draws.forEach(function(r){if(!byDay[r.dk])byDay[r.dk]=[];byDay[r.dk].push(r);});
+
+  const hits=[];const seen=new Set();
+  Object.entries(byDay).forEach(function([dk,dayDraws]){
+    if(dayDraws.length<2) return;
+    const comboMap={};
+    dayDraws.forEach(function(r){
+      c3.forEach(function(p){
+        const digits=p.map(function(i){return r.num[i];}).join('');
+        const key=p.join('')+'|'+digits;
+        if(!comboMap[key]) comboMap[key]=[];
+        comboMap[key].push(r);
+      });
+    });
+    Object.entries(comboMap).forEach(function([key,rs]){
+      const unique=[...new Map(rs.map(function(r){return [r.state+r.num+r.draw,r];})).values()];
+      if(unique.length<2) return;
+      const uid=dk+'|'+key+'|'+unique.map(function(r){return r.state+r.num+r.draw;}).sort().join(',');
+      if(seen.has(uid)) return;
+      seen.add(uid);
+      hits.push({dk,key,draws:unique});
+    });
+  });
+
+  hits.sort(function(a,b){return b.dk.localeCompare(a.dk);});
+  const display=limitF==='all'?hits:hits.slice(0,+limitF);
+
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDk(dk){const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
+  function getPat(n){const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});const v=Object.values(f).sort(function(a,b){return b-a;});if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';}
+  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+  const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+
+  let h=`<div style="font-size:.75rem;color:var(--g5);margin-bottom:12px;"><strong>${hits.length}</strong> matches — showing ${display.length}</div>`;
+  h+=`<table style="width:100%;border-collapse:collapse;font-size:.78rem;"><thead><tr style="background:var(--g1);text-align:left;">
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Date</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Pos</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Digits</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Draws</th>
+  </tr></thead><tbody>`;
+  display.forEach(function(hit){
+    const[posStr,digStr]=hit.key.split('|');
+    const posLabel=posStr.split('').map(function(p){return'P'+p;}).join('-');
+    const drawsHtml=hit.draws.map(function(r){
+      const p=getPat(r.num);
+      const dc=r.draw==='midday'?'color:var(--red);':'color:var(--b5);';
+      return `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--g0);border:1px solid var(--g2);border-radius:5px;padding:2px 6px;margin:1px;">
+        <span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 4px;border-radius:3px;font-size:.63rem;">${r.state}</span>
+        <span style="font-weight:700;${dc}font-size:.68rem;">${r.draw==='midday'?'M':'E'}</span>
+        <span style="font-family:'DM Mono',monospace;font-weight:800;font-size:.82rem;">${r.num}</span>
+        <span style="padding:1px 3px;border-radius:3px;background:${PAT_BG[p]};color:${PAT_COLOR[p]};font-size:.62rem;font-weight:700;">${p}</span>
+      </span>`;
+    }).join('');
+    h+=`<tr style="border-bottom:1px solid var(--g2);cursor:pointer;" onclick="showDayAllDraws('${hit.dk}')">
+      <td style="padding:6px 10px;white-space:nowrap;color:var(--b5);">${fmtDk(hit.dk)}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-size:.73rem;font-weight:700;">${posLabel}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;">${digStr}</td>
+      <td style="padding:6px 10px;">${drawsHtml}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table>`;
+  el.innerHTML=h;
+}
+
+// ── Position Streak ───────────────────────────────────────────
+function _renderPosStreak(){
+  const el=document.getElementById('sdpStreakBody');
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:12px 0;">Building...</div>';
+  const nDigits=+(document.getElementById('sdpStreakDigits')?.value||'4');
+  const topN=+(document.getElementById('sdpStreakTop')?.value||'20');
+
+  const draws=[];
+  Object.keys(RD).forEach(function(state){
+    Object.entries(RD[state].data).forEach(function([ym,month]){
+      Object.entries(month).forEach(function([day,nums]){
+        const dk=ym+'-'+day.padStart(2,'0');
+        nums.forEach(function(num,j){draws.push({state,dk,ym,num,draw:j===0?'midday':'evening'});});
+      });
+    });
+  });
+
+  function combosN(arr,k){
+    const out=[];
+    function h(s,c){if(c.length===k){out.push([...c]);return;}for(let i=s;i<arr.length;i++){c.push(arr[i]);h(i+1,c);c.pop();}}
+    h(0,[]);return out;
+  }
+  const cN=combosN([0,1,2,3,4],nDigits);
+
+  // Count hits per (ym, posKey)
+  const monthCounts={};
+  draws.forEach(function(r){
+    cN.forEach(function(p){
+      const digits=p.map(function(i){return r.num[i];}).join('');
+      // For streaks: require all identical (triple/quad pattern) OR any combo
+      const key=p.join('')+'|'+digits;
+      const mk=r.ym+'||'+key;
+      if(!monthCounts[mk]) monthCounts[mk]={ym:r.ym,posStr:p.join(''),digStr:digits,count:0,examples:[]};
+      monthCounts[mk].count++;
+      if(monthCounts[mk].examples.length<3) monthCounts[mk].examples.push(r);
+    });
+  });
+
+  const sorted=Object.values(monthCounts).filter(function(v){return v.count>=3;})
+    .sort(function(a,b){return b.count-a.count||b.ym.localeCompare(a.ym);})
+    .slice(0,topN);
+
+  if(!sorted.length){el.innerHTML='<div class="es">No streaks found.</div>';return;}
+
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtYm(ym){const[y,m]=ym.split('-');return mn[+m]+' '+y;}
+
+  let h=`<table style="width:100%;border-collapse:collapse;font-size:.78rem;"><thead><tr style="background:var(--g1);text-align:left;">
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Month</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Positions</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Digits</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Hits</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Examples</th>
+  </tr></thead><tbody>`;
+  sorted.forEach(function(v){
+    const posLabel=v.posStr.split('').map(function(p){return'P'+p;}).join('-');
+    const exHtml=v.examples.map(function(r){
+      return `<span style="font-family:'DM Mono',monospace;font-size:.72rem;font-weight:700;background:var(--b0);color:var(--b6);padding:1px 5px;border-radius:3px;margin:1px;">${r.state} ${r.num}</span>`;
+    }).join('');
+    h+=`<tr style="border-bottom:1px solid var(--g2);">
+      <td style="padding:6px 10px;white-space:nowrap;">${fmtYm(v.ym)}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:700;">${posLabel}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;">${v.digStr}</td>
+      <td style="padding:6px 10px;"><span style="font-weight:800;font-size:.9rem;color:var(--b6);">${v.count}</span></td>
+      <td style="padding:6px 10px;">${exHtml}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table>`;
+  el.innerHTML=h;
+}
+
+// ── Hot Position Pairs ────────────────────────────────────────
+function _renderPosPairs(){
+  const el=document.getElementById('sdpPairsBody');
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--g5);font-size:.8rem;padding:12px 0;">Building...</div>';
+  const yrF=document.getElementById('sdpPairsYear')?.value||'all';
+
+  const draws=[];
+  Object.keys(RD).forEach(function(state){
+    Object.entries(RD[state].data).forEach(function([ym,month]){
+      if(yrF!=='all'&&!ym.startsWith(yrF)) return;
+      Object.entries(month).forEach(function([day,nums]){
+        const dk=ym+'-'+day.padStart(2,'0');
+        nums.forEach(function(num,j){draws.push({state,dk,num,draw:j===0?'midday':'evening'});});
+      });
+    });
+  });
+
+  function combos4(){
+    const out=[];
+    for(let a=0;a<2;a++)for(let b=a+1;b<3;b++)for(let c=b+1;c<4;c++)for(let d=c+1;d<5;d++)out.push([a,b,c,d]);
+    return out;
+  }
+  const c4=combos4();
+  const byDay={};
+  draws.forEach(function(r){if(!byDay[r.dk])byDay[r.dk]=[];byDay[r.dk].push(r);});
+
+  const pairCounts={};
+  Object.values(byDay).forEach(function(dayDraws){
+    if(dayDraws.length<2) return;
+    const comboMap={};
+    dayDraws.forEach(function(r){
+      c4.forEach(function(p){
+        const digits=p.map(function(i){return r.num[i];}).join('');
+        const key=p.join('')+'|'+digits;
+        if(!comboMap[key]) comboMap[key]=[];
+        comboMap[key].push(r);
+      });
+    });
+    Object.values(comboMap).forEach(function(rs){
+      const unique=[...new Map(rs.map(function(r){return [r.state+r.num+r.draw,r];})).values()];
+      if(unique.length<2) return;
+      // Count each state pair
+      for(let i=0;i<unique.length-1;i++){
+        for(let j=i+1;j<unique.length;j++){
+          const pair=[unique[i].state,unique[j].state].sort().join('-');
+          pairCounts[pair]=(pairCounts[pair]||0)+1;
+        }
+      }
+    });
+  });
+
+  const sorted=Object.entries(pairCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,20);
+  if(!sorted.length){el.innerHTML='<div class="es">No pairs found.</div>';return;}
+
+  let h=`<table style="width:100%;border-collapse:collapse;font-size:.78rem;"><thead><tr style="background:var(--g1);text-align:left;">
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">State Pair</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Shared 4-Pos Matches</th>
+    <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Frequency</th>
+  </tr></thead><tbody>`;
+  const maxCount=sorted[0][1];
+  sorted.forEach(function([pair,count],idx){
+    const pct=Math.round(count/maxCount*100);
+    const [s1,s2]=pair.split('-');
+    h+=`<tr style="border-bottom:1px solid var(--g2);">
+      <td style="padding:6px 10px;">
+        <span style="font-weight:700;background:var(--b6);color:#fff;padding:2px 7px;border-radius:4px;font-size:.72rem;">${s1}</span>
+        <span style="margin:0 5px;color:var(--g5);">+</span>
+        <span style="font-weight:700;background:var(--b6);color:#fff;padding:2px 7px;border-radius:4px;font-size:.72rem;">${s2}</span>
+      </td>
+      <td style="padding:6px 10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:var(--b3);border-radius:4px;height:8px;width:${pct}%;max-width:150px;min-width:4px;background:var(--b5);"></div>
+          <span style="font-weight:800;color:var(--b6);">${count}</span>
+        </div>
+      </td>
+      <td style="padding:6px 10px;font-size:.72rem;color:var(--g5);">#${idx+1}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table>`;
+  el.innerHTML=h;
+}
+
 function _renderSDP4(){
   const el=document.getElementById('sdp4Body');
   if(!el) return;
@@ -21950,7 +22253,7 @@ function _renderSDP4(){
 
   const yrF=document.getElementById('sdp4Year')?.value||'2026';
 
-  // Build draws
+  // Build all draws in scope
   const draws=[];
   Object.keys(RD).forEach(function(state){
     Object.entries(RD[state].data).forEach(function([ym,month]){
@@ -21958,26 +22261,37 @@ function _renderSDP4(){
       Object.entries(month).forEach(function([day,nums]){
         const dk=ym+'-'+day.padStart(2,'0');
         nums.forEach(function(num,j){
-          draws.push({state,dk,num,draw:j===0?'midday':'evening',sorted:num.split('').sort().join('')});
+          draws.push({state,dk,ym,day:+day,num,draw:j===0?'midday':'evening',sorted:num.split('').sort().join('')});
         });
       });
     });
   });
 
-  // All 4-position combos
+  // ALL draws for cross-month follow-up lookups
+  const allDraws=[];
+  Object.keys(RD).forEach(function(state){
+    Object.entries(RD[state].data).forEach(function([ym,month]){
+      Object.entries(month).forEach(function([day,nums]){
+        const dk=ym+'-'+day.padStart(2,'0');
+        nums.forEach(function(num,j){
+          allDraws.push({state,dk,ym,day:+day,num,draw:j===0?'midday':'evening'});
+        });
+      });
+    });
+  });
+
   function combos4(arr){
     const out=[];
     for(let a=0;a<arr.length-3;a++)for(let b=a+1;b<arr.length-2;b++)for(let c=b+1;c<arr.length-1;c++)for(let d=c+1;d<arr.length;d++)out.push([arr[a],arr[b],arr[c],arr[d]]);
     return out;
   }
-  const POS=[0,1,2,3,4];
-  const c4=combos4(POS);
+  const c4=combos4([0,1,2,3,4]);
 
   // Group by day
   const byDay={};
   draws.forEach(function(r){if(!byDay[r.dk])byDay[r.dk]=[];byDay[r.dk].push(r);});
 
-  const hits=[];
+  const sameDayMatches=[];
   const seen=new Set();
 
   Object.entries(byDay).forEach(function([dk,dayDraws]){
@@ -21992,60 +22306,125 @@ function _renderSDP4(){
       });
     });
     Object.entries(comboMap).forEach(function([key,rs]){
-      if(rs.length<2) return;
       const unique=[...new Map(rs.map(function(r){return [r.state+r.num+r.draw,r];})).values()];
       if(unique.length<2) return;
-      const uid=dk+'|'+key+'|'+unique.map(function(r){return r.state+r.num+r.draw;}).sort().join(',');
+      const uid=dk+'|'+key;
       if(seen.has(uid)) return;
       seen.add(uid);
-      const [posStr,digStr]=key.split('|');
-      hits.push({dk,posStr,digStr,draws:unique});
+      sameDayMatches.push({dk,ym:dk.slice(0,7),key,draws:unique});
     });
   });
 
-  hits.sort(function(a,b){return b.dk.localeCompare(a.dk);});
-
-  if(!hits.length){
-    el.innerHTML='<div class="es">No same-day 4-position matches found for '+yrF+'.</div>';
-    return;
+  // For each match, find follow-up hits (3rd, 4th+) same month AND next month
+  function daysBetween(dk1,dk2){
+    return Math.round((new Date(dk2)-new Date(dk1))/(1000*60*60*24));
   }
 
+  function getNextYm(ym){
+    const [y,m]=ym.split('-').map(Number);
+    return m===12?(y+1)+'-01':y+'-'+(m+1+'').padStart(2,'0');
+  }
+
+  sameDayMatches.forEach(function(match){
+    const [posStr,digStr]=match.key.split('|');
+    const pos=posStr.split('').map(Number);
+    const nextYm=getNextYm(match.ym);
+    const matchStates=new Set(match.draws.map(function(d){return d.state;}));
+
+    // Same month follow-ups (after match date)
+    const sameMonthFollowups=allDraws.filter(function(r){
+      return r.ym===match.ym && r.dk>match.dk &&
+        pos.every(function(p,i){return r.num[p]===digStr[i];});
+    }).sort(function(a,b){return a.dk.localeCompare(b.dk);});
+
+    // Next month follow-ups
+    const nextMonthFollowups=allDraws.filter(function(r){
+      return r.ym===nextYm &&
+        pos.every(function(p,i){return r.num[p]===digStr[i];});
+    }).sort(function(a,b){return a.dk.localeCompare(b.dk);});
+
+    // Tag each followup with days-until and state-repeat flag
+    function tagFollowups(list){
+      return list.map(function(r){
+        return Object.assign({},r,{
+          daysAfter:daysBetween(match.dk,r.dk),
+          stateRepeat:matchStates.has(r.state)
+        });
+      });
+    }
+
+    match.sameMonthFollowups=tagFollowups(sameMonthFollowups);
+    match.nextMonthFollowups=tagFollowups(nextMonthFollowups);
+    match.hasFollowup=match.sameMonthFollowups.length>0||match.nextMonthFollowups.length>0;
+  });
+
+  sameDayMatches.sort(function(a,b){return b.dk.localeCompare(a.dk);});
+
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function fmtDk(dk){const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
+  function fmtDk(dk){if(!dk)return'';const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
   function getPat(n){const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});const v=Object.values(f).sort(function(a,b){return b-a;});if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';}
   const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
   const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
 
-  let h=`<div style="font-size:.75rem;color:var(--g5);margin-bottom:12px;"><strong>${hits.length}</strong> same-day 4-position match${hits.length!==1?'es':''} in ${yrF==='all'?'all years':yrF}</div>`;
+  function drawPill(r,extra){
+    const p=getPat(r.num);
+    const dc=r.draw==='midday'?'color:var(--red);':'color:var(--b5);';
+    return '<span style="display:inline-flex;align-items:center;gap:4px;background:'+(extra||'var(--g0)')+';border:1px solid var(--g2);border-radius:5px;padding:2px 7px;margin:1px;">'+
+      '<span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">'+r.state+'</span>'+
+      '<span style="font-weight:700;'+dc+'font-size:.7rem;">'+(r.draw==='midday'?'M':'E')+'</span>'+
+      '<span style="font-family:DM Mono,monospace;font-weight:800;">'+r.num+'</span>'+
+      '<span style="padding:1px 4px;border-radius:3px;background:'+PAT_BG[p]+';color:'+PAT_COLOR[p]+';font-size:.65rem;font-weight:700;">'+p+'</span>'+
+      (r.daysAfter!==undefined?'<span style="font-size:.62rem;color:var(--g5);">+'+r.daysAfter+'d</span>':'')+
+      (r.stateRepeat?'<span title="Same state as original match" style="font-size:.7rem;">🔁</span>':'')+
+      '</span>';
+  }
+
+  const totalMatches=sameDayMatches.length;
+  const withFollowup=sameDayMatches.filter(function(m){return m.hasFollowup;}).length;
+
+  let h=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    <div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:var(--b6);">${totalMatches}</span>
+      <span style="color:var(--g6);"> total same-day 4-pos matches</span>
+    </div>
+    <div style="background:#dcfce7;border:1.5px solid #16a34a;border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:#166534;">${withFollowup}</span>
+      <span style="color:#166534;"> had a follow-up hit (${totalMatches?Math.round(withFollowup/totalMatches*100):0}%)</span>
+    </div>
+  </div>`;
+
   h+=`<table style="width:100%;border-collapse:collapse;font-size:.78rem;">
     <thead><tr style="background:var(--g1);text-align:left;">
       <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Date</th>
-      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Positions</th>
-      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Shared Digits</th>
-      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Draws</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Pos</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Digits</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Same-Day Draws</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Same Month Follow-up</th>
+      <th style="padding:6px 10px;border-bottom:2px solid var(--g3);">Next Month Follow-up</th>
     </tr></thead><tbody>`;
 
-  hits.forEach(function(h2){
-    const posLabel=h2.posStr.split('').map(function(p){return'P'+p;}).join('-');
-    const drawsHtml=h2.draws.map(function(r){
-      const p=getPat(r.num);
-      const drawCol=r.draw==='midday'?'color:var(--red);':'color:var(--b5);';
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--g0);border:1px solid var(--g2);border-radius:5px;padding:2px 7px;margin:1px;">
-        <span style="font-weight:700;background:var(--b6);color:#fff;padding:1px 5px;border-radius:3px;font-size:.65rem;">${r.state}</span>
-        <span style="font-weight:700;${drawCol}font-size:.7rem;">${r.draw==='midday'?'M':'E'}</span>
-        <span style="font-family:'DM Mono',monospace;font-weight:800;">${r.num}</span>
-        <span style="padding:1px 4px;border-radius:3px;background:${PAT_BG[p]};color:${PAT_COLOR[p]};font-size:.65rem;font-weight:700;">${p}</span>
-      </span>`;
-    }).join('');
-    h+=`<tr style="border-bottom:1px solid var(--g2);" onclick="cmod();showDayAllDraws('${h2.dk}')" class="hover-row" style="cursor:pointer;">
-      <td style="padding:6px 10px;white-space:nowrap;cursor:pointer;color:var(--b5);">${fmtDk(h2.dk)}</td>
-      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-size:.75rem;font-weight:700;">${posLabel}</td>
-      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;color:var(--g8);">${h2.digStr}</td>
-      <td style="padding:6px 10px;">${drawsHtml}</td>
+  sameDayMatches.forEach(function(match){
+    const [posStr,digStr]=match.key.split('|');
+    const posLabel=posStr.split('').map(function(p){return'P'+p;}).join('-');
+    const hasSame=match.sameMonthFollowups.length>0;
+    const hasNext=match.nextMonthFollowups.length>0;
+    const rowBg=hasSame?'background:#f0fdf4;':hasNext?'background:#eff6ff;':'';
+
+    h+=`<tr style="border-bottom:1px solid var(--g2);${rowBg}" onclick="showDayAllDraws('${match.dk}')" style="cursor:pointer;">
+      <td style="padding:6px 10px;white-space:nowrap;color:var(--b5);cursor:pointer;">${fmtDk(match.dk)}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:700;">${posLabel}</td>
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-weight:800;color:var(--g8);">${digStr}</td>
+      <td style="padding:6px 10px;">${match.draws.map(function(r){return drawPill(r);}).join('')}</td>
+      <td style="padding:6px 10px;">${hasSame?match.sameMonthFollowups.map(function(r){return drawPill(r,'#dcfce7');}).join(''):'<span style="color:var(--g4);font-size:.72rem;">—</span>'}</td>
+      <td style="padding:6px 10px;">${hasNext?match.nextMonthFollowups.map(function(r){return drawPill(r,'#dbeafe');}).join(''):'<span style="color:var(--g4);font-size:.72rem;">—</span>'}</td>
     </tr>`;
   });
 
-  h+=`</tbody></table>`;
+  h+=`</tbody></table>
+  <div style="margin-top:8px;font-size:.7rem;color:var(--g5);">
+    🟢 green = same-month follow-up · 🔵 blue = next-month follow-up · +Nd = days after original · 🔁 = same state repeated
+  </div>`;
+
   el.innerHTML=h;
 }
 
