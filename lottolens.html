@@ -2986,12 +2986,20 @@ tr:hover td{background:var(--b0);}
             oninput="this.value=this.value.replace(/\D/g,'');"
             onkeydown="if(event.key==='Enter') _renderGapPosSearch();"
             style="width:100px;padding:5px 9px;border:1.5px solid var(--g3);border-radius:7px;font-family:DM Mono,monospace;font-size:.82rem;outline:none;" />
-          <button onclick="(function(){
-            var el=document.getElementById('gapPosSearchBody');
-            var q=(document.getElementById('gapPosSearch').value||'').replace(/[^0-9]/g,'');
-            if(!q||q.length<5){el.innerHTML='<div style=\'padding:10px;color:red;\'>Enter 5 digits</div>';return;}
-            _renderGapPosSearch();
-          })()"
+          <button onclick="
+            var _el=document.getElementById('gapPosSearchBody');
+            var _q=(document.getElementById('gapPosSearch').value||'').replace(/[^0-9]/g,'');
+            _el.innerHTML='<div style=\'padding:10px;background:#fef9c3;border-radius:6px;\'>Searching for: '+_q+' ('+_q.length+' digits)</div>';
+            if(_q.length===5){
+              var _sorted=_q.split('').sort().join('');
+              var _hits=ALL.filter(function(r){return r.sorted===_sorted;});
+              var _mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+              var _h='<div style=\'padding:10px;background:var(--g1);border-radius:8px;\'>'+_hits.length+' hits for '+_q+':<br>';
+              _hits.slice(0,20).forEach(function(r){var _d=r.dk.split('-');_h+=r.state+' '+r.number+' '+_mn[+_d[1]]+' '+_d[2]+', '+_d[0]+'<br>';});
+              if(_hits.length>20)_h+='...+'+(+_hits.length-20)+' more';
+              _h+='</div>';
+              _el.innerHTML=_h;
+            }"
             style="padding:4px 10px;font-size:.72rem;font-weight:700;background:var(--b5);color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 Search</button>
           <button onclick="document.getElementById('gapPosSearch').value='';document.getElementById('gapPosSearchBody').innerHTML='';"
             style="padding:4px 8px;font-size:.72rem;border:1.5px solid var(--g3);border-radius:6px;cursor:pointer;">Clear</button>
@@ -3531,7 +3539,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=449"></script>
+<script src="lottolens-data.js?v=450"></script>
 <script>
 
 // ================================================================
