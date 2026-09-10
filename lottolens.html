@@ -2979,14 +2979,19 @@ tr:hover td{background:var(--b0);}
         <select id="gapMode" onchange="renderGap();_gapToggleBT()" style="background:var(--g1);border:1.5px solid var(--g3);border-radius:7px;padding:5px 9px;font-size:.8rem;font-family:'DM Sans',sans-serif;color:var(--g9);outline:none;">
           <option value="digit">Digit Gaps</option>
           <option value="pair">Pair Gaps</option>
-          <option value="position">By Position</option>
+          <option value="position" selected>By Position</option>
         </select>
         <div id="gapPosSearchWrap" style="display:flex;align-items:center;gap:6px;">
           <input id="gapPosSearch" type="text" maxlength="5" placeholder="e.g. 12345"
             oninput="this.value=this.value.replace(/\D/g,'');"
             onkeydown="if(event.key==='Enter') _renderGapPosSearch();"
             style="width:100px;padding:5px 9px;border:1.5px solid var(--g3);border-radius:7px;font-family:DM Mono,monospace;font-size:.82rem;outline:none;" />
-          <button onclick="_renderGapPosSearch();"
+          <button onclick="(function(){
+            var el=document.getElementById('gapPosSearchBody');
+            var q=(document.getElementById('gapPosSearch').value||'').replace(/[^0-9]/g,'');
+            if(!q||q.length<5){el.innerHTML='<div style=\'padding:10px;color:red;\'>Enter 5 digits</div>';return;}
+            _renderGapPosSearch();
+          })()"
             style="padding:4px 10px;font-size:.72rem;font-weight:700;background:var(--b5);color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 Search</button>
           <button onclick="document.getElementById('gapPosSearch').value='';document.getElementById('gapPosSearchBody').innerHTML='';"
             style="padding:4px 8px;font-size:.72rem;border:1.5px solid var(--g3);border-radius:6px;cursor:pointer;">Clear</button>
@@ -3526,7 +3531,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=448"></script>
+<script src="lottolens-data.js?v=449"></script>
 <script>
 
 // ================================================================
