@@ -3526,7 +3526,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=445"></script>
+<script src="lottolens-data.js?v=446"></script>
 <script>
 
 // ================================================================
@@ -13417,6 +13417,9 @@ function _doRenderGap(){
   if(mode==='digit') _renderGapDigit(sorted,total,body);
   else if(mode==='pair') _renderGapPair(sorted,total,body);
   else if(mode==='position') _renderGapPosition(sorted,total,body);
+  // Show/hide position search wrap
+  const _psw=document.getElementById('gapPosSearchWrap');
+  if(_psw) _psw.style.display=(mode==='position'?'flex':'none');
 }
 
 function _gapColor(gap,avg){
@@ -14538,6 +14541,9 @@ function _buildTestTile(fp,label,topN,btActive,btAfterDraws,logKeySuffix){
     h+=`</div></div>`;
   }
   body.innerHTML=h;
+  // Show position search wrap
+  const _psWrap=document.getElementById('gapPosSearchWrap');
+  if(_psWrap) _psWrap.style.display='flex';
 }
 
 // ================================================================
