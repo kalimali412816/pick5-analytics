@@ -2981,7 +2981,7 @@ tr:hover td{background:var(--b0);}
           <option value="pair">Pair Gaps</option>
           <option value="position">By Position</option>
         </select>
-        <div id="gapPosSearchWrap" style="display:none;align-items:center;gap:6px;">
+        <div id="gapPosSearchWrap" style="display:flex;align-items:center;gap:6px;">
           <input id="gapPosSearch" type="text" maxlength="5" placeholder="e.g. 12345"
             oninput="this.value=this.value.replace(/\D/g,'');"
             onkeydown="if(event.key==='Enter') _renderGapPosSearch();"
@@ -3526,7 +3526,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=446"></script>
+<script src="lottolens-data.js?v=448"></script>
 <script>
 
 // ================================================================
@@ -13687,6 +13687,7 @@ function _renderGapPosSearch(){
 
   el.innerHTML=h;
 }
+window._renderGapPosSearch=_renderGapPosSearch;
 
 function _renderGapPosition(sorted,total,body){
   _gapBTInitYear();
