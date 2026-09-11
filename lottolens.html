@@ -3101,6 +3101,12 @@ tr:hover td{background:var(--b0);}
         <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Finds convergence points among 1-hit Position tab predictions — numbers reachable from 2+ picks by changing one digit</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select id="pmPosLen" onchange="renderPickMerge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">2+3+4 Digit</option>
+          <option value="2">2 Digit Only</option>
+          <option value="3">3 Digit Only</option>
+          <option value="4">4 Digit Only</option>
+        </select>
         <select id="pmPat" onchange="renderPickMerge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="ALL">All Patterns</option>
           <option value="D">D</option>
@@ -3566,7 +3572,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=459"></script>
+<script src="lottolens-data.js?v=464"></script>
 <script>
 
 // ================================================================
@@ -14388,6 +14394,28 @@ function _renderGapPosition(sorted,total,body){
       h+='<button onclick="_copyToClipboard(window._gapSeenBeforeList.join(\' \'),this)" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;padding:4px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">📋 Copy Seen Before ('+seenBeforePreds.length+')</button>';
     }
 
+    // Build _gapNumPredicted from all three prediction lists for Pick Merge tab
+    // Uses current date or backtest date as the dk
+    const _now=new Date();
+    const _btOn3=typeof _gapBTOn!=='undefined'&&_gapBTOn;
+    const _btMo3=document.getElementById('gapBTMonth')?.value||'';
+    const _btYr3=document.getElementById('gapBTYear')?.value||'';
+    const _btDy3=document.getElementById('gapBTDay')?.value||'';
+    const _usebt3=_btOn3&&_btMo3&&_btYr3&&parseInt(_btDy3)>0;
+    const _predDk=_usebt3
+      ?(_btYr3+'-'+String(_btMo3).padStart(2,'0')+'-'+String(_btDy3).padStart(2,'0'))
+      :(_now.getFullYear()+'-'+String(_now.getMonth()+1).padStart(2,'0')+'-'+String(_now.getDate()).padStart(2,'0'));
+    const _allPredNums=new Set([
+      ...(window._gapPredList||[]),
+      ...(window._gapExtPredList||[]),
+      ...(window._gapSeenBeforeList||[])
+    ]);
+    window._gapNumPredicted={}; // reset each render
+    _allPredNums.forEach(function(num){
+      if(!window._gapNumPredicted[num]) window._gapNumPredicted[num]=new Set();
+      window._gapNumPredicted[num].add(_predDk);
+    });
+
     h+=`</div>`;
   }
 
@@ -22619,19 +22647,13 @@ function renderPickMerge(){
   const el=document.getElementById('pmBody');
   if(!el) return;
 
-  // Get 1-hit predicted numbers from _gapNumPredicted
-  const numPred=window._gapNumPredicted||{};
-  const oneHits=Object.entries(numPred)
-    .filter(function([num,dks]){
-      if(dks.size!==1) return false;
-      if(pmDayF==='ALL') return true;
-      const dk=[...dks][0];
-      return parseInt(dk.slice(8,10),10)===parseInt(pmDayF,10);
-    })
-    .map(function([num,dks]){return {num,dk:[...dks][0]};});
+  const pmPosLen=document.getElementById('pmPosLen')?.value||'ALL';
+  const _poolMap=window._posHasntComePool||{all:{}};
+  const pool=pmPosLen==='2'?(_poolMap.p2||{}):pmPosLen==='3'?(_poolMap.p3||{}):pmPosLen==='4'?(_poolMap.p4||{}):(_poolMap.all||{});
+  const allNums=Object.keys(pool);
 
-  if(!oneHits.length){
-    el.innerHTML='<div class="es">No 1-hit predictions found. Switch to Gap Analysis → By Position to generate predictions first.</div>';
+  if(!allNums.length){
+    el.innerHTML='<div class="es">No Position tab data found. Visit the 🎯 Position tab first, then come back here.</div>';
     return;
   }
 
@@ -22651,10 +22673,8 @@ function renderPickMerge(){
 
   const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
   const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
-  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function fmtDk(dk){if(!dk)return'';const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
 
-  // For each 1-hit number, generate all one-digit variants (change 1 of 5 digits to 0-9)
+  // For each hasn't-come number, generate all one-digit variants
   function getVariants(num){
     const vars=new Set();
     for(let pos=0;pos<5;pos++){
@@ -22668,20 +22688,22 @@ function renderPickMerge(){
     return vars;
   }
 
-  // Build map: variant -> list of source 1-hit numbers
+  // Build convergence map: variant -> list of source hasn't-come numbers
   const variantMap={};
-  oneHits.forEach(function(src){
-    getVariants(src.num).forEach(function(v){
+  allNums.forEach(function(num){
+    getVariants(num).forEach(function(v){
       if(!variantMap[v]) variantMap[v]=[];
-      variantMap[v].push(src);
+      variantMap[v].push(num);
     });
   });
 
-  // Filter to variants with 2+ sources = convergence points
+  // Find convergence points: variants pointed to by 2+ hasn't-come numbers
   let results=Object.entries(variantMap)
     .filter(function([v,srcs]){return srcs.length>=minSrc;})
     .map(function([v,srcs]){
-      return {num:v,pat:getPat(v),sum:getSum(v),srcs:srcs};
+      return {num:v,pat:getPat(v),sum:getSum(v),srcs:srcs.map(function(s){
+        return {num:s,type:pool[s]?.type||'',sources:pool[s]?.sources||[]};
+      })};
     });
 
   // Apply pattern filter
@@ -22689,26 +22711,26 @@ function renderPickMerge(){
   // Apply sum filter
   if(sumVals.length) results=results.filter(function(r){return sumVals.includes(r.sum);});
 
-  // Sort by source count desc, then sum
+  // Sort by source count desc
   results.sort(function(a,b){return b.srcs.length-a.srcs.length||a.sum-b.sum;});
 
   if(!results.length){
-    el.innerHTML='<div class="es">No convergence points found with current filters. Try lowering Min Sources or changing pattern filter.</div>';
+    el.innerHTML='<div class="es">No convergence points found. Try lowering Min Sources or changing filters.</div>';
     return;
   }
 
   let h=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
     <div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;font-size:.78rem;">
-      <span style="font-weight:700;color:var(--b6);">${oneHits.length}</span>
-      <span style="color:var(--g6);"> 1-hit predictions as source</span>
+      <span style="font-weight:700;color:var(--b6);">${allNums.length}</span>
+      <span style="color:var(--g6);"> hasn't-come numbers in pool</span>
     </div>
     <div style="background:#ede9fe;border:1.5px solid #7c3aed;border-radius:8px;padding:8px 14px;font-size:.78rem;">
       <span style="font-weight:700;color:#5b21b6;">${results.length}</span>
-      <span style="color:#5b21b6;"> convergence points found</span>
+      <span style="color:#5b21b6;"> convergence points</span>
     </div>
   </div>`;
 
-  // Copy all button
+  // Copy buttons
   h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">`;
   ['D','DD','T','TD','Q','Qu'].forEach(function(pat){
     const nums=results.filter(function(r){return r.pat===pat;});
@@ -22734,15 +22756,18 @@ function renderPickMerge(){
     h+=`<span style="font-size:.72rem;color:var(--g5);">Σ${r.sum}</span>`;
     h+=`<span style="margin-left:auto;background:#ede9fe;color:#5b21b6;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700;">${r.srcs.length} sources</span>`;
     h+=`</div>`;
-    h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);margin-bottom:4px;">FROM:</div>`;
+    h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);margin-bottom:4px;">FROM HASN'T-COME POOL:</div>`;
     h+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
     r.srcs.forEach(function(src){
       const sp=getPat(src.num);
-      const pos=src.num.split('').map(function(d,i){return d===r.num[i]?'<span style="font-weight:900;color:var(--g9);">'+d+'</span>':'<span style="color:#ef4444;font-weight:700;text-decoration:underline;">'+d+'</span>';}).join('');
+      const pos=src.num.split('').map(function(d,i){
+        return d===r.num[i]
+          ?'<span style="font-weight:900;color:var(--g9);">'+d+'</span>'
+          :'<span style="color:#ef4444;font-weight:700;text-decoration:underline;">'+d+'</span>';
+      }).join('');
       h+=`<div style="display:flex;align-items:center;gap:6px;background:var(--g1);border-radius:6px;padding:4px 8px;">`;
       h+=`<span style="font-family:DM Mono,monospace;font-size:.88rem;">${pos}</span>`;
       h+=`<span style="background:${PAT_BG[sp]};color:${PAT_COLOR[sp]};padding:1px 4px;border-radius:3px;font-size:.65rem;font-weight:700;">${sp}</span>`;
-      h+=`<span style="font-size:.65rem;color:var(--g5);margin-left:auto;">${fmtDk(src.dk)}</span>`;
       h+=`</div>`;
     });
     h+=`</div></div>`;
@@ -24296,6 +24321,31 @@ function _renderPosSearch(){
       h+=`</div></div>`;
     }
   }
+
+  // Store hasn't-come pool for Pick Merge tab (2, 3, 4-digit position combos)
+  const _pmPool2={},_pmPool3={},_pmPool4={};
+  top4.forEach(function([key]){
+    haventComeFor4(key).forEach(function(item){
+      if(!_pmPool4[item.number]) _pmPool4[item.number]={sources:[],type:item.type};
+      _pmPool4[item.number].sources.push(key);
+    });
+  });
+  // For 2 and 3-digit: use haventCome (3-pos) and a 2-pos variant
+  if(typeof haventCome==='function'){
+    top3.forEach(function([key]){
+      haventCome(key).forEach(function(item){
+        if(!_pmPool3[item.number]) _pmPool3[item.number]={sources:[],type:item.type};
+        _pmPool3[item.number].sources.push(key);
+      });
+    });
+    top2.forEach(function([key]){
+      haventCome(key).forEach(function(item){
+        if(!_pmPool2[item.number]) _pmPool2[item.number]={sources:[],type:item.type};
+        _pmPool2[item.number].sources.push(key);
+      });
+    });
+  }
+  window._posHasntComePool={all:{..._pmPool2,..._pmPool3,..._pmPool4},p2:_pmPool2,p3:_pmPool3,p4:_pmPool4};
 
   container.innerHTML=h;
 }
