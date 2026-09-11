@@ -3527,7 +3527,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=454"></script>
+<script src="lottolens-data.js?v=455"></script>
 <script>
 
 // ================================================================
@@ -24842,9 +24842,19 @@ document.addEventListener('DOMContentLoaded',function(){
         h+='<span style="font-size:.72rem;color:var(--g5);">('+srtd+') Σ'+numSum+' · '+dks.length+'x</span>';
         h+='</div>';
         h+='<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+        // Group by year
+        var byYear={};
         dks.slice().sort().forEach(function(dk){
-          var p=dk.split('-');
-          h+='<span style="font-size:.68rem;background:var(--b0);color:var(--b7);border-radius:4px;padding:1px 6px;font-weight:600;">'+mn[+p[1]-1]+' '+parseInt(p[2])+'</span>';
+          var yr=dk.slice(0,4);
+          if(!byYear[yr]) byYear[yr]=[];
+          byYear[yr].push(dk);
+        });
+        Object.keys(byYear).sort().reverse().forEach(function(yr){
+          h+='<span style="font-size:.62rem;font-weight:700;color:var(--g5);margin-right:2px;">'+yr+':</span>';
+          byYear[yr].forEach(function(dk){
+            var p=dk.split('-');
+            h+='<span style="font-size:.68rem;background:var(--b0);color:var(--b7);border-radius:4px;padding:1px 6px;font-weight:600;">'+mn[+p[1]-1]+' '+parseInt(p[2])+'</span>';
+          });
         });
         h+='</div></div>';
       });
