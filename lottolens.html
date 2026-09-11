@@ -3527,7 +3527,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=455"></script>
+<script src="lottolens-data.js?v=456"></script>
 <script>
 
 // ================================================================
@@ -24810,12 +24810,14 @@ document.addEventListener('DOMContentLoaded',function(){
       var q=inp.value.replace(/[^0-9]/g,'');
       if(q.length!==5) return;
       var sorted=q.split('').sort().join('');
-      // Build exDks from ALL draws matching this sorted value
+      // Build exDks from _gapNumPredicted — days the ALGORITHM generated each arrangement
+      // Falls back to _gapRecurExDks if available
       var exDks={};
-      (typeof ALL!=='undefined'?ALL:[]).forEach(function(r){
-        if(r.sorted!==sorted) return;
-        if(!exDks[r.number]) exDks[r.number]=[];
-        if(!exDks[r.number].includes(r.dk)) exDks[r.number].push(r.dk);
+      var numPred=window._gapNumPredicted||{};
+      // Find all predicted numbers that are anagrams of q
+      Object.keys(numPred).forEach(function(num){
+        if(num.split('').sort().join('')!==sorted) return;
+        exDks[num]=[...numPred[num]].sort();
       });
       // Open the recurDetail modal directly with our own data (no 2x filter)
       var modal=document.getElementById('recurDetailModal');
