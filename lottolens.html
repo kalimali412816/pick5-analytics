@@ -2981,29 +2981,7 @@ tr:hover td{background:var(--b0);}
           <option value="pair">Pair Gaps</option>
           <option value="position" selected>By Position</option>
         </select>
-        <div id="gapPosSearchWrap" style="display:flex;align-items:center;gap:6px;">
-          <input id="gapPosSearch" type="text" maxlength="5" placeholder="e.g. 12345"
-            oninput="this.value=this.value.replace(/\D/g,'');"
-            onkeydown="if(event.key==='Enter') _renderGapPosSearch();"
-            style="width:100px;padding:5px 9px;border:1.5px solid var(--g3);border-radius:7px;font-family:DM Mono,monospace;font-size:.82rem;outline:none;" />
-          <button onclick="
-            var _el=document.getElementById('gapPosSearchBody');
-            var _q=(document.getElementById('gapPosSearch').value||'').replace(/[^0-9]/g,'');
-            _el.innerHTML='<div style=\'padding:10px;background:#fef9c3;border-radius:6px;\'>Searching for: '+_q+' ('+_q.length+' digits)</div>';
-            if(_q.length===5){
-              var _sorted=_q.split('').sort().join('');
-              var _hits=ALL.filter(function(r){return r.sorted===_sorted;});
-              var _mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-              var _h='<div style=\'padding:10px;background:var(--g1);border-radius:8px;\'>'+_hits.length+' hits for '+_q+':<br>';
-              _hits.slice(0,20).forEach(function(r){var _d=r.dk.split('-');_h+=r.state+' '+r.number+' '+_mn[+_d[1]]+' '+_d[2]+', '+_d[0]+'<br>';});
-              if(_hits.length>20)_h+='...+'+(+_hits.length-20)+' more';
-              _h+='</div>';
-              _el.innerHTML=_h;
-            }"
-            style="padding:4px 10px;font-size:.72rem;font-weight:700;background:var(--b5);color:#fff;border:none;border-radius:6px;cursor:pointer;">🔍 Search</button>
-          <button onclick="document.getElementById('gapPosSearch').value='';document.getElementById('gapPosSearchBody').innerHTML='';"
-            style="padding:4px 8px;font-size:.72rem;border:1.5px solid var(--g3);border-radius:6px;cursor:pointer;">Clear</button>
-        </div>
+        
         <select id="gapRecurWindow" onchange="_gapRecurWindowChange()" style="background:var(--g1);border:1.5px solid var(--g3);border-radius:7px;padding:5px 9px;font-size:.8rem;font-family:'DM Sans',sans-serif;color:var(--g9);outline:none;">
           <option value="7">Last 7 days</option>
           <option value="month0" selected>Current month</option>
@@ -3036,10 +3014,20 @@ tr:hover td{background:var(--b0);}
       </div>
       <button id="gapBTBtn" onclick="_toggleGapBT()" style="padding:5px 14px;border-radius:7px;font-size:.82rem;font-weight:600;border:1.5px solid var(--g3);background:var(--g1);color:var(--g7);cursor:pointer;white-space:nowrap;">🔍 Back Test OFF</button>
     </div>
+    <div id="gapPosSearchWrap" style="padding:8px 14px;border-top:1px solid var(--g3);background:#f0f9ff;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="font-size:.75rem;font-weight:700;color:var(--g7);">Search anagrams:</span>
+      <input id="gapPosSearch" type="text" maxlength="5" placeholder="e.g. 12345"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'');"
+        style="width:110px;padding:4px 9px;border:1.5px solid var(--g3);border-radius:6px;font-family:DM Mono,monospace;font-size:.85rem;outline:none;" />
+      <button onclick="window._doGapSearch();"
+        style="padding:4px 12px;font-size:.75rem;font-weight:700;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;">Search</button>
+      <button onclick="document.getElementById('gapPosSearch').value='';document.getElementById('gapPosSearchBody').innerHTML='';"
+        style="padding:4px 9px;font-size:.75rem;border:1.5px solid var(--g3);border-radius:6px;background:#fff;cursor:pointer;">Clear</button>
+    </div>
     <div style="padding:14px">
       <div id="gapSummary" style="margin-bottom:14px;font-size:.8rem;color:var(--g5);"></div>
       <div id="gapBody"></div>
-    <div id="gapPosSearchBody" style="padding:0 14px 14px;"></div>
+      <div id="gapPosSearchBody" style="padding-top:8px;"></div>
     </div>
   </div>
 </div>
@@ -3539,7 +3527,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=450"></script>
+<script src="lottolens-data.js?v=451"></script>
 <script>
 
 // ================================================================
@@ -13701,6 +13689,35 @@ function _renderGapPosSearch(){
   el.innerHTML=h;
 }
 window._renderGapPosSearch=_renderGapPosSearch;
+window._doGapSearch=function(){
+  var el=document.getElementById('gapPosSearchBody');
+  var q=(document.getElementById('gapPosSearch').value||'').replace(/[^0-9]/g,'');
+  if(!el){alert('element missing');return;}
+  if(q.length!==5){el.innerHTML='<div style="padding:10px;color:#991b1b;">Please enter exactly 5 digits.</div>';return;}
+  var sorted=q.split('').sort().join('');
+  var hits=(typeof ALL!=='undefined'?ALL:[]).filter(function(r){return r.sorted===sorted;});
+  hits.sort(function(a,b){return b.dk.localeCompare(a.dk);});
+  var mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var h='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-top:8px;">';
+  h+='<div style="font-weight:700;margin-bottom:8px;">Anagrams of '+q+': '+hits.length+' hit'+(hits.length!==1?'s':'')+'</div>';
+  if(!hits.length){h+='<div style="color:#6b7280;">None found in current data.</div>';}
+  else{
+    h+='<table style="width:100%;border-collapse:collapse;font-size:.78rem;">';
+    h+='<tr style="background:#e2e8f0;"><th style="padding:4px 8px;text-align:left;">Number</th><th style="padding:4px 8px;text-align:left;">State</th><th style="padding:4px 8px;text-align:left;">Draw</th><th style="padding:4px 8px;text-align:left;">Date</th></tr>';
+    hits.forEach(function(r){
+      var d=r.dk.split('-');
+      h+='<tr style="border-bottom:1px solid #e2e8f0;">';
+      h+='<td style="padding:4px 8px;font-family:monospace;font-weight:700;">'+(r.number===q?'<u>':'')+r.number+(r.number===q?'</u>':'')+'</td>';
+      h+='<td style="padding:4px 8px;">'+r.state+'</td>';
+      h+='<td style="padding:4px 8px;">'+(r.draw==='midday'?'Mid':'Eve')+'</td>';
+      h+='<td style="padding:4px 8px;">'+mn[+d[1]]+' '+d[2]+', '+d[0]+'</td>';
+      h+='</tr>';
+    });
+    h+='</table>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+};
 
 function _renderGapPosition(sorted,total,body){
   _gapBTInitYear();
