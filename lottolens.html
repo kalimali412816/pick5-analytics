@@ -3019,7 +3019,7 @@ tr:hover td{background:var(--b0);}
       <input id="gapPosSearch" type="text" maxlength="5" placeholder="e.g. 12345"
         oninput="this.value=this.value.replace(/[^0-9]/g,'');"
         style="width:110px;padding:4px 9px;border:1.5px solid var(--g3);border-radius:6px;font-family:DM Mono,monospace;font-size:.85rem;outline:none;" />
-      <button onclick="window._doGapSearch();"
+      <button id="gapSearchBtn"
         style="padding:4px 12px;font-size:.75rem;font-weight:700;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;">Search</button>
       <button onclick="document.getElementById('gapPosSearch').value='';document.getElementById('gapPosSearchBody').innerHTML='';"
         style="padding:4px 9px;font-size:.75rem;border:1.5px solid var(--g3);border-radius:6px;background:#fff;cursor:pointer;">Clear</button>
@@ -3527,7 +3527,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=451"></script>
+<script src="lottolens-data.js?v=452"></script>
 <script>
 
 // ================================================================
@@ -24800,5 +24800,46 @@ function _renderDigitDrought(){
 </div>
 <!-- ── End Calendar & Reminder System ──────────────────────────── -->
 
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var btn=document.getElementById('gapSearchBtn');
+  if(btn){
+    btn.addEventListener('click',function(){
+      var el=document.getElementById('gapPosSearchBody');
+      var inp=document.getElementById('gapPosSearch');
+      if(!el||!inp) return;
+      var q=inp.value.replace(/[^0-9]/g,'');
+      if(q.length!==5){
+        el.innerHTML='<div style="padding:10px;color:#991b1b;background:#fee2e2;border-radius:6px;">Please enter exactly 5 digits.</div>';
+        return;
+      }
+      var sorted=q.split('').sort().join('');
+      var pool=(typeof ALL!=='undefined'?ALL:[]);
+      var hits=pool.filter(function(r){return r.sorted===sorted;});
+      hits.sort(function(a,b){return b.dk.localeCompare(a.dk);});
+      var mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var h='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-top:8px;">';
+      h+='<b>Anagrams of '+q+': '+hits.length+' hit'+(hits.length!==1?'s':'')+'</b><br><br>';
+      if(!hits.length){
+        h+='<span style="color:#6b7280;">None found.</span>';
+      } else {
+        h+='<table style="width:100%;border-collapse:collapse;font-size:.78rem;">';
+        h+='<tr style="background:#e2e8f0;font-weight:700;"><td style="padding:4px 8px;">Number</td><td style="padding:4px 8px;">State</td><td style="padding:4px 8px;">Draw</td><td style="padding:4px 8px;">Date</td></tr>';
+        hits.forEach(function(r){
+          var d=r.dk.split('-');
+          var isExact=r.number===q;
+          h+='<tr style="border-bottom:1px solid #e2e8f0;'+(isExact?'background:#eff6ff;':'')+'"><td style="padding:4px 8px;font-family:monospace;font-weight:700;'+(isExact?'color:#1d4ed8;':'')+'">'+r.number+'</td>';
+          h+='<td style="padding:4px 8px;">'+r.state+'</td>';
+          h+='<td style="padding:4px 8px;">'+(r.draw==='midday'?'Mid':'Eve')+'</td>';
+          h+='<td style="padding:4px 8px;">'+mn[+d[1]]+' '+d[2]+', '+d[0]+'</td></tr>';
+        });
+        h+='</table>';
+      }
+      h+='</div>';
+      el.innerHTML=h;
+    });
+  }
+});
+</script>
 </body>
 </html>
