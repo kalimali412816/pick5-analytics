@@ -819,7 +819,8 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('permMatcher',this)">🔀 Perm Matcher</div>
   <div class="tab" onclick="switchTab('posTrips',this)">🎯 Position Trips</div>
   <div class="tab" onclick="switchTab('posFilter',this)">🔎 Position Search</div>
-  <div class="tab" onclick="switchTab('posConverge',this)">🎯 Position Convergence</div>
+  <div class="tab" onclick="switchTab('posConverge','pickMerge',this)">🎯 Position Convergence</div>
+  <div class="tab" onclick="switchTab('pickMerge',this)">🔀 Pick Merge</div>
   <div class="tab" onclick="switchTab('posRepeat',this)">📅 Pos Day Repeat</div>
   <div class="tab" onclick="switchTab('digitSearch',this)">🔢 Digit Search</div>
   <div class="tab" onclick="switchTab('sameDayPerm',this)">♊ Same-Day Doubles</div>
@@ -3092,6 +3093,44 @@ tr:hover td{background:var(--b0);}
     </div>
   </div>
 </div>
+<div id="panel-pickMerge" class="panel">
+  <div class="card">
+    <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3>🔀 Pick Merge</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Finds convergence points among 1-hit Position tab predictions — numbers reachable from 2+ picks by changing one digit</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select id="pmPat" onchange="renderPickMerge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Patterns</option>
+          <option value="D">D</option>
+          <option value="DD">DD</option>
+          <option value="T">T</option>
+          <option value="TD">TD</option>
+          <option value="Q">Q</option>
+          <option value="Qu">Qu</option>
+        </select>
+        <input id="pmSum" type="text" placeholder="Sum e.g. 17,21" oninput="renderPickMerge()"
+          style="width:110px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;" />
+        <input id="pmMinSrc" type="number" min="2" max="10" value="2" onchange="renderPickMerge()"
+          style="width:60px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;" title="Min sources (how many 1-hit picks must point to it)" />
+        <select id="pmDay" onchange="renderPickMerge()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Days</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+          <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+          <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
+          <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
+          <option value="31">31</option>
+        </select>
+        <button onclick="renderPickMerge()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">🔄 Refresh</button>
+      </div>
+    </div>
+    <div id="pmBody" style="padding:16px;"></div>
+  </div>
+</div>
+
 <div id="panel-posConverge" class="panel">
   <div class="card">
     <div class="ch" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
@@ -3527,7 +3566,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=457"></script>
+<script src="lottolens-data.js?v=459"></script>
 <script>
 
 // ================================================================
@@ -11178,6 +11217,7 @@ function renderCur(){
   else if(curTab==='triplePredictor'){_renderTriplePredictor();}
   else if(curTab==='nextDayIntel'){renderNextDayIntel();}
   else if(curTab==='posFilter'){_renderPosFilter();}
+  else if(curTab==='pickMerge'){renderPickMerge();}
   else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='posRepeat'){_renderPosRepeat();}
   else if(curTab==='dashboard'){renderDashboard();}
@@ -22571,6 +22611,143 @@ function _renderSDP4(){
     🟢 green = same-month follow-up · 🔵 blue = next-month follow-up · +Nd = days after original · 🔁 = same state repeated
   </div>`;
 
+  el.innerHTML=h;
+}
+
+
+function renderPickMerge(){
+  const el=document.getElementById('pmBody');
+  if(!el) return;
+
+  // Get 1-hit predicted numbers from _gapNumPredicted
+  const numPred=window._gapNumPredicted||{};
+  const oneHits=Object.entries(numPred)
+    .filter(function([num,dks]){
+      if(dks.size!==1) return false;
+      if(pmDayF==='ALL') return true;
+      const dk=[...dks][0];
+      return parseInt(dk.slice(8,10),10)===parseInt(pmDayF,10);
+    })
+    .map(function([num,dks]){return {num,dk:[...dks][0]};});
+
+  if(!oneHits.length){
+    el.innerHTML='<div class="es">No 1-hit predictions found. Switch to Gap Analysis → By Position to generate predictions first.</div>';
+    return;
+  }
+
+  const patF=document.getElementById('pmPat')?.value||'ALL';
+  const sumFRaw=(document.getElementById('pmSum')?.value||'').trim();
+  const sumVals=sumFRaw?sumFRaw.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
+  const minSrc=parseInt(document.getElementById('pmMinSrc')?.value||'2',10);
+  const pmDayF=document.getElementById('pmDay')?.value||'ALL';
+
+  function getPat(n){
+    const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+    const v=Object.values(f).sort(function(a,b){return b-a;});
+    if(v[0]===5)return'Qu';if(v[0]===4)return'Q';if(v[0]===3&&v[1]===2)return'TD';
+    if(v[0]===3)return'T';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'D';return'S';
+  }
+  function getSum(n){return n.split('').reduce(function(a,d){return a+(+d);},0);}
+
+  const PAT_BG={Qu:'#dbeafe',Q:'#fee2e2',TD:'#ede9fe',T:'#fce7f3',DD:'#fef9c3',D:'#dcfce7',S:'#f3f4f6'};
+  const PAT_COLOR={Qu:'#1e40af',Q:'#991b1b',TD:'#5b21b6',T:'#9d174d',DD:'#854d0e',D:'#166534',S:'#374151'};
+  const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDk(dk){if(!dk)return'';const[y,mo,d]=dk.split('-');return mn[+mo]+' '+d+', '+y;}
+
+  // For each 1-hit number, generate all one-digit variants (change 1 of 5 digits to 0-9)
+  function getVariants(num){
+    const vars=new Set();
+    for(let pos=0;pos<5;pos++){
+      for(let d=0;d<=9;d++){
+        const ds=String(d);
+        if(ds===num[pos]) continue;
+        const v=num.slice(0,pos)+ds+num.slice(pos+1);
+        vars.add(v);
+      }
+    }
+    return vars;
+  }
+
+  // Build map: variant -> list of source 1-hit numbers
+  const variantMap={};
+  oneHits.forEach(function(src){
+    getVariants(src.num).forEach(function(v){
+      if(!variantMap[v]) variantMap[v]=[];
+      variantMap[v].push(src);
+    });
+  });
+
+  // Filter to variants with 2+ sources = convergence points
+  let results=Object.entries(variantMap)
+    .filter(function([v,srcs]){return srcs.length>=minSrc;})
+    .map(function([v,srcs]){
+      return {num:v,pat:getPat(v),sum:getSum(v),srcs:srcs};
+    });
+
+  // Apply pattern filter
+  if(patF!=='ALL') results=results.filter(function(r){return r.pat===patF;});
+  // Apply sum filter
+  if(sumVals.length) results=results.filter(function(r){return sumVals.includes(r.sum);});
+
+  // Sort by source count desc, then sum
+  results.sort(function(a,b){return b.srcs.length-a.srcs.length||a.sum-b.sum;});
+
+  if(!results.length){
+    el.innerHTML='<div class="es">No convergence points found with current filters. Try lowering Min Sources or changing pattern filter.</div>';
+    return;
+  }
+
+  let h=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    <div style="background:var(--b0);border:1.5px solid var(--b3);border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:var(--b6);">${oneHits.length}</span>
+      <span style="color:var(--g6);"> 1-hit predictions as source</span>
+    </div>
+    <div style="background:#ede9fe;border:1.5px solid #7c3aed;border-radius:8px;padding:8px 14px;font-size:.78rem;">
+      <span style="font-weight:700;color:#5b21b6;">${results.length}</span>
+      <span style="color:#5b21b6;"> convergence points found</span>
+    </div>
+  </div>`;
+
+  // Copy all button
+  h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">`;
+  ['D','DD','T','TD','Q','Qu'].forEach(function(pat){
+    const nums=results.filter(function(r){return r.pat===pat;});
+    if(!nums.length) return;
+    h+=`<button onclick="_copyToClipboard('${nums.map(function(r){return r.num;}).join(' ')}',this)"
+      style="padding:2px 9px;font-size:.68rem;font-weight:700;background:${PAT_BG[pat]};color:${PAT_COLOR[pat]};border:1.5px solid ${PAT_COLOR[pat]};border-radius:5px;cursor:pointer;">
+      📋 ${pat} (${nums.length})</button>`;
+  });
+  h+=`<button onclick="_copyToClipboard('${results.map(function(r){return r.num;}).join(' ')}',this)"
+    style="padding:2px 9px;font-size:.68rem;font-weight:700;background:var(--g1);color:var(--g7);border:1.5px solid var(--g4);border-radius:5px;cursor:pointer;">
+    📋 All (${results.length})</button>`;
+  h+=`</div>`;
+
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;">`;
+
+  results.forEach(function(r){
+    const p=r.pat;
+    const isSpecial=p==='T'||p==='TD'||p==='Q'||p==='Qu';
+    h+=`<div style="background:var(--g0);border:${isSpecial?'2px solid '+PAT_COLOR[p]:'1px solid var(--g2)'};border-radius:10px;padding:10px 12px;">`;
+    h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">`;
+    h+=`<span style="font-family:DM Mono,monospace;font-weight:900;font-size:1.05rem;">${r.num}</span>`;
+    h+=`<span style="background:${PAT_BG[p]};color:${PAT_COLOR[p]};padding:2px 6px;border-radius:4px;font-size:.72rem;font-weight:700;">${p}</span>`;
+    h+=`<span style="font-size:.72rem;color:var(--g5);">Σ${r.sum}</span>`;
+    h+=`<span style="margin-left:auto;background:#ede9fe;color:#5b21b6;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700;">${r.srcs.length} sources</span>`;
+    h+=`</div>`;
+    h+=`<div style="font-size:.7rem;font-weight:700;color:var(--g5);margin-bottom:4px;">FROM:</div>`;
+    h+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
+    r.srcs.forEach(function(src){
+      const sp=getPat(src.num);
+      const pos=src.num.split('').map(function(d,i){return d===r.num[i]?'<span style="font-weight:900;color:var(--g9);">'+d+'</span>':'<span style="color:#ef4444;font-weight:700;text-decoration:underline;">'+d+'</span>';}).join('');
+      h+=`<div style="display:flex;align-items:center;gap:6px;background:var(--g1);border-radius:6px;padding:4px 8px;">`;
+      h+=`<span style="font-family:DM Mono,monospace;font-size:.88rem;">${pos}</span>`;
+      h+=`<span style="background:${PAT_BG[sp]};color:${PAT_COLOR[sp]};padding:1px 4px;border-radius:3px;font-size:.65rem;font-weight:700;">${sp}</span>`;
+      h+=`<span style="font-size:.65rem;color:var(--g5);margin-left:auto;">${fmtDk(src.dk)}</span>`;
+      h+=`</div>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
   el.innerHTML=h;
 }
 
