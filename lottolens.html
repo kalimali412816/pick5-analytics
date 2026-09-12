@@ -3130,7 +3130,7 @@ tr:hover td{background:var(--b0);}
           <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
           <option value="31">31</option>
         </select>
-        <button onclick="renderPickMerge()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">🔄 Refresh</button>
+        <button onclick="buildAndRenderPickMerge()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">⚡ Build &amp; Refresh</button>
       </div>
     </div>
     <div id="pmBody" style="padding:16px;"></div>
@@ -3572,7 +3572,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=468"></script>
+<script src="lottolens-data.js?v=470"></script>
 <script>
 
 // ================================================================
@@ -22649,23 +22649,120 @@ function _renderSDP4(){
 }
 
 
-function _buildPickMergePool(){
-  // Called after _renderPosSearch completes
-  // Needs access to top4 which is local — so we read from rendered DOM instead
-  // Walk all rendered hasn't-come pills in psContent
-  const psContent=document.getElementById('psContent');
-  if(!psContent) return;
-  const pool={};
-  // Find all hasn't-come number spans (they have onclick _psApplyPattern)
-  psContent.querySelectorAll('[onclick*="_psApplyPattern"]').forEach(function(el){
-    const num=el.textContent.replace(/[^0-9]/g,'').slice(0,5);
-    if(num.length===5){
-      if(!pool[num]) pool[num]={sources:[],type:''};
-      pool[num].sources.push('pos4');
-    }
+function buildAndRenderPickMerge(){
+  const el=document.getElementById('pmBody');
+  if(el) el.innerHTML='<div style="padding:20px;color:var(--g5);">Building pool from all position combos...</div>';
+
+  // Rebuild the pool from scratch using current Position tab settings
+  const stF=document.getElementById('psState')?.value||'ALL';
+  const yrF=document.getElementById('psYear')?.value||'ALL';
+  const psDrawF=document.getElementById('psDraw')?.value||'both';
+  const minHits=parseInt(document.getElementById('psMinHits')?.value||'0')||0;
+  const maxHits=parseInt(document.getElementById('psMaxHits')?.value||'9999')||9999;
+
+  let scopeRows=ALL;
+  if(stF!=='ALL') scopeRows=scopeRows.filter(function(r){return r.state===stF;});
+  if(yrF!=='ALL') scopeRows=scopeRows.filter(function(r){return r.dk.startsWith(yrF);});
+  if(psDrawF!=='both') scopeRows=scopeRows.filter(function(r){return r.draw===psDrawF;});
+  if(!scopeRows.length){
+    if(el) el.innerHTML='<div class="es">No draws match Position tab filters.</div>';
+    return;
+  }
+
+  const scopeNumSet=new Set(scopeRows.map(function(r){return r.number;}));
+
+  // Build position combo counts
+  function combos(arr,k){
+    const out=[];
+    function rec(s,c){if(c.length===k){out.push(c.slice());return;}for(let i=s;i<arr.length;i++){c.push(arr[i]);rec(i+1,c);c.pop();}}
+    rec(0,[]);return out;
+  }
+  const POS=[0,1,2,3,4];
+  const counts2={},counts3={},counts4={};
+  scopeRows.forEach(function(r){
+    combos(POS,2).forEach(function(p){const k=p.join('')+'|'+p.map(function(i){return r.number[i];}).join('');counts2[k]=(counts2[k]||0)+1;});
+    combos(POS,3).forEach(function(p){const k=p.join('')+'|'+p.map(function(i){return r.number[i];}).join('');counts3[k]=(counts3[k]||0)+1;});
+    combos(POS,4).forEach(function(p){const k=p.join('')+'|'+p.map(function(i){return r.number[i];}).join('');counts4[k]=(counts4[k]||0)+1;});
   });
-  window._posHasntComePool={all:pool,p2:{},p3:{},p4:pool};
-  console.log('Pick Merge pool built:',Object.keys(pool).length,'numbers');
+
+  function topN(obj,n){
+    const arr=Object.entries(obj).sort(function(a,b){return b[1]-a[1];});
+    if(arr.length<=n) return arr;
+    const cut=arr[n-1][1];
+    return arr.filter(function([,c]){return c>=cut&&c>=minHits&&c<=maxHits;});
+  }
+  const top4=topN(counts4,10);
+
+  // haventComeFor4 logic inline
+  function getHasntCome4(key){
+    const [posStr,digStr]=key.split('|');
+    const posArr=posStr.split('').map(Number);
+    const missingPos=[0,1,2,3,4].find(function(p){return !posArr.includes(p);});
+    const knownDigits=digStr.split('');
+    const knownCounts={};
+    knownDigits.forEach(function(d){knownCounts[d]=(knownCounts[d]||0)+1;});
+    const allSingles=Object.values(knownCounts).every(function(c){return c===1;});
+    function buildNum(x){
+      const arr=Array(5);
+      posArr.forEach(function(p,i){arr[p]=knownDigits[i];});
+      arr[missingPos]=String(x);
+      return arr.join('');
+    }
+    function getPat(n){
+      const f={};n.split('').forEach(function(d){f[d]=(f[d]||0)+1;});
+      const v=Object.values(f).sort(function(a,b){return b-a;});
+      if(v[0]===5)return'Qu';if(v[0]===4)return'Quads';if(v[0]===3&&v[1]===2)return'TD';
+      if(v[0]===3)return'Triples';if(v[0]===2&&v[1]===2)return'DD';if(v[0]===2)return'Doubles';return'Singles';
+    }
+    const results=[];
+    if(allSingles){
+      const anyDoubled=knownDigits.some(function(d){
+        return scopeRows.some(function(r){
+          for(let i=0;i<posArr.length;i++){if(r.number[posArr[i]]!==knownDigits[i])return false;}
+          return r.number.split('').filter(function(ch){return ch===d;}).length>=2;
+        });
+      });
+      if(!anyDoubled){
+        knownDigits.forEach(function(d){
+          const num=buildNum(d);
+          if(!scopeNumSet.has(num)) results.push({number:num,type:getPat(num)});
+        });
+      }
+      for(let x=0;x<=9;x++){
+        const xs=String(x);
+        if(knownDigits.includes(xs)) continue;
+        const num=buildNum(xs);
+        const pat=getPat(num);
+        if(['DD','Triples','TD','Quads','Qu'].includes(pat)&&!scopeNumSet.has(num))
+          results.push({number:num,type:pat});
+      }
+    } else {
+      for(let x=0;x<=9;x++){
+        const num=buildNum(String(x));
+        const pat=getPat(num);
+        if(['DD','Triples','TD','Quads','Qu'].includes(pat)&&!scopeNumSet.has(num))
+          results.push({number:num,type:pat});
+      }
+    }
+    return results;
+  }
+
+  // Build pool from all top4 combos
+  const p4={};
+  top4.forEach(function([key]){
+    getHasntCome4(key).forEach(function(item){
+      if(!p4[item.number]) p4[item.number]={sources:[],type:item.type};
+      p4[item.number].sources.push(key);
+    });
+  });
+
+  window._posHasntComePool={all:Object.assign({},p4),p2:{},p3:{},p4:p4};
+  console.log('Pick Merge pool:',Object.keys(p4).length,'numbers from',top4.length,'combos');
+  renderPickMerge();
+}
+
+function _buildPickMergePool(){
+  buildAndRenderPickMerge();
 }
 
 function renderPickMerge(){
