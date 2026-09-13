@@ -3592,7 +3592,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=472"></script>
+<script src="lottolens-data.js?v=473"></script>
 <script>
 
 // ================================================================
@@ -23890,9 +23890,11 @@ function _renderPosSearch(){
   function applyHitsFilter(arr){
     return arr.filter(([,c])=>c>=minHits&&c<=maxHits);
   }
-  const top2=(posLen===0||posLen===2)?applyHitsFilter(topNWithTies(counts2,minHits>0?99999:3)):[];
-  const top3=(posLen===0||posLen===3)?applyHitsFilter(topNWithTies(counts3,minHits>0?99999:3)):[];
-  const top4=(posLen===0||posLen===4)?applyHitsFilter(topNWithTies(counts4,minHits>0?99999:10)):[];
+  // When filtering by exact hits (min=max), show ALL matching combos not just top N
+  const _allCombos=minHits>0;
+  const top2=(posLen===0||posLen===2)?applyHitsFilter(topNWithTies(counts2,_allCombos?99999:3)):[];
+  const top3=(posLen===0||posLen===3)?applyHitsFilter(topNWithTies(counts3,_allCombos?99999:3)):[];
+  const top4=(posLen===0||posLen===4)?applyHitsFilter(topNWithTies(counts4,_allCombos?99999:10)):[];
 
   // Track new combos via localStorage — NEW = wasn't in the list last render
   const _LS_PREV='ll_combo_prev_list';
