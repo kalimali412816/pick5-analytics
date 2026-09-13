@@ -1271,6 +1271,26 @@ tr:hover td{background:var(--b0);}
           <option value="5">Max 5</option><option value="6">Max 6</option><option value="7">Max 7</option>
           <option value="8">Max 8</option><option value="10">Max 10</option>
         </select>
+        <button id="psOneHitToggle" onclick="
+          var isOn=this.dataset.on==='1';
+          if(!isOn){
+            document.getElementById('psMinHits').value='1';
+            document.getElementById('psMaxHits').value='1';
+            this.dataset.on='1';
+            this.style.background='#f59e0b';
+            this.style.color='#fff';
+            this.textContent='⚡ 1-Hit ON';
+          } else {
+            document.getElementById('psMinHits').value='0';
+            document.getElementById('psMaxHits').value='9999';
+            this.dataset.on='0';
+            this.style.background='rgba(255,255,255,.15)';
+            this.style.color='#fff';
+            this.textContent='⚡ 1-Hit Only';
+          }
+          _renderPosSearch();
+        " data-on="0"
+          style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;white-space:nowrap;">⚡ 1-Hit Only</button>
         <select id="psDraw" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="both">Mid + Eve</option>
           <option value="midday">Midday Only</option>
@@ -3572,7 +3592,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=471"></script>
+<script src="lottolens-data.js?v=472"></script>
 <script>
 
 // ================================================================
