@@ -1316,6 +1316,12 @@ tr:hover td{background:var(--b0);}
           <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
           <option value="31">31</option>
         </select>
+        <select id="psDayOffset" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="0">+/- 0</option>
+          <option value="1">+/- 1</option>
+          <option value="2">+/- 2</option>
+          <option value="3">+/- 3</option>
+        </select>
         <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearch()"
           style="width:120px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:'DM Sans',sans-serif;" />
       </div>
@@ -3592,7 +3598,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=474"></script>
+<script src="lottolens-data.js?v=476"></script>
 <script>
 
 // ================================================================
@@ -23840,6 +23846,7 @@ function _renderPosSearch(){
   const _psPatMap={'ALL':null,'S':['Singles'],'D':['Doubles'],'DD':['DD'],'T':['Triples'],'TD':['TD'],'Q':['Quads'],'Qu':['Qu']};
   const _psPatInternal=_psPatMap[psPatF]||null;
   const psDayF=document.getElementById('psDay')?.value||'ALL';
+  const psDayOffset=parseInt(document.getElementById('psDayOffset')?.value||'0',10);
   const psSumFRaw=(document.getElementById('psSumF')?.value||'').trim();
   const psSumVals=psSumFRaw?psSumFRaw.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
 
@@ -24013,14 +24020,15 @@ function _renderPosSearch(){
     // Apply day filter: only show combos that have appeared on the selected day
     // (but preserve full hit count from original items)
     if(psDayF!=='ALL'){
+      const _targetDay=parseInt(psDayF,10);
       items=items.filter(function(item){
         const key=item[0];
         const [posStr,digStr]=key.split('|');
         if(!posStr||!digStr) return false;
-        // Check if this combo appeared on this day of month in scopeRows
         return scopeRows.some(function(r){
-          return parseInt(r.dk.slice(8,10),10)===parseInt(psDayF,10) &&
-            posStr.split('').every(function(p,i){return r.number[+p]===digStr[i];});
+          const d=parseInt(r.dk.slice(8,10),10);
+          const dayMatch=psDayOffset===0?(d===_targetDay):(Math.abs(d-_targetDay)===psDayOffset);
+          return dayMatch && posStr.split('').every(function(p,i){return r.number[+p]===digStr[i];});
         });
       });
     }
