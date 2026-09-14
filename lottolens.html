@@ -3604,7 +3604,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=483"></script>
+<script src="lottolens-data.js?v=484"></script>
 <script>
 
 // ================================================================
@@ -24086,6 +24086,7 @@ function _renderPosSearch(){
         if(psDigitsF.length) hc=hc.filter(function(h){
           return psDigitsF.split('').every(function(d){return h.number.includes(d);});
         });
+        if(psDigitsF.length&&!hc.length) return; // skip combo entirely if no pills match digit filter
         if(hc.length){
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
