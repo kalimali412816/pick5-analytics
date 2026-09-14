@@ -3598,7 +3598,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=478"></script>
+<script src="lottolens-data.js?v=480"></script>
 <script>
 
 // ================================================================
@@ -21453,6 +21453,7 @@ function _renderPosConverge(){
 
   // Use setTimeout to allow the UI to update before heavy computation
   setTimeout(function(){
+    try{
     // Build scope rows
     let rows=ALL;
     if(scope!=='ALL') rows=rows.filter(r=>r.dk.startsWith(scope));
@@ -21609,6 +21610,9 @@ function _renderPosConverge(){
     });
     h+=`</div>`;
     container.innerHTML=h;
+    }catch(e){
+      container.innerHTML='<div style="padding:20px;color:red;background:#fee2e2;border-radius:8px;margin:16px;"><b>Position Convergence Error:</b> '+e.message+'<br><small>'+e.stack.slice(0,300)+'</small></div>';
+    }
   },50);
 }
 
