@@ -1322,6 +1322,9 @@ tr:hover td{background:var(--b0);}
           <option value="2">+/- 2</option>
           <option value="3">+/- 3</option>
         </select>
+        <input id="psDigits" type="text" maxlength="5" placeholder="Digits e.g. 44"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'');_renderPosSearch();"
+          style="width:90px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
         <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearch()"
           style="width:120px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:'DM Sans',sans-serif;" />
       </div>
@@ -3156,6 +3159,9 @@ tr:hover td{background:var(--b0);}
           <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
           <option value="31">31</option>
         </select>
+        <input id="pmDigits" type="text" maxlength="5" placeholder="Digits e.g. 44"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'');renderPickMerge();"
+          style="width:90px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
         <button onclick="buildAndRenderPickMerge()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">⚡ Build &amp; Refresh</button>
       </div>
     </div>
@@ -3598,7 +3604,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=482"></script>
+<script src="lottolens-data.js?v=483"></script>
 <script>
 
 // ================================================================
@@ -22863,6 +22869,14 @@ function renderPickMerge(){
   // Apply sum filter
   if(sumVals.length) results=results.filter(function(r){return sumVals.includes(r.sum);});
 
+  // Apply digit filter
+  const pmDigits=(document.getElementById('pmDigits')?.value||'').replace(/[^0-9]/g,'');
+  if(pmDigits.length>0){
+    results=results.filter(function(r){
+      return pmDigits.split('').every(function(d){return r.num.includes(d);});
+    });
+  }
+
   // Sort by source count desc
   results.sort(function(a,b){return b.srcs.length-a.srcs.length||a.sum-b.sum;});
 
@@ -23853,6 +23867,7 @@ function _renderPosSearch(){
   const psDayOffset=parseInt(document.getElementById('psDayOffset')?.value||'0',10);
   const psSumFRaw=(document.getElementById('psSumF')?.value||'').trim();
   const psSumVals=psSumFRaw?psSumFRaw.split(/[,\s]+/).map(Number).filter(function(n){return !isNaN(n)&&n>=0;}):[];
+  const psDigitsF=(document.getElementById('psDigits')?.value||'').replace(/[^0-9]/g,'');
 
   // Read pattern
   const pat=[];
@@ -24067,6 +24082,9 @@ function _renderPosSearch(){
         if(psSumVals.length) hc=hc.filter(function(h){
           const s=h.number.split('').reduce(function(a,d){return a+(+d);},0);
           return psSumVals.includes(s);
+        });
+        if(psDigitsF.length) hc=hc.filter(function(h){
+          return psDigitsF.split('').every(function(d){return h.number.includes(d);});
         });
         if(hc.length){
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
