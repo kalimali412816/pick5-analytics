@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=498"></script>
+<script src="lottolens-data.js?v=499"></script>
 <script>
 
 // ================================================================
@@ -23993,6 +23993,32 @@ function _renderPosSearch(){
 
   // Build a Set of all numbers ever drawn in scope (for "hasn't come" checks)
   const scopeNumSet=new Set(scopeRows.map(r=>r.number));
+
+  // Pre-filter top combos by abc pattern
+  const _psAbcPatGlobal=(document.getElementById('psAbcPat')?.value||'').toLowerCase();
+  if(_psAbcPatGlobal.length===5){
+    const _filterByPat=function(topArr){
+      return topArr.filter(function(item){
+        const key=item[0];
+        const parts=key.split('|');
+        const posStr=parts[0]; const digStr=parts[1];
+        const posArr=posStr.split('').map(Number);
+        const wildPos=[0,1,2,3,4].find(function(x){return !posArr.includes(x);});
+        if(wildPos===undefined) return true;
+        for(var d=0;d<=9;d++){
+          var arr=Array(5);
+          posArr.forEach(function(p,i){arr[p]=digStr[i];});
+          arr[wildPos]=String(d);
+          var num=arr.join('');
+          if(!scopeNumSet.has(num)&&getAbcPat(num)===_psAbcPatGlobal) return true;
+        }
+        return false;
+      });
+    };
+    top2.splice(0,top2.length,..._filterByPat(top2));
+    top3.splice(0,top3.length,..._filterByPat(top3));
+    top4.splice(0,top4.length,..._filterByPat(top4));
+  }
 
   function haventComeFor4(key){
     const [posStr,digStr]=key.split('|');
