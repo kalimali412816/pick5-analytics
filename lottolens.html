@@ -1334,6 +1334,9 @@ tr:hover td{background:var(--b0);}
         <input id="psDigits" type="text" maxlength="5" placeholder="Digits e.g. 44"
           oninput="this.value=this.value.replace(/[^0-9]/g,'');_renderPosSearch();"
           style="width:90px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
+        <input id="psAbcPat" type="text" maxlength="5" placeholder="Pat e.g. abcde"
+          oninput="this.value=this.value.replace(/[^a-e]/g,'').toLowerCase();_renderPosSearch();"
+          style="width:100px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
         <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearch()"
           style="width:120px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:'DM Sans',sans-serif;" />
       </div>
@@ -3171,6 +3174,9 @@ tr:hover td{background:var(--b0);}
         <input id="pmDigits" type="text" maxlength="5" placeholder="Digits e.g. 44"
           oninput="this.value=this.value.replace(/[^0-9]/g,'');renderPickMerge();"
           style="width:90px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
+        <input id="pmAbcPat" type="text" maxlength="5" placeholder="Pat e.g. abcde"
+          oninput="this.value=this.value.replace(/[^a-e]/g,'').toLowerCase();renderPickMerge();"
+          style="width:100px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
         <button onclick="buildAndRenderPickMerge()" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;">⚡ Build &amp; Refresh</button>
       </div>
     </div>
@@ -3613,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=497"></script>
+<script src="lottolens-data.js?v=498"></script>
 <script>
 
 // ================================================================
@@ -22807,6 +22813,15 @@ function buildAndRenderPickMerge(){
   renderPickMerge();
 }
 
+function getAbcPat(num){
+  var digits=num.split('').map(Number);
+  var indexed=digits.map(function(d,i){return [i,d];}).sort(function(a,b){return a[1]-b[1]||a[0]-b[0];});
+  var result=new Array(5);
+  var letters='abcde';
+  indexed.forEach(function(pair,i){result[pair[0]]=letters[i];});
+  return result.join('');
+}
+
 function _buildPickMergePool(){
   buildAndRenderPickMerge();
 }
@@ -22885,6 +22900,11 @@ function renderPickMerge(){
     results=results.filter(function(r){
       return pmDigits.split('').every(function(d){return r.num.includes(d);});
     });
+  }
+  // Apply abc pattern filter
+  const pmAbcPat=(document.getElementById('pmAbcPat')?.value||'').toLowerCase();
+  if(pmAbcPat.length===5){
+    results=results.filter(function(r){return getAbcPat(r.num)===pmAbcPat;});
   }
 
   // Sort by source count desc
@@ -24097,7 +24117,9 @@ function _renderPosSearch(){
         if(psDigitsF.length) hc=hc.filter(function(h){
           return psDigitsF.split('').every(function(d){return h.number.includes(d);});
         });
-        if(psDigitsF.length&&!hc.length) return; // skip combo entirely if no pills match digit filter
+        var _psAbcPat=(document.getElementById('psAbcPat')?.value||'').toLowerCase();
+        if(_psAbcPat.length===5) hc=hc.filter(function(h){return getAbcPat(h.number)===_psAbcPat;});
+        if((psDigitsF.length||_psAbcPat.length===5)&&!hc.length) return; // skip combo entirely if no pills match digit filter
         if(hc.length){
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
