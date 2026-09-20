@@ -1253,6 +1253,15 @@ tr:hover td{background:var(--b0);}
           <option value="ALL">All States</option><option value="DC">DC</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="GE">GE</option><option value="LA">LA</option><option value="MD">MD</option><option value="MI">MI</option><option value="OH">OH</option><option value="PA">PA</option><option value="VA">VA</option>
         </select>
         <select id="psYear" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;"></select>
+        <select id="psMonth" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
+          <option value="ALL">All Months</option>
+          <option value="01">Jan</option><option value="02">Feb</option>
+          <option value="03">Mar</option><option value="04">Apr</option>
+          <option value="05">May</option><option value="06">Jun</option>
+          <option value="07">Jul</option><option value="08">Aug</option>
+          <option value="09">Sep</option><option value="10">Oct</option>
+          <option value="11">Nov</option><option value="12">Dec</option>
+        </select>
         <select id="psPosLen" onchange="_renderPosSearch()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
           <option value="0">All Pos Types</option>
           <option value="2">2-Digit</option>
@@ -3604,7 +3613,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=492"></script>
+<script src="lottolens-data.js?v=493"></script>
 <script>
 
 // ================================================================
@@ -22692,6 +22701,7 @@ function buildAndRenderPickMerge(){
   // Rebuild the pool from scratch using current Position tab settings
   const stF=document.getElementById('psState')?.value||'ALL';
   const yrF=document.getElementById('psYear')?.value||'ALL';
+  const moF=document.getElementById('psMonth')?.value||'ALL';
   const psDrawF=document.getElementById('psDraw')?.value||'both';
   const minHits=parseInt(document.getElementById('psMinHits')?.value||'0')||0;
   const maxHits=parseInt(document.getElementById('psMaxHits')?.value||'9999')||9999;
@@ -23881,6 +23891,7 @@ function _renderPosSearch(){
   let scopeRows=ALL;
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
+  if(moF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.slice(5,7)===moF);
   if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
 
   if(!scopeRows.length){
