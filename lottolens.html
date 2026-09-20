@@ -3613,7 +3613,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=493"></script>
+<script src="lottolens-data.js?v=494"></script>
 <script>
 
 // ================================================================
@@ -23895,7 +23895,7 @@ function _renderPosSearch(){
   if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
 
   if(!scopeRows.length){
-    document.getElementById('psTopCombos').innerHTML='<div class="es">No draws match the selected filters.</div>';
+    document.getElementById('psContent').innerHTML='<div class="es">No draws match the selected filters.</div>';
     return;
   }
   // Build positional combinations counts
