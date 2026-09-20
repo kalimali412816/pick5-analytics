@@ -3613,7 +3613,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=495"></script>
+<script src="lottolens-data.js?v=496"></script>
 <script>
 
 // ================================================================
@@ -22701,7 +22701,7 @@ function buildAndRenderPickMerge(){
   // Rebuild the pool from scratch using current Position tab settings
   const stF=document.getElementById('psState')?.value||'ALL';
   const yrF=document.getElementById('psYear')?.value||'ALL';
-  const psMonthF=(document.getElementById('psMonth')?.value||'ALL').trim()||'ALL';
+
   const psDrawF=document.getElementById('psDraw')?.value||'both';
   const minHits=parseInt(document.getElementById('psMinHits')?.value||'0')||0;
   const maxHits=parseInt(document.getElementById('psMaxHits')?.value||'9999')||9999;
@@ -23891,7 +23891,7 @@ function _renderPosSearch(){
   let scopeRows=ALL;
   if(stF!=='ALL') scopeRows=scopeRows.filter(r=>r.state===stF);
   if(yrF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.startsWith(yrF));
-  if(psMonthF!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.slice(5,7)===psMonthF);
+  {const _mo=(document.getElementById('psMonth')?.value||'ALL');if(_mo!=='ALL') scopeRows=scopeRows.filter(r=>r.dk.slice(5,7)===_mo);}
   if(psDrawF!=='both') scopeRows=scopeRows.filter(r=>r.draw===psDrawF);
 
   if(!scopeRows.length){
