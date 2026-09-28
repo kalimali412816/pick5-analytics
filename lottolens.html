@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=536"></script>
+<script src="lottolens-data.js?v=542"></script>
 <script>
 
 // ================================================================
@@ -6272,7 +6272,9 @@ function _buildConsecStreakWidget(inline){
   const _maxDk=ALL.reduce(function(a,r){return r.dk>a?r.dk:a;},'');
   const hotYmCount={};
   const hotYmStateMap={};
-  const hotYmDatesMap={}; // ym -> [{st, histDks:[], curDks:[]}]
+  const hotYmDatesMap={};
+  const _latestFiltDk=[..._filtDks].sort().reverse()[0]||'';
+  const _curYm=_latestFiltDk.slice(0,7);
   const stateTopYm={};
   stateData.forEach(({st,chains})=>{
     const ymCnt={};
@@ -6306,7 +6308,7 @@ function _buildConsecStreakWidget(inline){
     html+=`<div style="font-size:.68rem;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:6px;">🟢 Hot Historical Months — ${mn[curMonthNum-1]}</div>`;
     html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
     hotYmSorted.forEach(([ym,cnt],rank)=>{
-      try{
+
       const ymP=ym.split('-');
       const ymLabel=mn[+ymP[1]-1]+' '+ymP[0];
       const states=[...hotYmStateMap[ym]].join(', ');
@@ -6318,7 +6320,7 @@ function _buildConsecStreakWidget(inline){
       html+=`<span style="font-size:.55rem;color:var(--g5);">${states}</span>`;
       html+=`<span style="font-size:.52rem;color:#047857;cursor:pointer;text-decoration:underline;" onclick="_showHotYmDetail('${ym}')">📅 See dates</span>`;
       html+=`</div>`;
-      }catch(e){html+=`<div style="color:red;font-size:.5rem;">${e.message}</div>`;}
+
     });
     html+=`</div></div>`;
   }
