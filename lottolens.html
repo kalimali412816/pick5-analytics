@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=509"></script>
+<script src="lottolens-data.js?v=510"></script>
 <script>
 
 // ================================================================
@@ -22045,14 +22045,15 @@ function renderNextDayIntel(){
   const latestDk=allDks.reduce(function(a,b){return a>b?a:b;});
 
   // Compute reference date using offset
+  // For 1 Day After: use latest day as source, but predict 2 days ahead
+  const srcOffset=dayOffset===1?0:dayOffset; // source always latest day when offset=1
   const refD=new Date(latestDk+'T12:00:00Z');
-  refD.setUTCDate(refD.getUTCDate()+dayOffset);
+  refD.setUTCDate(refD.getUTCDate()+srcOffset);
   const refDk=refD.toISOString().slice(0,10);
 
   // Use draws from reference date
   const latestDraws=FILT.filter(function(r){return r.dk===refDk;});
   if(!latestDraws.length){
-    // If no draws on refDk, fall back to closest available date
     const sorted=[...new Set(allDks)].sort();
     const fallback=dayOffset<0?sorted[0]:sorted[sorted.length-1];
     el.innerHTML='<div class="es">No draws found for '+refDk+'. Closest available: '+fallback+'</div>';
@@ -22060,8 +22061,9 @@ function renderNextDayIntel(){
   }
 
   // Compute next day from reference date (what we're predicting)
+  // For 1 Day After: predict 2 days ahead from latest
   const nextD=new Date(refDk+'T12:00:00Z');
-  nextD.setUTCDate(nextD.getUTCDate()+1);
+  nextD.setUTCDate(nextD.getUTCDate()+(dayOffset===1?2:1));
   const nextDk=nextD.toISOString().slice(0,10);
 
   // Step 2: find pattern matches for latest draws only
