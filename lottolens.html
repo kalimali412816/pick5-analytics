@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=510"></script>
+<script src="lottolens-data.js?v=511"></script>
 <script>
 
 // ================================================================
@@ -22045,10 +22045,12 @@ function renderNextDayIntel(){
   const latestDk=allDks.reduce(function(a,b){return a>b?a:b;});
 
   // Compute reference date using offset
-  // For 1 Day After: use latest day as source, but predict 2 days ahead
-  const srcOffset=dayOffset===1?0:dayOffset; // source always latest day when offset=1
+  // dayOffset -1 = 1 Day Prior (use day before latest, predict latest)
+  // dayOffset  0 = Latest Day (use latest, predict tomorrow)
+  // dayOffset  1 = 1 Day After (use latest, predict day after tomorrow)
   const refD=new Date(latestDk+'T12:00:00Z');
-  refD.setUTCDate(refD.getUTCDate()+srcOffset);
+  if(dayOffset===-1) refD.setUTCDate(refD.getUTCDate()-1);
+  // dayOffset 0 and 1 both use latest as source
   const refDk=refD.toISOString().slice(0,10);
 
   // Use draws from reference date
@@ -22060,10 +22062,10 @@ function renderNextDayIntel(){
     return;
   }
 
-  // Compute next day from reference date (what we're predicting)
-  // For 1 Day After: predict 2 days ahead from latest
-  const nextD=new Date(refDk+'T12:00:00Z');
-  nextD.setUTCDate(nextD.getUTCDate()+(dayOffset===1?2:1));
+  // Compute prediction date
+  // -1: predict latest day | 0: predict +1 | 1: predict +2
+  const nextD=new Date(latestDk+'T12:00:00Z');
+  nextD.setUTCDate(nextD.getUTCDate()+(dayOffset===1?2:dayOffset===-1?0:1));
   const nextDk=nextD.toISOString().slice(0,10);
 
   // Step 2: find pattern matches for latest draws only
@@ -22077,7 +22079,7 @@ function renderNextDayIntel(){
       const srcDk=prev.dk;
       if(!sourceMap[srcDk]){
         const sd=new Date(srcDk+'T12:00:00Z');
-        sd.setUTCDate(sd.getUTCDate()+1);
+        sd.setUTCDate(sd.getUTCDate()+(dayOffset===1?2:1));
         const sNextDk=sd.toISOString().slice(0,10);
         sourceMap[srcDk]={currentDraws:[],nextDk:sNextDk,nextRecs:ALL.filter(function(r){return r.dk===sNextDk;}),matchType:pat.matchType};
       }
