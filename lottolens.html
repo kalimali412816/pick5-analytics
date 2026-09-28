@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=518"></script>
+<script src="lottolens-data.js?v=519"></script>
 <script>
 
 // ================================================================
@@ -6284,7 +6284,8 @@ function _buildConsecStreakWidget(inline){
       if(!hotYmStateMap[c.hist_ym]) hotYmStateMap[c.hist_ym]=new Set();
       hotYmStateMap[c.hist_ym].add(st);
       if(!hotYmDatesMap[c.hist_ym]) hotYmDatesMap[c.hist_ym]={curDates:new Set(),histDays:new Set()};
-      const _todayDk=new Date().toISOString().slice(0,10);
+      const _td=new Date();
+      const _todayDk=_td.getFullYear()+'-'+String(_td.getMonth()+1).padStart(2,'0')+'-'+String(_td.getDate()).padStart(2,'0');
       c.chain.forEach(function(link){
         if(link.cur_dk<=_todayDk){
           hotYmDatesMap[c.hist_ym].curDates.add(link.cur_dk);
