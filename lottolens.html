@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=513"></script>
+<script src="lottolens-data.js?v=514"></script>
 <script>
 
 // ================================================================
@@ -4690,6 +4690,19 @@ function renderPatternOrigin(){
   const stF = document.getElementById('poStateF')?.value || 'ALL';
   const stF2 = document.getElementById('poStateF2')?.value || 'ALL';
 
+  // Show loading state immediately
+  const _poBody=document.getElementById('poBody');
+  if(_poBody&&!_poBody._rendering){
+    _poBody._rendering=true;
+    const _cacheKey=pat+'|'+stF+'|'+stF2+'|'+FILT.length;
+    if(_poBody._cacheKey===_cacheKey){_poBody._rendering=false;return;} // same params, skip
+    _poBody.innerHTML='<div style="padding:30px;text-align:center;color:var(--g5);font-size:.85rem;">⏳ Loading Pattern Origin...</div>';
+    setTimeout(function(){_poBody._rendering=false;_renderPatternOriginFull(pat,stF,stF2,_poBody,_cacheKey);},20);
+    return;
+  }
+}
+function _renderPatternOriginFull(pat,stF,stF2,_poBody,_cacheKey){
+
   // Populate state dropdown once
   const stEl = document.getElementById('poStateF');
   if(stEl && stEl.options.length<=1){
@@ -4738,6 +4751,8 @@ function renderPatternOrigin(){
   } else {
     _poShowYears();
   }
+  // Cache the result
+  if(_poBody) _poBody._cacheKey=_cacheKey;
 }
 
 function _poShowYearsBoth(stF, stF2, pat, patKey){
