@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=527"></script>
+<script src="lottolens-data.js?v=529"></script>
 <script>
 
 // ================================================================
@@ -6316,7 +6316,7 @@ function _buildConsecStreakWidget(inline){
       html+=`<span style="font-size:.62rem;font-weight:800;color:#065f46;">#${rank+1} ${ymLabel}</span>`;
       html+=`<span style="font-size:.58rem;color:#16a34a;font-weight:600;">${cnt} green chain${cnt>1?'s':''}</span>`;
       html+=`<span style="font-size:.55rem;color:var(--g5);">${states}</span>`;
-      html+=`<span style="font-size:.52rem;color:#047857;cursor:pointer;text-decoration:underline;" onclick="_showHotYmDetail('${ym}')">📅 See dates</span>`;
+      html+=`<span style="font-size:.52rem;color:#047857;cursor:pointer;text-decoration:underline;" onclick="window._showHotYmDetail(this.dataset.ym)" data-ym="${ym}">📅 See dates</span>`;
       html+=`</div>`;
       }catch(e){html+=`<div style="color:red;font-size:.5rem;">${e.message}</div>`;}
     });
@@ -25320,7 +25320,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 });
 
-function _showHotYmDetail(ym){
+function _showHotYmDetail(elOrYm){const ym=typeof elOrYm==='string'?elOrYm:elOrYm.dataset.ym;
   const data=window._hotYmDatesMap&&window._hotYmDatesMap[ym];
   if(!data||!data.length){alert('No detail available for '+ym);return;}
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
