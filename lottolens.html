@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=516"></script>
+<script src="lottolens-data.js?v=517"></script>
 <script>
 
 // ================================================================
@@ -6271,7 +6271,7 @@ function _buildConsecStreakWidget(inline){
   const curMonthNum=+curMonthPad;
   const hotYmCount={};
   const hotYmStateMap={};
-  const hotYmDatesMap={}; // ym -> {curDates:Set, histDays:Set}
+  const hotYmDatesMap={};
   const stateTopYm={};
   stateData.forEach(({st,chains})=>{
     const ymCnt={};
@@ -6283,7 +6283,6 @@ function _buildConsecStreakWidget(inline){
       hotYmCount[c.hist_ym]=(hotYmCount[c.hist_ym]||0)+1;
       if(!hotYmStateMap[c.hist_ym]) hotYmStateMap[c.hist_ym]=new Set();
       hotYmStateMap[c.hist_ym].add(st);
-      // Track dates — link has cur_dk and hist_day (number)
       if(!hotYmDatesMap[c.hist_ym]) hotYmDatesMap[c.hist_ym]={curDates:new Set(),histDays:new Set()};
       c.chain.forEach(function(link){
         hotYmDatesMap[c.hist_ym].curDates.add(link.cur_dk);
@@ -6306,6 +6305,7 @@ function _buildConsecStreakWidget(inline){
     html+=`<div style="font-size:.68rem;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:6px;">🟢 Hot Historical Months — ${mn[curMonthNum-1]}</div>`;
     html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
     hotYmSorted.forEach(([ym,cnt],rank)=>{
+      try{
       const ymP=ym.split('-');
       const ymLabel=mn[+ymP[1]-1]+' '+ymP[0];
       const states=[...hotYmStateMap[ym]].join(', ');
@@ -6314,22 +6314,18 @@ function _buildConsecStreakWidget(inline){
       html+=`<div style="background:${bg};border:1.5px solid ${border};border-radius:7px;padding:4px 10px;display:flex;flex-direction:column;align-items:center;min-width:70px;">`;
       html+=`<span style="font-size:.62rem;font-weight:800;color:#065f46;">#${rank+1} ${ymLabel}</span>`;
       html+=`<span style="font-size:.58rem;color:#16a34a;font-weight:600;">${cnt} green chain${cnt>1?'s':''}</span>`;
-      // Show exact historic dates and current dates
       const _dates=hotYmDatesMap[ym];
       if(_dates){
-        const _mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const _fmtDk=function(dk){const p=dk.split('-');return _mn[+p[1]]+' '+parseInt(p[2]);};
-        // Historic dates
-        const _histDksSorted=[..._dates.histDays].sort();
-        const _histStr=_histDksSorted.map(_fmtDk).join(', ');
-        // Current dates
-        const _curDksSorted=[..._dates.curDates].sort();
-        const _curStr=_curDksSorted.map(_fmtDk).join(', ');
+        const _mn2=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const _fmtDk=function(dk){const p=dk.split('-');return _mn2[+p[1]]+' '+parseInt(p[2]);};
+        const _histStr=[..._dates.histDays].sort().map(_fmtDk).join(', ');
+        const _curStr=[..._dates.curDates].sort().map(_fmtDk).join(', ');
         html+=`<span style="font-size:.5rem;color:#047857;font-weight:600;">Hist: ${_histStr}</span>`;
         html+=`<span style="font-size:.5rem;color:var(--b6);font-weight:600;">Now: ${_curStr}</span>`;
       }
       html+=`<span style="font-size:.55rem;color:var(--g5);">${states}</span>`;
       html+=`</div>`;
+      }catch(e){html+=`<div style="color:red;font-size:.5rem;">${e.message}</div>`;}
     });
     html+=`</div></div>`;
   }
