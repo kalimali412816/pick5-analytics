@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=524"></script>
+<script src="lottolens-data.js?v=525"></script>
 <script>
 
 // ================================================================
@@ -6269,6 +6269,8 @@ function _buildConsecStreakWidget(inline){
   const _filtMonths=[...new Set([..._filtDks].map(dk=>dk.slice(5,7)))];
   const curMonthPad=_filtMonths.length===1?_filtMonths[0]:String(todayDate.getMonth()+1).padStart(2,'0');
   const curMonthNum=+curMonthPad;
+  const _maxDk=ALL.reduce(function(a,r){return r.dk>a?r.dk:a;},'');
+  const _maxDkYm=_maxDk.slice(0,7);
   const hotYmCount={};
   const hotYmStateMap={};
   const hotYmDatesMap={};
@@ -6284,12 +6286,10 @@ function _buildConsecStreakWidget(inline){
       if(!hotYmStateMap[c.hist_ym]) hotYmStateMap[c.hist_ym]=new Set();
       hotYmStateMap[c.hist_ym].add(st);
       if(!hotYmDatesMap[c.hist_ym]) hotYmDatesMap[c.hist_ym]={curDates:new Set(),histDays:new Set()};
-      const _latestDk=ALL.reduce(function(a,r){return r.dk>a?r.dk:a;},'');
-      const _curYm=_latestDk.slice(0,7);
       c.chain.forEach(function(link){
-        if(link.cur_dk<=_latestDk&&link.cur_dk.startsWith(_curYm)){
+        hotYmDatesMap[c.hist_ym].histDays.add(c.hist_ym+'-'+String(link.hist_day).padStart(2,'0'));
+        if(link.cur_dk<=_maxDk&&link.cur_dk.startsWith(_maxDkYm)){
           hotYmDatesMap[c.hist_ym].curDates.add(link.cur_dk);
-          hotYmDatesMap[c.hist_ym].histDays.add(c.hist_ym+'-'+String(link.hist_day).padStart(2,'0'));
         }
       });
     });
