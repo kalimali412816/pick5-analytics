@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=511"></script>
+<script src="lottolens-data.js?v=513"></script>
 <script>
 
 // ================================================================
@@ -6271,6 +6271,7 @@ function _buildConsecStreakWidget(inline){
   const curMonthNum=+curMonthPad;
   const hotYmCount={};
   const hotYmStateMap={};
+  const hotYmDatesMap={}; // ym -> {curDates:Set, histDays:Set}
   const stateTopYm={};
   stateData.forEach(({st,chains})=>{
     const ymCnt={};
@@ -6282,6 +6283,12 @@ function _buildConsecStreakWidget(inline){
       hotYmCount[c.hist_ym]=(hotYmCount[c.hist_ym]||0)+1;
       if(!hotYmStateMap[c.hist_ym]) hotYmStateMap[c.hist_ym]=new Set();
       hotYmStateMap[c.hist_ym].add(st);
+      // Track dates
+      if(!hotYmDatesMap[c.hist_ym]) hotYmDatesMap[c.hist_ym]={curDates:new Set(),histDks:new Set()};
+      c.chain.forEach(function(link){
+        hotYmDatesMap[c.hist_ym].curDates.add(link.cur_dk);
+        hotYmDatesMap[c.hist_ym].histDks.add(link.hist_dk);
+      });
     });
     stateTopYm[st]=Object.entries(ymCnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
   });
@@ -6307,6 +6314,20 @@ function _buildConsecStreakWidget(inline){
       html+=`<div style="background:${bg};border:1.5px solid ${border};border-radius:7px;padding:4px 10px;display:flex;flex-direction:column;align-items:center;min-width:70px;">`;
       html+=`<span style="font-size:.62rem;font-weight:800;color:#065f46;">#${rank+1} ${ymLabel}</span>`;
       html+=`<span style="font-size:.58rem;color:#16a34a;font-weight:600;">${cnt} green chain${cnt>1?'s':''}</span>`;
+      // Show exact historic dates and current dates
+      const _dates=hotYmDatesMap[ym];
+      if(_dates){
+        const _mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const _fmtDk=function(dk){const p=dk.split('-');return _mn[+p[1]]+' '+parseInt(p[2]);};
+        // Historic dates
+        const _histDksSorted=[..._dates.histDks].sort();
+        const _histStr=_histDksSorted.map(_fmtDk).join(', ');
+        // Current dates
+        const _curDksSorted=[..._dates.curDates].sort();
+        const _curStr=_curDksSorted.map(_fmtDk).join(', ');
+        html+=`<span style="font-size:.5rem;color:#047857;font-weight:600;">Hist: ${_histStr}</span>`;
+        html+=`<span style="font-size:.5rem;color:var(--b6);font-weight:600;">Now: ${_curStr}</span>`;
+      }
       html+=`<span style="font-size:.55rem;color:var(--g5);">${states}</span>`;
       html+=`</div>`;
     });
