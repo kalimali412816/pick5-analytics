@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=529"></script>
+<script src="lottolens-data.js?v=530"></script>
 <script>
 
 // ================================================================
@@ -6316,7 +6316,7 @@ function _buildConsecStreakWidget(inline){
       html+=`<span style="font-size:.62rem;font-weight:800;color:#065f46;">#${rank+1} ${ymLabel}</span>`;
       html+=`<span style="font-size:.58rem;color:#16a34a;font-weight:600;">${cnt} green chain${cnt>1?'s':''}</span>`;
       html+=`<span style="font-size:.55rem;color:var(--g5);">${states}</span>`;
-      html+=`<span style="font-size:.52rem;color:#047857;cursor:pointer;text-decoration:underline;" onclick="window._showHotYmDetail(this.dataset.ym)" data-ym="${ym}">📅 See dates</span>`;
+      html+=`<span style="font-size:.52rem;color:#047857;cursor:pointer;text-decoration:underline;" onclick="_showHotYmDetail('${ym}')">📅 See dates</span>`;
       html+=`</div>`;
       }catch(e){html+=`<div style="color:red;font-size:.5rem;">${e.message}</div>`;}
     });
@@ -25320,23 +25320,23 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 });
 
-function _showHotYmDetail(elOrYm){const ym=typeof elOrYm==='string'?elOrYm:elOrYm.dataset.ym;
+function _showHotYmDetail(ym){
   const data=window._hotYmDatesMap&&window._hotYmDatesMap[ym];
   if(!data||!data.length){alert('No detail available for '+ym);return;}
   const mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const fmtDk=function(dk){const p=dk.split('-');return mn[+p[1]]+' '+parseInt(p[2])+', '+p[0];};
   const [y,mo]=ym.split('-');
   let h='<div style="font-weight:700;font-size:.9rem;color:var(--g9);margin-bottom:10px;">'+mn[+mo]+' '+y+' — Streak Detail</div>';
-  data.forEach(function(item,i){
+  data.forEach(function(item){
     h+='<div style="margin-bottom:10px;padding:8px;background:var(--g1);border-radius:6px;">';
     h+='<div style="font-weight:700;font-size:.75rem;color:var(--g9);">'+item.st+'</div>';
     h+='<div style="font-size:.7rem;color:#047857;margin-top:3px;"><b>Hist:</b> '+item.histDks.map(fmtDk).join(', ')+'</div>';
     h+='<div style="font-size:.7rem;color:var(--b6);margin-top:2px;"><b>Now:</b> '+(item.curDks.length?item.curDks.map(fmtDk).join(', '):'—')+'</div>';
     h+='</div>';
   });
-  cmod();
-  document.getElementById('modal-body').innerHTML=h;
-  document.getElementById('modal').style.display='flex';
+  document.getElementById('MT').textContent=mn[+mo]+' '+y+' Streak';
+  document.getElementById('MB').innerHTML=h;
+  document.getElementById('MO').classList.add('open');
 }
 </script>
 </body>
