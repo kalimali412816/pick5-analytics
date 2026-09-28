@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=542"></script>
+<script src="lottolens-data.js?v=543"></script>
 <script>
 
 // ================================================================
@@ -6293,7 +6293,7 @@ function _buildConsecStreakWidget(inline){
     });
     stateTopYm[st]=Object.entries(ymCnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
   });
-  const hotYmSorted=Object.entries(hotYmCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const hotYmSorted=Object.entries(hotYmCount).sort((a,b)=>b[1]-a[1]);
   window._hotYmDatesMap=hotYmDatesMap;
 
   let html=inline?'':'<div style="background:#fff;border-radius:12px;border:1.5px solid var(--g3);padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);">';
