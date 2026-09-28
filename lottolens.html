@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=515"></script>
+<script src="lottolens-data.js?v=516"></script>
 <script>
 
 // ================================================================
@@ -6283,11 +6283,11 @@ function _buildConsecStreakWidget(inline){
       hotYmCount[c.hist_ym]=(hotYmCount[c.hist_ym]||0)+1;
       if(!hotYmStateMap[c.hist_ym]) hotYmStateMap[c.hist_ym]=new Set();
       hotYmStateMap[c.hist_ym].add(st);
-      // Track dates
-      if(!hotYmDatesMap[c.hist_ym]) hotYmDatesMap[c.hist_ym]={curDates:new Set(),histDks:new Set()};
+      // Track dates — link has cur_dk and hist_day (number)
+      if(!hotYmDatesMap[c.hist_ym]) hotYmDatesMap[c.hist_ym]={curDates:new Set(),histDays:new Set()};
       c.chain.forEach(function(link){
         hotYmDatesMap[c.hist_ym].curDates.add(link.cur_dk);
-        hotYmDatesMap[c.hist_ym].histDks.add(link.hist_dk);
+        hotYmDatesMap[c.hist_ym].histDays.add(c.hist_ym+'-'+String(link.hist_day).padStart(2,'0'));
       });
     });
     stateTopYm[st]=Object.entries(ymCnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
@@ -6320,7 +6320,7 @@ function _buildConsecStreakWidget(inline){
         const _mn=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const _fmtDk=function(dk){const p=dk.split('-');return _mn[+p[1]]+' '+parseInt(p[2]);};
         // Historic dates
-        const _histDksSorted=[..._dates.histDks].sort();
+        const _histDksSorted=[..._dates.histDays].sort();
         const _histStr=_histDksSorted.map(_fmtDk).join(', ');
         // Current dates
         const _curDksSorted=[..._dates.curDates].sort();
