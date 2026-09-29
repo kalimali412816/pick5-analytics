@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=556"></script>
+<script src="lottolens-data.js?v=557"></script>
 <script>
 
 // ================================================================
@@ -6227,20 +6227,10 @@ function _buildConsecStreakWidget(inline){
         latestCurDk:ulinksB[ulinksB.length-1].cur_dk,dir:'bwd'});
     });
 
-    // Merge forward and backward chains
-    // If a backward chain covers the same current dates as a forward chain,
-    // keep the backward (it has the correct hist dates) and drop the forward duplicate
-    const bwdCurDkSets=new Set(bwdChains.map(function(c){
-      return c.chain.map(function(l){return l.cur_dk;}).join(',');
-    }));
-    const filteredFwd=chains.filter(function(c){
-      const key=c.chain.map(function(l){return l.cur_dk;}).join(',');
-      return !bwdCurDkSets.has(key);
-    });
-    const allChains=[...filteredFwd,...bwdChains];
+    // Deduplicate forward chains only
     const seenChains=new Set();
-    const uniqueChains=allChains.filter(c=>{
-      const k=c.hist_ym+'_'+c.chain.map(function(l){return l.cur_dk;}).join(',');
+    const uniqueChains=chains.filter(c=>{
+      const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day;
       if(seenChains.has(k))return false; seenChains.add(k); return true;
     });
 
@@ -6359,11 +6349,9 @@ function _buildConsecStreakWidget(inline){
 
     let activeChains;
     if(_isUnfiltered){
-      // Only show chains that haven't been broken — latestCurDk must equal latestDk
-      activeChains=uniqueChains.filter(c=>c.latestCurDk===latestDk);
+      activeChains=chains.filter(c=>c.latestCurDk===latestDk);
     } else {
-      // Show all chains ending in the filtered date scope
-      activeChains=uniqueChains.filter(c=>_filtDks.has(c.latestCurDk));
+      activeChains=chains.filter(c=>_filtDks.has(c.latestCurDk));
     }
     // If no active chains, fall back to most recent (only in filtered view)
     const displayChains=activeChains.length?activeChains:(_isUnfiltered?[]:(lastChain?[lastChain]:[]));
