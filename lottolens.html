@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=550"></script>
+<script src="lottolens-data.js?v=551"></script>
 <script>
 
 // ================================================================
@@ -6383,9 +6383,10 @@ function _buildConsecStreakWidget(inline){
       // Build hist date range label using actual dates (avoids day 32 etc.)
       const histFirstDate=new Date(chain.hist_ym+'-'+String(firstHd).padStart(2,'0'));
       const histLastDate=new Date(chain.hist_ym+'-'+String(lastHd).padStart(2,'0'));
+      const _minHd=Math.min(firstHd,lastHd), _maxHd=Math.max(firstHd,lastHd);
       const histRangeLabel=histFirstDate.getMonth()===histLastDate.getMonth()
-        ?`${mn[histFirstDate.getMonth()]} ${firstHd}–${lastHd} ${hym[0]}`
-        :`${mn[histFirstDate.getMonth()]} ${firstHd}–${mn[histLastDate.getMonth()]} ${lastHd} ${hym[0]}`;
+        ?`${mn[histFirstDate.getMonth()]} ${_minHd}–${_maxHd} ${hym[0]}`
+        :`${mn[histFirstDate.getMonth()]} ${_minHd}–${mn[histLastDate.getMonth()]} ${_maxHd} ${hym[0]}`;
 
       row+=`<span style="font-size:.72rem;font-weight:600;color:var(--g7);">${rangeLabel}</span>`;
       row+=`<span style="font-size:.68rem;background:var(--b0);border:1px solid var(--b3);border-radius:4px;padding:1px 6px;color:var(--b7);font-weight:700;">${chain.len}d</span>`;
