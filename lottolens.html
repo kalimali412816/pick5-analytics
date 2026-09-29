@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=555"></script>
+<script src="lottolens-data.js?v=556"></script>
 <script>
 
 // ================================================================
@@ -6360,10 +6360,10 @@ function _buildConsecStreakWidget(inline){
     let activeChains;
     if(_isUnfiltered){
       // Only show chains that haven't been broken — latestCurDk must equal latestDk
-      activeChains=chains.filter(c=>c.latestCurDk===latestDk);
+      activeChains=uniqueChains.filter(c=>c.latestCurDk===latestDk);
     } else {
       // Show all chains ending in the filtered date scope
-      activeChains=chains.filter(c=>_filtDks.has(c.latestCurDk));
+      activeChains=uniqueChains.filter(c=>_filtDks.has(c.latestCurDk));
     }
     // If no active chains, fall back to most recent (only in filtered view)
     const displayChains=activeChains.length?activeChains:(_isUnfiltered?[]:(lastChain?[lastChain]:[]));
