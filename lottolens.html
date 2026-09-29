@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=553"></script>
+<script src="lottolens-data.js?v=555"></script>
 <script>
 
 // ================================================================
@@ -6092,7 +6092,7 @@ function _buildConsecStreakWidget(inline){
     const byYm=new Map();
     const add=(p)=>{
       if(p._key===r._key||p.dk>=r.dk) return;
-      if(p._mmdd2===r._mmdd2||p._dd2===r._dd2){
+      {
         const ym2=p.dk.slice(0,7);
         if(!byYm.has(ym2)) byYm.set(ym2,new Set());
         byYm.get(ym2).add(+p.dk.slice(8,10));
@@ -6109,7 +6109,7 @@ function _buildConsecStreakWidget(inline){
     const check=(p)=>{
       if(p._key===r._key||p.dk>=r.dk) return;
       if(p.dk.slice(0,7)===hist_ym&&+p.dk.slice(8,10)===hist_day){
-        if(p._mmdd2===r._mmdd2||p._dd2===r._dd2) sources.push(p);
+        sources.push(p);
       }
     };
     (_allByNumber.get(r.number)||[]).forEach(check);
