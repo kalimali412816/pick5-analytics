@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=549"></script>
+<script src="lottolens-data.js?v=550"></script>
 <script>
 
 // ================================================================
@@ -6227,10 +6227,11 @@ function _buildConsecStreakWidget(inline){
         latestCurDk:ulinksB[ulinksB.length-1].cur_dk,dir:'bwd'});
     });
 
-    // Deduplicate chains
+    // Merge forward and backward chains, deduplicate
+    const allChains=[...chains,...bwdChains];
     const seenChains=new Set();
-    const uniqueChains=chains.filter(c=>{
-      const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day;
+    const uniqueChains=allChains.filter(c=>{
+      const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day+'_'+c.dir;
       if(seenChains.has(k))return false; seenChains.add(k); return true;
     });
 
