@@ -3619,7 +3619,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=557"></script>
+<script src="lottolens-data.js?v=561"></script>
 <script>
 
 // ================================================================
@@ -6175,8 +6175,8 @@ function _buildConsecStreakWidget(inline){
     }
 
     // Separate fwd and bwd edges
-    const fwdEdges=edges.filter(e=>e.dir!=='bwd');
-    const bwdEdges=edges.filter(e=>e.dir==='bwd');
+    const fwdEdges=edges; // include both fwd and bwd edges
+    const bwdEdges=[];    // no longer needed separately
 
     // Merge edges into chains (forward)
     const usedEdges=new Set();
@@ -6227,12 +6227,7 @@ function _buildConsecStreakWidget(inline){
         latestCurDk:ulinksB[ulinksB.length-1].cur_dk,dir:'bwd'});
     });
 
-    // Deduplicate forward chains only
-    const seenChains=new Set();
-    const uniqueChains=chains.filter(c=>{
-      const k=c.hist_ym+'_'+c.chain[0].cur_dk+'_'+c.chain[0].hist_day;
-      if(seenChains.has(k))return false; seenChains.add(k); return true;
-    });
+    const uniqueChains=chains;
 
     uniqueChains.sort((a,b)=>b.latestCurDk.localeCompare(a.latestCurDk));
     const lastChain=uniqueChains[0]||null;
