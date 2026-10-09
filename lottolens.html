@@ -919,6 +919,7 @@ tr:hover td{background:var(--b0);}
           <select id="freqMinSel" onchange="_setFreqMin(+this.value)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.75rem;">
             <option value="2">2+</option>
           </select>
+          <label title="Show only numbers drawn exactly this many times (e.g. 3x only), instead of 3 or more" style="display:inline-flex;align-items:center;gap:3px;font-size:.68rem;color:rgba(255,255,255,.85);font-weight:600;cursor:pointer;margin-left:2px;"><input type="checkbox" id="freqExactChk" onchange="_setFreqExact(this.checked)" style="cursor:pointer;margin:0;"> Exact only</label>
         </div>
         <div style="position:relative;display:inline-block;">
           <span id="freqInfoBtn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;user-select:none;" onclick="document.getElementById('freqInfoTip').style.display=document.getElementById('freqInfoTip').style.display==='block'?'none':'block'">i</span>
@@ -8281,8 +8282,13 @@ function populateSumDropdown(){
 }
 
 let _freqMinCount=2;
+let _freqExact=false;
 function _setFreqMin(n){
   _freqMinCount=n;
+  renderFrequency();
+}
+function _setFreqExact(on){
+  _freqExact=!!on;
   renderFrequency();
 }
 
@@ -8318,12 +8324,12 @@ function renderFrequency(){
   if(sel){
     const cur=_freqMinCount;
     sel.innerHTML='';
-    for(let n=2;n<=maxCnt;n++){const o=document.createElement('option');o.value=n;o.textContent=n+'+';if(n===cur)o.selected=true;sel.appendChild(o);}
+    for(let n=2;n<=maxCnt;n++){const o=document.createElement('option');o.value=n;o.textContent=_freqExact?(n+'x'):(n+'+');if(n===cur)o.selected=true;sel.appendChild(o);}
     // Clamp _freqMinCount to valid range
     if(_freqMinCount>maxCnt)_freqMinCount=2;
     sel.value=_freqMinCount;
   }
-  const sorted=Object.entries(freq).filter(([,cnt])=>cnt>=_freqMinCount).sort((a,b)=>{
+  const sorted=Object.entries(freq).filter(([,cnt])=>_freqExact?cnt===_freqMinCount:cnt>=_freqMinCount).sort((a,b)=>{
     if(b[1]!==a[1])return b[1]-a[1];
     // Same count: exact repeats first
     const aHasExact=[...exactRepeatNums].some(n=>srt(n)===a[0]);
@@ -8355,7 +8361,7 @@ function renderFrequency(){
     </div>`;
   });
   window._freqNums=sorted.map(([sp])=>sp);
-  const freqCopyBtn=sorted.length?`<div style="margin-bottom:10px"><button class="btn" style="background:var(--g2);color:var(--g7);border:1.5px solid var(--g3);font-size:.78rem;padding:5px 12px" onclick="_copyToClipboard(window._freqNums.join(' '),this)">📋 Copy (${window._freqNums.length})</button></div>`:'';
+  const freqCopyBtn=sorted.length?`<div style="margin-bottom:10px"><button class="btn" style="background:var(--g2);color:var(--g7);border:1.5px solid var(--g3);font-size:.78rem;padding:5px 12px" onclick="_copyToClipboard(window._freqNums.join(' '),this)">📋 Copy${_freqExact?' '+_freqMinCount+'x only':''} (${window._freqNums.length})</button></div>`:'';
   document.getElementById('freqContent').innerHTML=(freqCopyBtn+h)||'<div class="es">No data.</div>';
 
   // ---- STATS BAR: Top Sums + Top Digits ----
