@@ -3625,7 +3625,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=582"></script>
+<script src="lottolens-data.js?v=583"></script>
 <script>
 
 // ================================================================
@@ -6198,7 +6198,7 @@ function _buildConsecStreakWidget(inline){
       for(let j=idx+1;j<fwdEdges.length;j++){
         if(usedEdges.has(j)) continue;
         const ne=fwdEdges[j];
-        if(ne.hist_ym===lastEdge.hist_ym&&ne.dk1===lastEdge.dk2&&ne.hd1===lastEdge.hd2){
+        if(ne.hist_ym===lastEdge.hist_ym&&ne.dir===lastEdge.dir&&ne.dk1===lastEdge.dk2&&ne.hd1===lastEdge.hd2){
           links.push({cur_dk:ne.dk2,hist_day:ne.hd2,rec:ne.rec2,srcs:ne.srcs2});
           usedEdges.add(j); lastEdge=ne;
         }
@@ -6206,7 +6206,7 @@ function _buildConsecStreakWidget(inline){
       // Deduplicate links by cur_dk
       const seen=new Set(); const ulinks=links.filter(l=>{if(seen.has(l.cur_dk))return false;seen.add(l.cur_dk);return true;});
       chains.push({hist_ym:e.hist_ym,chain:ulinks,len:ulinks.length,
-        latestCurDk:ulinks[ulinks.length-1].cur_dk,dir:'fwd'});
+        latestCurDk:ulinks[ulinks.length-1].cur_dk,dir:e.dir});
     });
 
     // Backward chains
@@ -6393,13 +6393,18 @@ function _buildConsecStreakWidget(inline){
       if(!active) row+=`<span style="font-size:.7rem;font-weight:${overdue?700:400};color:${overdue?'#dc2626':'var(--g5)'};">${daysSince}d ago${overdue?' ⚠️':''}</span>`;
 
       // Next day button (historical) — only when active AND that date exists in DB
+      // Direction-aware: a forward chain (hist days going up, e.g. 21→22) continues to lastHd+1,
+      // a backward chain (hist days going down, e.g. 22→21) continues to lastHd-1.
       if(active){
-        const histNextDk=`${chain.hist_ym}-${String(lastHd+1).padStart(2,'0')}`;
+        const _bwd=chain.chain.length>1&&lastHd<firstHd;
+        const _step=_bwd?-1:1;
+        const _hp=chain.hist_ym.split('-');
+        const _nd=new Date(Date.UTC(+_hp[0],+_hp[1]-1,lastHd+_step));
+        const histNextDk=_nd.getUTCFullYear()+'-'+String(_nd.getUTCMonth()+1).padStart(2,'0')+'-'+String(_nd.getUTCDate()).padStart(2,'0');
         const histNextExists=ALL.some(r=>r.dk===histNextDk);
         if(histNextExists){
-          const histNextDate=new Date(histNextDk);
-          const histNextLabel=mn[histNextDate.getMonth()]+' '+histNextDate.getDate()+' '+hym[0];
-          row+=`<span style="cursor:pointer;color:var(--b5);font-size:.7rem;text-decoration:underline;margin-left:4px;" onclick="cmod();_consecNextDay('${histNextDk}','${st}')">📅 ${histNextLabel} →</span>`;
+          const histNextLabel=mn[_nd.getUTCMonth()]+' '+_nd.getUTCDate()+' '+_nd.getUTCFullYear();
+          row+=`<span style="cursor:pointer;color:var(--b5);font-size:.7rem;text-decoration:underline;margin-left:4px;" onclick="cmod();_consecNextDay('${histNextDk}','${st}')">${_bwd?'📅 ← '+histNextLabel:'📅 '+histNextLabel+' →'}</span>`;
         }
       }
 
