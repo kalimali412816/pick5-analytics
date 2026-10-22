@@ -110,6 +110,8 @@ tr:hover td{background:var(--b0);}
 .mb{padding:16px;overflow-y:auto;}
 .mr{display:flex;gap:7px;padding:6px 0;border-bottom:1px solid var(--g1);align-items:center;flex-wrap:wrap;font-size:.8rem;}
 /* TRENDS */
+.tb2.dual-btn{background:#fff7ed;border-color:#ea580c;color:#9a3412;}
+.tb2.dual-btn.active{background:var(--b5);border-color:var(--b5);color:#fff;}
 .tcontrols{background:#fff;border-radius:11px;padding:14px;margin-bottom:13px;box-shadow:var(--sh);}
 .tcontrols h4{font-size:.82rem;font-weight:700;color:var(--b8);margin-bottom:10px;}
 .acc{margin-bottom:8px;border:1.5px solid var(--g3);border-radius:8px;overflow:hidden;}
@@ -1487,6 +1489,12 @@ tr:hover td{background:var(--b0);}
             <button class="tb2" style="background:#ecfdf5;border-color:var(--ac2);color:#065f46;" onclick="setTT('top4-combo',this)">Top 4 Digits (Combined)</button>
             <button class="tb2" style="background:#fdf2f8;border-color:#c026d3;color:#86198f;" onclick="setTT('times-state',this)">Times Drawn (State)</button>
             <button class="tb2" style="background:#fdf2f8;border-color:#c026d3;color:#86198f;" onclick="setTT('times-combo',this)">Times Drawn (Combined)</button>
+            <button class="tb2 dual-btn" onclick="setTT('sumtd-state',this)">Sum + Times Drawn (State)</button>
+            <button class="tb2 dual-btn" onclick="setTT('sumtd-combo',this)">Sum + Times Drawn (Combined)</button>
+            <button class="tb2 dual-btn" onclick="setTT('sumdelta-state',this)">Sum + Delta (State)</button>
+            <button class="tb2 dual-btn" onclick="setTT('sumdelta-combo',this)">Sum + Delta (Combined)</button>
+            <button class="tb2 dual-btn" onclick="setTT('tddelta-state',this)">Times Drawn + Delta (State)</button>
+            <button class="tb2 dual-btn" onclick="setTT('tddelta-combo',this)">Times Drawn + Delta (Combined)</button>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:4px;border-top:1px solid var(--g3);">
             <span style="font-size:.68rem;font-weight:600;color:var(--g5);text-transform:uppercase">Filter by:</span>
@@ -3628,7 +3636,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=601"></script>
+<script src="lottolens-data.js?v=602"></script>
 <script>
 
 // ================================================================
@@ -9655,6 +9663,45 @@ function renderTrends(){
     });
   }
 
+  // ---- DUAL TRENDS: Sum+TD, Sum+Delta, TD+Delta (only when selected; not part of "All Types") ----
+  const _dualSel=['sumtd','sumdelta','tddelta'].find(k=>tType===k+'-state'||tType===k+'-combo');
+  if(_dualSel){
+    const isState=tType.endsWith('-state');
+    const [ka,kb]={sumtd:['sum','td'],sumdelta:['sum','delta'],tddelta:['td','delta']}[_dualSel];
+    const useSt=isState&&stF!=='ALL';
+    let _stCnt=null;
+    if(useSt){_stCnt=new Map();ALL.forEach(x=>{const k=x.state+'|'+x.sorted;_stCnt.set(k,(_stCnt.get(k)||0)+1);});}
+    const val=(r,k)=>{
+      if(k==='sum')return r.sum;
+      const tdAll=(_allBySorted.get(r.sorted)||[]).length;
+      if(k==='td')return tdAll;
+      const c=useSt?(_stCnt.get(r.state+'|'+r.sorted)||0):tdAll;
+      return Math.abs(sd(r.sorted)-c);
+    };
+    const fld={sum:'sum',td:'timesDrawn',delta:'delta'};
+    const mkDual=(sc,pool,isCombo)=>{
+      const days={};
+      pool.forEach(r=>{const key=val(r,ka)+'|'+val(r,kb);(days[key]=days[key]||[]).push(r.dk);});
+      Object.entries(days).forEach(([key,ds])=>{
+        const [va,vb]=key.split('|').map(Number);
+        const match=r=>val(r,ka)===va&&val(r,kb)===vb;
+        const base={type:tType,state:isCombo?'ALL':sc,combined:isCombo,dual:{ka,kb},[fld[ka]]:va,[fld[kb]]:vb};
+        if(!isCombo){
+          findRuns(ds,maxGap).forEach(run=>allTrends.push({...base,run,nd:numsOnDays(run,match,pool),len:run.length}));
+        }else{
+          const u=[...new Set(ds)].sort();
+          for(let i=0;i<u.length;i++){
+            const win=[u[i]];
+            for(let j=i+1;j<u.length;j++){if(daysBetween(u[i],u[j])<=maxGap)win.push(u[j]);else break;}
+            if(win.length>=2){allTrends.push({...base,run:win,nd:numsOnDays(win,match,pool),len:win.length,wk:win.join('|')});break;}
+          }
+        }
+      });
+    };
+    if(isState)statesKeys.forEach(sc=>mkDual(sc,draws.filter(r=>r.state===sc),false));
+    else mkDual('ALL',draws,true);
+  }
+
   // ---- PATTERN TYPE (ABCDE) ----
   if(tType==='all'||tType==='pattern-type'){
     // Build pattern string for a number: map each digit to A/B/C/D/E based on rank of unique digits
@@ -9913,10 +9960,13 @@ function renderTrends(){
     'pattern-type':'Pattern Type (ABCDE)',
     'top3-state':'Top 3 Digits (State)','top3-combo':'Top 3 Digits (Combined)',
     'top4-state':'Top 4 Digits (State)','top4-combo':'Top 4 Digits (Combined)',
-    'times-state':'Times Drawn (State)','times-combo':'Times Drawn (Combined)'
+    'times-state':'Times Drawn (State)','times-combo':'Times Drawn (Combined)',
+    'sumtd-state':'Sum + Times Drawn (State)','sumtd-combo':'Sum + Times Drawn (Combined)',
+    'sumdelta-state':'Sum + Delta (State)','sumdelta-combo':'Sum + Delta (Combined)',
+    'tddelta-state':'Times Drawn + Delta (State)','tddelta-combo':'Times Drawn + Delta (Combined)'
   };
   // Green types (non-All)
-  const greenTypes=new Set(['sp-state','sp-combo','sum-state','sum-combo','delta-state','delta-combo','num-state','num-combo','pattern-type','top3-state','top3-combo','top4-state','top4-combo','times-state','times-combo']);
+  const greenTypes=new Set(['sp-state','sp-combo','sum-state','sum-combo','delta-state','delta-combo','num-state','num-combo','pattern-type','top3-state','top3-combo','top4-state','top4-combo','times-state','times-combo','sumtd-state','sumtd-combo','sumdelta-state','sumdelta-combo','tddelta-state','tddelta-combo']);
 
   let h=`<p style="font-size:.78rem;color:var(--g5);margin-bottom:10px">Found <strong>${allTrends.length}</strong> trend instances. Most recent first.</p>`;
   let uid=0;
@@ -9926,7 +9976,17 @@ function renderTrends(){
     const isGreen=greenTypes.has(t.type)&&t.len>=2;
     const combTag=t.combined?`<span class="sbadge sbadge-pur">COMBINED</span>`:'';
     let valLabel='';
-    if(t.sp)valLabel=`<strong style="font-family:DM Mono,monospace;font-size:.92rem;color:#fff">${t.sp}</strong>`;
+    if(t.dual){
+      const _dl=k=>{
+        if(k==='sum')return `Sum = <span class="sb" onclick="showSumModal(${t.sum})" title="Click to see all combos for sum ${t.sum}" style="cursor:pointer;font-size:.92rem;padding:2px 8px;">${t.sum}</span>`;
+        if(k==='td')return `Times Drawn = <span class="sb" onclick="navigateToTotalDrawnAllTime(${t.timesDrawn})" title="Click to see all combos drawn ${t.timesDrawn} times" style="cursor:pointer;font-size:.92rem;padding:2px 8px;">${t.timesDrawn}</span>`;
+        window._trendDualNums=window._trendDualNums||{};
+        window._trendDualNums[uid]=[...new Set(t.nd.map(x=>srt(x.number)))];
+        return `|Delta| = <span class="sb" onclick="navigateToDeltaValue(${t.delta},window._trendDualNums[${uid}],'${t.run[t.run.length-1].slice(0,7)}')" title="Click to see all combos with delta ${t.delta}" style="cursor:pointer;font-size:.92rem;padding:2px 8px;">${t.delta}</span>`;
+      };
+      valLabel=`${_dl(t.dual.ka)} <span style="opacity:.8;font-weight:700;">+</span> ${_dl(t.dual.kb)}`;
+    }
+    else if(t.sp)valLabel=`<strong style="font-family:DM Mono,monospace;font-size:.92rem;color:#fff">${t.sp}</strong>`;
     else if(t.sum!==undefined)valLabel=`Sum = <span class="sb" onclick="showSumModal(${t.sum})" title="Click to see all combos for sum ${t.sum}" style="cursor:pointer;font-size:.92rem;padding:2px 8px;">${t.sum}</span>`;
     else if(t.delta!==undefined){
       const _trendNums=[...new Set(t.nd.map(x=>srt(x.number)))];
