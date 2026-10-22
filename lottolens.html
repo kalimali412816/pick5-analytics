@@ -3637,7 +3637,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=603"></script>
+<script src="lottolens-data.js?v=604"></script>
 <script>
 
 // ================================================================
@@ -13350,6 +13350,15 @@ function showDayDraws(dk, dateStr){
   document.getElementById('PDMT').textContent='Draws on '+dateDisplay;
 }
 // ================================================================
+// Count-aware digit containment: "555" needs three 5s, "44" needs two 4s (not just one of each digit)
+function _hasDigitsCounted(num,digits){
+  const have={};
+  for(const c of String(num))have[c]=(have[c]||0)+1;
+  const need={};
+  for(const c of String(digits))need[c]=(need[c]||0)+1;
+  return Object.keys(need).every(function(c){return (have[c]||0)>=need[c];});
+}
+
 function _copyToClipboard(text, btn){
   const origText=btn.textContent;
   const origBg=btn.style.background;
@@ -23013,7 +23022,7 @@ function renderPickMerge(){
   const pmDigits=(document.getElementById('pmDigits')?.value||'').replace(/[^0-9]/g,'');
   if(pmDigits.length>0){
     results=results.filter(function(r){
-      return pmDigits.split('').every(function(d){return r.num.includes(d);});
+      return _hasDigitsCounted(r.num,pmDigits);
     });
   }
   // Apply abc pattern filter
@@ -24257,7 +24266,7 @@ function _renderPosSearch(){
           return psSumVals.includes(s);
         });
         if(psDigitsF.length) hc=hc.filter(function(h){
-          return psDigitsF.split('').every(function(d){return h.number.includes(d);});
+          return _hasDigitsCounted(h.number,psDigitsF);
         });
         var _psAbcPat=(document.getElementById('psAbcPat')?.value||'').toLowerCase();
         if(_psAbcPat.length===5) hc=hc.filter(function(h){return getAbcPat(h.number)===_psAbcPat;});
@@ -24485,7 +24494,7 @@ function _renderPosSearch(){
   const _psKeepHC=function(number,type){
     if(_psPatInternal&&!_psPatInternal.includes(type))return false;
     if(psSumVals.length&&!psSumVals.includes(number.split('').reduce(function(a,d){return a+(+d);},0)))return false;
-    if(psDigitsF.length&&!psDigitsF.split('').every(function(d){return number.includes(d);}))return false;
+    if(psDigitsF.length&&!_hasDigitsCounted(number,psDigitsF))return false;
     if(_psAbcPatGlobal.length===5&&getAbcPat(number)!==_psAbcPatGlobal)return false;
     return true;
   };
