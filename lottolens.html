@@ -1346,6 +1346,7 @@ tr:hover td{background:var(--b0);}
           style="width:100px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
         <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearch()"
           style="width:120px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:'DM Sans',sans-serif;" />
+        <button id="psCopyAllHC" onclick="if(window._psHCAll)_copyToClipboard(window._psHCAll,this)" title="Copies every Hasn't Come number currently shown, based on the filters selected" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:#7c3aed;border:1px solid #a78bfa;color:#fff;border-radius:5px;cursor:pointer;white-space:nowrap;">📋 Copy All Hasn't Come</button>
       </div>
     </div>
     <div style="padding:16px;border-bottom:1px solid var(--g2);">
@@ -3636,7 +3637,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=602"></script>
+<script src="lottolens-data.js?v=603"></script>
 <script>
 
 // ================================================================
@@ -24197,6 +24198,7 @@ function _renderPosSearch(){
     return results;
   }
 
+  const _psHCSet=new Set();
   function renderTopSection(label,items,emoji){
     if(!items||!items.length) return '';
     const is4=(label==='4-Digit Positions');
@@ -24261,6 +24263,7 @@ function _renderPosSearch(){
         if(_psAbcPat.length===5) hc=hc.filter(function(h){return getAbcPat(h.number)===_psAbcPat;});
         if((psDigitsF.length||_psAbcPat.length===5)&&!hc.length) return; // skip combo entirely if no pills match digit filter
         if(hc.length){
+          hc.forEach(function(h){_psHCSet.add(h.number);});
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
           s+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
@@ -24478,6 +24481,24 @@ function _renderPosSearch(){
 
   topH+=`</div>`;
 
+  // ===== COPY ALL HASN'T COME — every hasn't-come number shown, respecting the active filters =====
+  const _psKeepHC=function(number,type){
+    if(_psPatInternal&&!_psPatInternal.includes(type))return false;
+    if(psSumVals.length&&!psSumVals.includes(number.split('').reduce(function(a,d){return a+(+d);},0)))return false;
+    if(psDigitsF.length&&!psDigitsF.split('').every(function(d){return number.includes(d);}))return false;
+    if(_psAbcPatGlobal.length===5&&getAbcPat(number)!==_psAbcPatGlobal)return false;
+    return true;
+  };
+  const _psUpdateHCBtn=function(){
+    const arr=[..._psHCSet].sort();
+    window._psHCAll=arr.join(' ');
+    const b=document.getElementById('psCopyAllHC');
+    if(b)b.textContent="📋 Copy All Hasn't Come ("+arr.length+")";
+  };
+  rareList.forEach(function(e){if(_psKeepHC(e[1].number,e[1].type))_psHCSet.add(e[1].number);});
+  commonList.forEach(function(e){if(_psKeepHC(e[1].number,e[1].type))_psHCSet.add(e[1].number);});
+  _psUpdateHCBtn();
+
   if(filledCount===0){
     container.innerHTML=topH+'<div class="es" style="text-align:center;padding:30px 12px;font-size:.85rem;color:var(--g5);">Enter at least one digit above to search — or click a top combo to load it.</div>';
     return;
@@ -24651,6 +24672,8 @@ function _renderPosSearch(){
     if(hcItems.length){
       const hcNums=hcItems.map(x=>x.number).join(' ');
       window._psHCNums=hcNums;
+      hcItems.forEach(function(x){if(_psKeepHC(x.number,x.type))_psHCSet.add(x.number);});
+      _psUpdateHCBtn();
       const typeColor={Qu:'#0f2044',Quads:'#991b1b',TD:'#5b21b6',Triples:'#9d174d',DD:'#854d0e',Doubles:'#166534',Singles:'#1e40af'};
       const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
       const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
