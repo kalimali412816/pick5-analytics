@@ -1339,12 +1339,12 @@ tr:hover td{background:var(--b0);}
           <option value="3">+/- 3</option>
         </select>
         <input id="psDigits" type="text" maxlength="5" placeholder="Digits e.g. 44"
-          oninput="this.value=this.value.replace(/[^0-9]/g,'');_renderPosSearch();"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'');_renderPosSearchDeb();"
           style="width:90px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
         <input id="psAbcPat" type="text" maxlength="5" placeholder="Pat e.g. abcde"
-          oninput="this.value=this.value.replace(/[^a-e]/g,'').toLowerCase();_renderPosSearch();"
+          oninput="this.value=this.value.replace(/[^a-e]/g,'').toLowerCase();_renderPosSearchDeb();"
           style="width:100px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
-        <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearch()"
+        <input id="psSumF" type="text" placeholder="Sum e.g. 17,21" oninput="_renderPosSearchDeb()"
           style="width:120px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:'DM Sans',sans-serif;" />
         <button id="psCopyAllHC" onclick="if(window._psHCAll)_copyToClipboard(window._psHCAll,this)" title="Copies every Hasn't Come number currently shown, based on the filters selected" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:#7c3aed;border:1px solid #a78bfa;color:#fff;border-radius:5px;cursor:pointer;white-space:nowrap;">📋 Copy All Hasn't Come</button>
       </div>
@@ -3637,7 +3637,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=604"></script>
+<script src="lottolens-data.js?v=605"></script>
 <script>
 
 // ================================================================
@@ -24238,16 +24238,38 @@ function _renderPosSearch(){
     const typeBg={Qu:'#dbeafe',Quads:'#fee2e2',TD:'#ede9fe',Triples:'#fce7f3',DD:'#fef9c3',Doubles:'#dcfce7',Singles:'#dbeafe'};
     const typeLabel={Qu:'Qu',Quads:'Q',TD:'TD',Triples:'T',DD:'DD',Doubles:'D',Singles:'S'};
     let s=`<div style="margin-bottom:10px;">`;
-    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">${emoji} Top ${label}: <span style="color:var(--ac1);font-weight:800;">${items.length} combo${items.length!==1?'s':''}</span></div>`;
+    s+=`<div style="font-size:.66rem;font-weight:700;color:var(--g6);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">${emoji} Top ${label}: <span style="color:var(--ac1);font-weight:800;">%%CNT%%</span></div>`;
     s+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
     const ranks=[];
     for(let i=0;i<items.length;i++){
       if(i===0||items[i][1]!==items[i-1][1]) ranks.push(i+1);
       else ranks.push(ranks[i-1]);
     }
+    // Rendering every combo (e.g. 1-Hit Only can be tens of thousands) freezes the browser, so only the
+    // first PS_MAX_ROWS rows are drawn. ALL combos are still evaluated so Copy All Hasn't Come stays complete.
+    const PS_MAX_ROWS=150;let shown=0,hidden=0,matched=0;
     items.forEach(([key,cnt],i)=>{
       const rk=ranks[i];
       const rkColors=['#fbbf24','#cbd5e1','#d97706'];
+      let hc=[];
+      if(is4){
+        const hcRaw=haventComeFor4(key);
+        hc=_psPatInternal?hcRaw.filter(function(h){return _psPatInternal.includes(h.type);}):hcRaw;
+        if(psSumVals.length) hc=hc.filter(function(h){
+          const s=h.number.split('').reduce(function(a,d){return a+(+d);},0);
+          return psSumVals.includes(s);
+        });
+        if(psDigitsF.length) hc=hc.filter(function(h){
+          return _hasDigitsCounted(h.number,psDigitsF);
+        });
+        var _psAbcPat=(document.getElementById('psAbcPat')?.value||'').toLowerCase();
+        if(_psAbcPat.length===5) hc=hc.filter(function(h){return getAbcPat(h.number)===_psAbcPat;});
+        if((psDigitsF.length||_psAbcPat.length===5)&&!hc.length) return; // skip combo entirely if no pills match digit filter
+        hc.forEach(function(h){_psHCSet.add(h.number);});
+      }
+      matched++;
+      if(shown>=PS_MAX_ROWS){hidden++;return;}
+      shown++;
       s+=`<div style="border-radius:7px;border:1px solid var(--g2);overflow:hidden;background:#fff;">`;
       const isNew=_isNewCombo(key);
       s+=`<div onclick="_psApplyPattern('${key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;">`;
@@ -24259,20 +24281,7 @@ function _renderPosSearch(){
       s+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
       s+=`</div>`;
       if(is4){
-        const hcRaw=haventComeFor4(key);
-        let hc=_psPatInternal?hcRaw.filter(function(h){return _psPatInternal.includes(h.type);}):hcRaw;
-        if(psSumVals.length) hc=hc.filter(function(h){
-          const s=h.number.split('').reduce(function(a,d){return a+(+d);},0);
-          return psSumVals.includes(s);
-        });
-        if(psDigitsF.length) hc=hc.filter(function(h){
-          return _hasDigitsCounted(h.number,psDigitsF);
-        });
-        var _psAbcPat=(document.getElementById('psAbcPat')?.value||'').toLowerCase();
-        if(_psAbcPat.length===5) hc=hc.filter(function(h){return getAbcPat(h.number)===_psAbcPat;});
-        if((psDigitsF.length||_psAbcPat.length===5)&&!hc.length) return; // skip combo entirely if no pills match digit filter
         if(hc.length){
-          hc.forEach(function(h){_psHCSet.add(h.number);});
           s+=`<div style="padding:4px 8px 6px 8px;background:#fafafa;border-top:1px dashed var(--g2);">`;
           s+=`<div style="font-size:.58rem;font-weight:700;color:var(--g5);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;">🚫 Hasn't Come</div>`;
           s+=`<div style="display:flex;flex-wrap:wrap;gap:3px;">`;
@@ -24287,8 +24296,10 @@ function _renderPosSearch(){
       }
       s+=`</div>`;
     });
-    s+=`</div></div>`;
-    return s;
+    s+=`</div>`;
+    if(hidden>0) s+=`<div style="font-size:.66rem;color:var(--g5);padding:6px 4px;">+${hidden.toLocaleString()} more combos not drawn (showing first ${shown}) — Copy All Hasn't Come still includes every one</div>`;
+    s+=`</div>`;
+    return s.replace('%%CNT%%',matched.toLocaleString()+' combo'+(matched!==1?'s':''));
   }
 
   let topH='';
@@ -24708,6 +24719,8 @@ function _renderPosSearch(){
     container.innerHTML='<div style="padding:20px;color:red;background:#fee2e2;border-radius:8px;"><b>Position tab error:</b> '+e.message+'<br><small>'+e.stack.slice(0,200)+'</small></div>';
   }
 }
+
+const _renderPosSearchDeb=debounce(_renderPosSearch,300);
 
 // ========== SAME-DAY CROSS-MONTH REPEATS ==========
 function _sdcrSetScope(scope){
