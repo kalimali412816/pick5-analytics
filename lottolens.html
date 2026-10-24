@@ -1585,6 +1585,7 @@ tr:hover td{background:var(--b0);}
         </div>
         <div id="paChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         <div style="margin-top:12px;">
+          <div style="font-size:.7rem;color:var(--g6);margin-bottom:8px;"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #eab308;border-radius:3px;vertical-align:-2px;"></span> yellow border = also came the day before &nbsp;·&nbsp; <span style="display:inline-block;width:12px;height:12px;border:2.5px solid #dc2626;border-radius:3px;vertical-align:-2px;"></span> red border = also came both of the 2 days before (3 days in a row). Applies to the Sums, Times Drawn and Delta tiles.</div>
           <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Sums in the source draws <span style="font-weight:400;color:var(--g5);">· click to add/remove from Sums</span></div>
           <div id="paSumChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         </div>
@@ -3709,7 +3710,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=612"></script>
+<script src="lottolens-data.js?v=613"></script>
 <script>
 
 // ================================================================
@@ -24862,9 +24863,23 @@ function _paToggleNum(id,v){
   if(s.has(v))s.delete(v);else s.add(v);
   el.value=_paCompress(s);_renderPairsAlgo();
 }
-function _paTileHtml(label,count,on,onclick,sub){
-  return '<span onclick="'+onclick+'" style="cursor:pointer;font-family:DM Mono,monospace;font-size:.78rem;font-weight:700;padding:3px 8px;border-radius:6px;border:1.5px solid '+(on?'var(--b5)':'var(--g3)')+';background:'+(on?'var(--b5)':'#fff')+';color:'+(on?'#fff':'var(--g7)')+';">'+label+' <span style="font-size:.62rem;opacity:.75;">×'+count+(sub?' · '+sub:'')+'</span></span>';
+const _paDayCache=new Map();
+function _paDaySets(dkDay){ // values that came on that day (all draws); times drawn counted as of that day
+  const ck=dkDay+'|'+ALL.length;
+  if(_paDayCache.has(ck))return _paDayCache.get(ck);
+  const t=new Map();
+  ALL.forEach(function(r){if(r.dk<=dkDay)t.set(r.sorted,(t.get(r.sorted)||0)+1);});
+  const S=new Set(),T=new Set(),E=new Set();
+  ALL.forEach(function(r){if(r.dk===dkDay){const c=t.get(r.sorted)||0;S.add(r.sum);T.add(c);E.add(Math.abs(r.sum-c));}});
+  const o={S:S,T:T,E:E};_paDayCache.set(ck,o);return o;
 }
+function _paTileHtml(label,count,on,onclick,sub,flag){
+  const bc=flag===2?'#dc2626':flag===1?'#eab308':(on?'var(--b5)':'var(--g3)');
+  const bw=flag?'2.5px':'1.5px';
+  const tip=flag===2?'Also came the day before AND the day before that':flag===1?'Also came the day before':'';
+  return '<span title="'+tip+'" onclick="'+onclick+'" style="cursor:pointer;font-family:DM Mono,monospace;font-size:.78rem;font-weight:700;padding:3px 8px;border-radius:6px;border:'+bw+' solid '+bc+';background:'+(on?'var(--b5)':'#fff')+';color:'+(on?'#fff':'var(--g7)')+';">'+label+' <span style="font-size:.62rem;opacity:.75;">×'+count+(sub?' · '+sub:'')+'</span></span>';
+}
+function _paFlag(set1,set2,v){return (set1.has(v)&&set2.has(v))?2:(set1.has(v)?1:0);}
 function _paAddShown(){
   const cur=_paParseGroups(document.getElementById('paGroups').value);
   (window._paShownChips||[]).forEach(function(g){cur.push(g);});
@@ -24911,9 +24926,10 @@ function _renderPairsAlgo(){
   });
   const sumSel=_paExpand(document.getElementById('paSums').value),tdSel=_paExpand(document.getElementById('paTD').value),edSel=_paExpand(document.getElementById('paED').value);
   const asc=function(o){return Object.keys(o).map(Number).sort(function(a,b){return a-b;});};
-  document.getElementById('paSumChips').innerHTML=src.length?asc(sumC).map(function(v){return _paTileHtml(v,sumC[v],sumSel.has(v),"_paToggleNum('paSums',"+v+")");}).join(''):'';
-  document.getElementById('paTDChips').innerHTML=src.length?asc(tdC).map(function(v){return _paTileHtml(v,tdC[v],tdSel.has(v-1),"_paToggleNum('paTD',"+(v-1)+")",'picks '+(v-1));}).join(''):'';
-  document.getElementById('paEDChips').innerHTML=src.length?asc(edC).map(function(v){return _paTileHtml('Δ'+v,edC[v],edSel.has(v),"_paToggleNum('paED',"+v+")",'E'+v);}).join(''):'';
+  const p1=_paDaySets(_paAddDays(D,-1)),p2=_paDaySets(_paAddDays(D,-2));
+  document.getElementById('paSumChips').innerHTML=src.length?asc(sumC).map(function(v){return _paTileHtml(v,sumC[v],sumSel.has(v),"_paToggleNum('paSums',"+v+")",'',_paFlag(p1.S,p2.S,v));}).join(''):'';
+  document.getElementById('paTDChips').innerHTML=src.length?asc(tdC).map(function(v){return _paTileHtml(v,tdC[v],tdSel.has(v-1),"_paToggleNum('paTD',"+(v-1)+")",'picks '+(v-1),_paFlag(p1.T,p2.T,v));}).join(''):'';
+  document.getElementById('paEDChips').innerHTML=src.length?asc(edC).map(function(v){return _paTileHtml('Δ'+v,edC[v],edSel.has(v),"_paToggleNum('paED',"+v+")",'E'+v,_paFlag(p1.E,p2.E,v));}).join(''):'';
   if(!src.length){out.innerHTML='<div class="es">No draws found for '+D+' ('+modeLbl+').</div>';return;}
   // ---- filters ----
   const groups=[...selected];
