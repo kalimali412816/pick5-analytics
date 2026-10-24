@@ -1585,7 +1585,7 @@ tr:hover td{background:var(--b0);}
         </div>
         <div id="paChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         <div style="margin-top:12px;">
-          <div style="font-size:.7rem;color:var(--g6);margin-bottom:8px;"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #eab308;border-radius:3px;vertical-align:-2px;"></span> yellow border = also came the day before &nbsp;·&nbsp; <span style="display:inline-block;width:12px;height:12px;border:2.5px solid #dc2626;border-radius:3px;vertical-align:-2px;"></span> red border = also came both of the 2 days before (3 days in a row). Applies to the Sums, Times Drawn and Delta tiles.</div>
+          <div style="font-size:.7rem;color:var(--g6);margin-bottom:8px;"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #eab308;border-radius:3px;vertical-align:-2px;"></span> yellow border = also came the day before &nbsp;·&nbsp; <span style="display:inline-block;width:12px;height:12px;border:2.5px solid #dc2626;border-radius:3px;vertical-align:-2px;"></span> red border = also came both of the 2 days before (3 days in a row). Applies to the group, Sums, Times Drawn and Delta tiles.</div>
           <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Sums in the source draws <span style="font-weight:400;color:var(--g5);">· click to add/remove from Sums</span></div>
           <div id="paSumChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         </div>
@@ -3710,7 +3710,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=613"></script>
+<script src="lottolens-data.js?v=614"></script>
 <script>
 
 // ================================================================
@@ -24879,6 +24879,21 @@ function _paTileHtml(label,count,on,onclick,sub,flag){
   const tip=flag===2?'Also came the day before AND the day before that':flag===1?'Also came the day before':'';
   return '<span title="'+tip+'" onclick="'+onclick+'" style="cursor:pointer;font-family:DM Mono,monospace;font-size:.78rem;font-weight:700;padding:3px 8px;border-radius:6px;border:'+bw+' solid '+bc+';background:'+(on?'var(--b5)':'#fff')+';color:'+(on?'#fff':'var(--g7)')+';">'+label+' <span style="font-size:.62rem;opacity:.75;">×'+count+(sub?' · '+sub:'')+'</span></span>';
 }
+function _paGroupsOf(sorted,size){
+  const seen=new Set();
+  (function rec(start,cur){
+    if(cur.length===size){seen.add(cur.map(function(i){return sorted[i];}).join(''));return;}
+    for(let i=start;i<5;i++){cur.push(i);rec(i+1,cur);cur.pop();}
+  })(0,[]);
+  return seen;
+}
+function _paDayGroups(dkDay,size){
+  const ck=dkDay+'|g'+size+'|'+ALL.length;
+  if(_paDayCache.has(ck))return _paDayCache.get(ck);
+  const s=new Set();
+  ALL.forEach(function(r){if(r.dk===dkDay)_paGroupsOf(r.sorted,size).forEach(function(g){s.add(g);});});
+  _paDayCache.set(ck,s);return s;
+}
 function _paFlag(set1,set2,v){return (set1.has(v)&&set2.has(v))?2:(set1.has(v)?1:0);}
 function _paAddShown(){
   const cur=_paParseGroups(document.getElementById('paGroups').value);
@@ -24901,22 +24916,16 @@ function _renderPairsAlgo(){
   const minC=Math.max(1,+document.getElementById('paChipMin').value||1);
   const gc={};
   src.forEach(function(r){
-    const s=r.sorted,seen=new Set();
-    const idx=[0,1,2,3,4];
-    (function rec(start,cur){
-      if(cur.length===size){seen.add(cur.map(function(i){return s[i];}).join(''));return;}
-      for(let i=start;i<5;i++){cur.push(i);rec(i+1,cur);cur.pop();}
-    })(0,[]);
-    seen.forEach(function(g){gc[g]=(gc[g]||0)+1;});
+    _paGroupsOf(r.sorted,size).forEach(function(g){gc[g]=(gc[g]||0)+1;});
   });
+  const _g1=_paDayGroups(_paAddDays(D,-1),size),_g2=_paDayGroups(_paAddDays(D,-2),size);
   const td=new Map();
   ALL.forEach(function(r){if(r.dk<=D)td.set(r.sorted,(td.get(r.sorted)||0)+1);});
   const selected=new Set(_paParseGroups(document.getElementById('paGroups').value));
   const chips=Object.entries(gc).filter(function(e){return e[1]>=minC;}).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0]);});
   window._paShownChips=chips.map(function(e){return e[0];});
   chipsEl.innerHTML=src.length?(chips.length?chips.map(function(e){
-    const on=selected.has(e[0]);
-    return '<span onclick="_paToggleGroup(\''+e[0]+'\')" style="cursor:pointer;font-family:DM Mono,monospace;font-size:.78rem;font-weight:700;padding:3px 8px;border-radius:6px;border:1.5px solid '+(on?'var(--b5)':'var(--g3)')+';background:'+(on?'var(--b5)':'#fff')+';color:'+(on?'#fff':'var(--g7)')+';">'+e[0]+' <span style="font-size:.62rem;opacity:.75;">×'+e[1]+'</span></span>';
+    return _paTileHtml(e[0],e[1],selected.has(e[0]),"_paToggleGroup('"+e[0]+"')",'',_paFlag(_g1,_g2,e[0]));
   }).join(''):'<span style="font-size:.76rem;color:var(--g5);">No '+size+'-digit group appears in '+minC+'+ draws.</span>'):'<span style="font-size:.76rem;color:var(--g5);">No draws found for that date and draw selection.</span>';
   // ---- tiles: sums / times drawn / delta of the source draws ----
   const sumC={},tdC={},edC={};
