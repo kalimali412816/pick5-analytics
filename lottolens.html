@@ -110,6 +110,7 @@ tr:hover td{background:var(--b0);}
 .mb{padding:16px;overflow-y:auto;}
 .mr{display:flex;gap:7px;padding:6px 0;border-bottom:1px solid var(--g1);align-items:center;flex-wrap:wrap;font-size:.8rem;}
 /* TRENDS */
+.pa-pat{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;color:var(--g7);padding:3px 9px;border:1.5px solid var(--g3);border-radius:6px;background:#fff;cursor:pointer;}
 .tb2.dual-btn{background:#fff7ed;border-color:#ea580c;color:#9a3412;}
 .tb2.dual-btn.active{background:var(--b5);border-color:var(--b5);color:#fff;}
 .tcontrols{background:#fff;border-radius:11px;padding:14px;margin-bottom:13px;box-shadow:var(--sh);}
@@ -829,6 +830,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('sameDayPerm',this)">♊ Same-Day Doubles</div>
   <div class="tab" onclick="switchTab('triplePredictor',this)">🎯 T Predictor</div>
   <div class="tab" onclick="switchTab('nextDayIntel',this)">🔮 Next Day Intel</div>
+  <div class="tab" onclick="switchTab('pairsAlgo',this)">🧩 Pairs</div>
 </div>
 
 <!-- RESULTS -->
@@ -1528,6 +1530,62 @@ tr:hover td{background:var(--b0);}
   </div>
   <div id="ptSummary" style="display:none;"></div>
   <div id="trendsContent"></div>
+</div>
+
+<!-- PAIRS BUILDER -->
+<div id="panel-pairsAlgo" class="panel">
+  <div class="card">
+    <div class="ch">
+      <div>
+        <h3>🧩 Pairs Builder</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Pick a day's draws, choose 2–4 digit groups, then filter by sum, times drawn and pattern — lists every normalized number that fits</div>
+      </div>
+    </div>
+    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Date range (source day)</span>
+          <div style="display:flex;gap:5px;"><input type="date" id="paDate" onchange="_renderPairsAlgo()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><button class="tb2" onclick="_paLatest()">Latest</button></div></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Draws used</span>
+          <select id="paMode" onchange="_renderPairsAlgo()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;">
+            <option value="all">All draws that day (mid + eve + GE)</option>
+            <option value="mid">Midday + Germany only</option>
+            <option value="eve">Evening only</option>
+          </select></div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--g7);padding-bottom:6px;"><input type="checkbox" id="paExcl" checked onchange="_renderPairsAlgo()"> Exclude past winners (numbers drawn in those draws)</label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:2;min-width:220px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Digits included (2–4 digit groups, number must contain at least one group)</span>
+          <input type="text" id="paGroups" placeholder="e.g. 02, 03, 048, 67" oninput="_renderPairsAlgoDeb()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.82rem;font-family:'DM Mono',monospace;"></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Sums (e.g. 20-29, 31)</span>
+          <input type="text" id="paSums" placeholder="Any" oninput="_renderPairsAlgoDeb()" style="width:110px;padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.82rem;"></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Times drawn (e.g. 25-42)</span>
+          <input type="text" id="paTD" placeholder="Any" oninput="_renderPairsAlgoDeb()" style="width:110px;padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.82rem;"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Pattern types:</span>
+        <label class="pa-pat"><input type="checkbox" value="S" checked onchange="_renderPairsAlgo()"> S</label>
+        <label class="pa-pat"><input type="checkbox" value="D" checked onchange="_renderPairsAlgo()"> D</label>
+        <label class="pa-pat"><input type="checkbox" value="DD" checked onchange="_renderPairsAlgo()"> DD</label>
+        <label class="pa-pat"><input type="checkbox" value="T" checked onchange="_renderPairsAlgo()"> T</label>
+        <label class="pa-pat"><input type="checkbox" value="TD" checked onchange="_renderPairsAlgo()"> TD</label>
+        <label class="pa-pat"><input type="checkbox" value="Q" checked onchange="_renderPairsAlgo()"> Q</label>
+        <label class="pa-pat"><input type="checkbox" value="F" checked onchange="_renderPairsAlgo()"> F</label>
+      </div>
+      <div style="border-top:1px solid var(--g3);padding-top:10px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
+          <span style="font-size:.72rem;font-weight:700;color:var(--g9);">Groups found in the source draws</span>
+          <select id="paChipSize" onchange="_renderPairsAlgo()" style="padding:3px 7px;border:1.5px solid var(--g3);border-radius:6px;font-size:.76rem;"><option value="2">2-digit</option><option value="3">3-digit</option><option value="4">4-digit</option></select>
+          <span style="font-size:.72rem;color:var(--g6);">appearing in at least</span>
+          <input type="number" id="paChipMin" value="2" min="1" max="30" onchange="_renderPairsAlgo()" style="width:54px;padding:3px 6px;border:1.5px solid var(--g3);border-radius:6px;font-size:.76rem;">
+          <span style="font-size:.72rem;color:var(--g6);">draws</span>
+          <button class="tb2" onclick="_paAddShown()">Add all shown</button>
+          <button class="tb2" onclick="_paClearGroups()">Clear groups</button>
+        </div>
+        <div id="paChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px;"><div id="paOut" style="padding:16px;"></div></div>
 </div>
 
 <!-- MONTHLY -->
@@ -3637,7 +3695,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=609"></script>
+<script src="lottolens-data.js?v=610"></script>
 <script>
 
 // ================================================================
@@ -11341,7 +11399,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat','pairsAlgo'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -11388,6 +11446,7 @@ function renderCur(){
   else if(curTab==='pickMerge'){renderPickMerge();}
   else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='posRepeat'){_renderPosRepeat();}
+  else if(curTab==='pairsAlgo'){_renderPairsAlgo();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -24721,6 +24780,145 @@ function _renderPosSearch(){
 }
 
 const _renderPosSearchDeb=debounce(_renderPosSearch,300);
+
+// ================================================================
+// PAIRS BUILDER — source day's draws → 2/3/4-digit groups → sum / times-drawn / pattern filters
+// ================================================================
+const _paPatMap={S:'Singles',D:'Doubles',DD:'DD',T:'Triples',TD:'TD',Q:'Quads',F:'Qu'};
+let _paAllCombos=null;
+function _paCombos(){
+  if(_paAllCombos)return _paAllCombos;
+  const out=[];
+  for(let a=0;a<=9;a++)for(let b=a;b<=9;b++)for(let c=b;c<=9;c++)for(let d=c;d<=9;d++)for(let e=d;e<=9;e++)out.push(''+a+b+c+d+e);
+  return (_paAllCombos=out);
+}
+function _paParseRanges(txt){
+  const t=(txt||'').trim();if(!t)return null;
+  const out=[];
+  t.split(/[,\s]+/).forEach(function(p){
+    const m=p.match(/^(\d+)(?:-(\d+))?$/);if(!m)return;
+    const a=+m[1],b=m[2]!==undefined?+m[2]:a;out.push([Math.min(a,b),Math.max(a,b)]);
+  });
+  return out.length?out:null;
+}
+function _paInRanges(v,r){return !r||r.some(function(x){return v>=x[0]&&v<=x[1];});}
+function _paParseGroups(txt){
+  return (txt||'').split(/[,\s]+/).map(function(s){return s.replace(/\D/g,'');})
+    .filter(function(s){return s.length>=2&&s.length<=4;})
+    .map(function(s){return s.split('').sort().join('');});
+}
+function _paHas(sorted,group){ // multiset containment: "66" needs two 6s
+  const have={};for(const c of sorted)have[c]=(have[c]||0)+1;
+  const need={};for(const c of group)need[c]=(need[c]||0)+1;
+  for(const c in need){if((have[c]||0)<need[c])return false;}
+  return true;
+}
+function _paAddDays(dk,n){
+  const p=dk.split('-');const t=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n));
+  return t.getUTCFullYear()+'-'+String(t.getUTCMonth()+1).padStart(2,'0')+'-'+String(t.getUTCDate()).padStart(2,'0');
+}
+function _paLatest(){const el=document.getElementById('paDate');if(el){el.value=ALL.length?ALL[0].dk:'';}_renderPairsAlgo();}
+function _paSourceRows(dk,mode){
+  return ALL.filter(function(r){return r.dk===dk&&(mode==='all'||(mode==='mid'&&r.draw==='midday')||(mode==='eve'&&r.draw==='evening'));});
+}
+function _paSetGroups(arr){
+  const uniq=[...new Set(arr)];
+  document.getElementById('paGroups').value=uniq.join(', ');
+  _renderPairsAlgo();
+}
+function _paToggleGroup(g){
+  const cur=_paParseGroups(document.getElementById('paGroups').value);
+  const i=cur.indexOf(g);
+  if(i>=0)cur.splice(i,1);else cur.push(g);
+  _paSetGroups(cur);
+}
+function _paClearGroups(){_paSetGroups([]);}
+function _paAddShown(){
+  const cur=_paParseGroups(document.getElementById('paGroups').value);
+  (window._paShownChips||[]).forEach(function(g){cur.push(g);});
+  _paSetGroups(cur);
+}
+const _renderPairsAlgoDeb=debounce(function(){_renderPairsAlgo();},300);
+
+function _renderPairsAlgo(){
+  const out=document.getElementById('paOut'),chipsEl=document.getElementById('paChips');
+  if(!out||!chipsEl)return;
+  const dEl=document.getElementById('paDate');
+  if(!dEl.value&&ALL.length)dEl.value=ALL[0].dk;
+  const D=dEl.value;
+  const mode=document.getElementById('paMode').value;
+  const src=_paSourceRows(D,mode);
+  const modeLbl={all:'all draws',mid:'midday + Germany',eve:'evening'}[mode];
+  // ---- group chips from the source draws ----
+  const size=+document.getElementById('paChipSize').value;
+  const minC=Math.max(1,+document.getElementById('paChipMin').value||1);
+  const gc={};
+  src.forEach(function(r){
+    const s=r.sorted,seen=new Set();
+    const idx=[0,1,2,3,4];
+    (function rec(start,cur){
+      if(cur.length===size){seen.add(cur.map(function(i){return s[i];}).join(''));return;}
+      for(let i=start;i<5;i++){cur.push(i);rec(i+1,cur);cur.pop();}
+    })(0,[]);
+    seen.forEach(function(g){gc[g]=(gc[g]||0)+1;});
+  });
+  const selected=new Set(_paParseGroups(document.getElementById('paGroups').value));
+  const chips=Object.entries(gc).filter(function(e){return e[1]>=minC;}).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0]);});
+  window._paShownChips=chips.map(function(e){return e[0];});
+  chipsEl.innerHTML=src.length?(chips.length?chips.map(function(e){
+    const on=selected.has(e[0]);
+    return '<span onclick="_paToggleGroup(\''+e[0]+'\')" style="cursor:pointer;font-family:DM Mono,monospace;font-size:.78rem;font-weight:700;padding:3px 8px;border-radius:6px;border:1.5px solid '+(on?'var(--b5)':'var(--g3)')+';background:'+(on?'var(--b5)':'#fff')+';color:'+(on?'#fff':'var(--g7)')+';">'+e[0]+' <span style="font-size:.62rem;opacity:.75;">×'+e[1]+'</span></span>';
+  }).join(''):'<span style="font-size:.76rem;color:var(--g5);">No '+size+'-digit group appears in '+minC+'+ draws.</span>'):'<span style="font-size:.76rem;color:var(--g5);">No draws found for that date and draw selection.</span>';
+  if(!src.length){out.innerHTML='<div class="es">No draws found for '+D+' ('+modeLbl+').</div>';return;}
+  // ---- filters ----
+  const groups=[...selected];
+  const sumR=_paParseRanges(document.getElementById('paSums').value);
+  const tdR=_paParseRanges(document.getElementById('paTD').value);
+  const pats=new Set([...document.querySelectorAll('.pa-pat input:checked')].map(function(x){return _paPatMap[x.value];}));
+  const excl=document.getElementById('paExcl').checked;
+  const td=new Map();
+  ALL.forEach(function(r){if(r.dk<=D)td.set(r.sorted,(td.get(r.sorted)||0)+1);});
+  const winners=new Set(src.map(function(r){return r.sorted;}));
+  const res=_paCombos().filter(function(s){
+    if(excl&&winners.has(s))return false;
+    if(!pats.has(_getRepeatKey(s)))return false;
+    let sm=0;for(const c of s)sm+=+c;
+    if(!_paInRanges(sm,sumR))return false;
+    if(!_paInRanges(td.get(s)||0,tdR))return false;
+    if(groups.length&&!groups.some(function(g){return _paHas(s,g);}))return false;
+    return true;
+  });
+  // ---- results check: later draws that day (when midday-only) + next day ----
+  const hitMap=new Map();
+  const later=[];
+  if(mode==='mid')ALL.filter(function(r){return r.dk===D&&r.draw==='evening';}).forEach(function(r){later.push({r:r,lbl:'same-day evening'});});
+  const nd=_paAddDays(D,1);
+  ALL.filter(function(r){return r.dk===nd;}).forEach(function(r){later.push({r:r,lbl:'next day'});});
+  const resSet=new Set(res);
+  later.forEach(function(x){if(resSet.has(x.r.sorted)){const a=hitMap.get(x.r.sorted)||[];a.push(x);hitMap.set(x.r.sorted,a);}});
+  const evCount=later.filter(function(x){return x.lbl==='same-day evening';}).length;
+  const ndCount=later.length-evCount;
+  let sumH='<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;">';
+  sumH+='<div style="font-size:.95rem;font-weight:800;color:var(--g9);">'+res.length.toLocaleString()+' number'+(res.length!==1?'s':'')+'</div>';
+  sumH+='<div style="font-size:.74rem;color:var(--g6);">from '+src.length+' draw'+(src.length!==1?'s':'')+' on '+D+' ('+modeLbl+')'+(groups.length?' · '+groups.length+' group'+(groups.length!==1?'s':''):'')+'</div>';
+  sumH+='<button onclick="_copyToClipboard(window._paCopy||\'\',this)" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.74rem;cursor:pointer;font-weight:600;">📋 Copy '+res.length+'</button>';
+  sumH+='</div>';
+  window._paCopy=res.join(' ');
+  let chk='<div style="font-size:.74rem;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:'+(hitMap.size?'#dcfce7':'var(--g0)')+';border:1px solid '+(hitMap.size?'#86efac':'var(--g2)')+';color:var(--g7);">';
+  if(!later.length)chk+='🕒 No later results in the data yet'+(mode==='mid'?' (no evening draws or next day for '+D+')':' (no draws on '+nd+')')+' — nothing to check this list against.';
+  else{
+    chk+='<strong>Check vs. later results:</strong> '+(mode==='mid'?evCount+' same-day evening draw'+(evCount!==1?'s':'')+' · ':'')+ndCount+' next-day draw'+(ndCount!==1?'s':'')+' — ';
+    if(hitMap.size){
+      chk+='<strong style="color:#166534;">'+hitMap.size+' of the '+res.length+' numbers came out</strong>: '+[...hitMap.entries()].map(function(e){return '<span style="font-family:DM Mono,monospace;font-weight:700;">'+e[0]+'</span> ('+e[1].map(function(x){return x.r.state+' '+x.r.number+' '+x.r.draw.slice(0,3)+', '+x.lbl;}).join('; ')+')';}).join(' · ');
+    }else chk+='none of the listed numbers came out.';
+  }
+  chk+='</div>';
+  const body='<div style="display:flex;flex-wrap:wrap;gap:5px;">'+res.map(function(s){
+    const h=hitMap.get(s);
+    return '<span onclick="showNumModal(\''+s+'\')" title="'+(h?'Came out: '+h.map(function(x){return x.r.state+' '+x.r.number+' ('+x.lbl+')';}).join(', '):'TD '+(td.get(s)||0))+'" style="cursor:pointer;font-family:DM Mono,monospace;font-size:.8rem;font-weight:700;padding:3px 8px;border-radius:5px;border:1.5px solid '+(h?'#16a34a':'var(--g3)')+';background:'+(h?'#dcfce7':'#fff')+';color:'+(h?'#166534':'var(--g7)')+';">'+s+(h?' ✅':'')+'</span>';
+  }).join('')+'</div>';
+  out.innerHTML=sumH+chk+(res.length?body:'<div class="es">No numbers match these filters.</div>');
+}
 
 // ========== SAME-DAY CROSS-MONTH REPEATS ==========
 function _sdcrSetScope(scope){
