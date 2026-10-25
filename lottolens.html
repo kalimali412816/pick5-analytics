@@ -831,6 +831,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('triplePredictor',this)">🎯 T Predictor</div>
   <div class="tab" onclick="switchTab('nextDayIntel',this)">🔮 Next Day Intel</div>
   <div class="tab" onclick="switchTab('pairsAlgo',this)">🧩 Pairs</div>
+  <div class="tab" onclick="switchTab('quirks',this)">🧬 Quirks</div>
 </div>
 
 <!-- RESULTS -->
@@ -1533,6 +1534,47 @@ tr:hover td{background:var(--b0);}
 </div>
 
 <!-- PAIRS BUILDER -->
+<div id="panel-quirks" class="panel">
+  <div class="card">
+    <div class="ch">
+      <div>
+        <h3>🧬 Quirks Builder</h3>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Pick a day's draws — each draw spins off numbers by swapping digits within their groups (3·5·8, 6·9, 2·7 by default), keeping each digit in its own position. Pattern boxes then filter the results.</div>
+      </div>
+    </div>
+    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Source day</span>
+          <div style="display:flex;gap:5px;"><input type="date" id="qkDate" onchange="_qkDateChanged()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><button class="tb2" onclick="_qkLatest()">Latest</button></div></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Quick select</span>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="tb2" onclick="_qkPreset('mid')">Midday + GE</button><button class="tb2" onclick="_qkPreset('eve')">Evening</button><button class="tb2" onclick="_qkPreset('all')">All</button><button class="tb2" onclick="_qkPreset('none')">None</button></div></div>
+      </div>
+      <div>
+        <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Draws used <span style="font-weight:400;color:var(--g5);">· tick the draws that feed the builder</span></div>
+        <div id="qkDraws" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Patterns</span>
+          <div class="qk-pat" style="display:flex;gap:9px;flex-wrap:wrap;font-size:.8rem;">
+            <label><input type="checkbox" value="11111" checked onchange="_renderQuirks()"> S</label>
+            <label><input type="checkbox" value="2111" checked onchange="_renderQuirks()"> D</label>
+            <label><input type="checkbox" value="221" checked onchange="_renderQuirks()"> DD</label>
+            <label><input type="checkbox" value="311" checked onchange="_renderQuirks()"> T</label>
+            <label><input type="checkbox" value="32" checked onchange="_renderQuirks()"> TD</label>
+            <label><input type="checkbox" value="41" checked onchange="_renderQuirks()"> Q</label>
+            <label><input type="checkbox" value="5" checked onchange="_renderQuirks()"> F</label>
+          </div></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;" title="Digits in the same group can replace each other. Digits not listed stay fixed.">Swap groups</span>
+          <input type="text" id="qkClasses" value="358 69 27" oninput="_renderQuirksDeb()" style="width:150px;padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.82rem;font-family:'DM Mono',monospace;"></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;" title="Most digits a result may differ from its source. Blank = no limit. Your two-pair sources (65353, 85454) matched 2.">Max digits changed</span>
+          <input type="number" id="qkMaxChg" min="1" max="5" placeholder="No limit" oninput="_renderQuirksDeb()" style="width:90px;padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.82rem;"></div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--g7);padding-bottom:6px;" title="Keep one number per same-digits group: the one with the most digits in the same position as its source (ties go to the one matching further left). Fits triple-type sources exactly; for sources with pairs it can pick a different one than your tool."><input type="checkbox" id="qkDedupe" onchange="_renderQuirks()"> De-dupe</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--g7);padding-bottom:6px;"><input type="checkbox" id="qkExcl" onchange="_renderQuirks()"> Exclude past winners</label>
+      </div>
+      <div id="qkOut"></div>
+    </div>
+  </div>
+</div>
 <div id="panel-pairsAlgo" class="panel">
   <div class="card">
     <div class="ch">
@@ -3710,7 +3752,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=616"></script>
+<script src="lottolens-data.js?v=617"></script>
 <script>
 
 // ================================================================
@@ -11441,7 +11483,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat','pairsAlgo'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat','pairsAlgo','quirks'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -11489,6 +11531,7 @@ function renderCur(){
   else if(curTab==='posConverge'){_renderPosConverge();}
   else if(curTab==='posRepeat'){_renderPosRepeat();}
   else if(curTab==='pairsAlgo'){_renderPairsAlgo();}
+  else if(curTab==='quirks'){_renderQuirks();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -24884,6 +24927,130 @@ function _paCompress(set){
   const a=[...set].sort(function(x,y){return x-y;}),out=[];
   for(let i=0;i<a.length;){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;out.push(j>i?a[i]+'-'+a[j]:''+a[i]);i=j+1;}
   return out.join(', ');
+}
+// ================= QUIRKS BUILDER =================
+let _qkSel=new Set(),_qkBuiltDate='';
+const _QK_ORDER=['DE','FL','GA','GE','LA','MD','MI','OH','PA','VA','DC'];
+function _qkDayRows(dk){
+  const rows=ALL.filter(function(r){return r.dk===dk;});
+  rows.sort(function(a,b){const ia=_QK_ORDER.indexOf(a.state),ib=_QK_ORDER.indexOf(b.state);if(ia!==ib)return ia-ib;return (a.draw==='midday'?0:1)-(b.draw==='midday'?0:1);});
+  return rows;
+}
+function _qkKey(r){return r.state+'|'+r.draw+'|'+r.number;}
+function _qkLabel(r){return r.state==='GE'?'GE':r.state+' '+(r.draw==='midday'?'mid':'eve');}
+function _qkLatest(){const el=document.getElementById('qkDate');if(el)el.value=ALL.length?ALL[0].dk:'';_qkDateChanged();}
+function _qkDateChanged(){_qkBuiltDate='';_qkPreset('mid',true);}
+function _qkPreset(p,skipRender){
+  const dk=document.getElementById('qkDate').value;const rows=_qkDayRows(dk);
+  _qkSel=new Set();
+  rows.forEach(function(r){
+    if(p==='all'||(p==='mid'&&r.draw==='midday')||(p==='eve'&&r.draw==='evening'))_qkSel.add(_qkKey(r));
+  });
+  _qkBuiltDate='';_renderQuirks();
+}
+function _qkToggle(k){if(_qkSel.has(k))_qkSel.delete(k);else _qkSel.add(k);_renderQuirks();}
+function _qkParseClasses(){
+  const map={};
+  (document.getElementById('qkClasses').value||'').split(/[\s,]+/).filter(Boolean).forEach(function(tok){
+    const d=[...new Set(tok.replace(/[^0-9]/g,'').split(''))].join('');
+    d.split('').forEach(function(c){map[c]=d;});
+  });
+  return map;
+}
+function _qkPatKey(n){const c={};for(const x of n)c[x]=(c[x]||0)+1;return Object.values(c).sort(function(a,b){return b-a;}).join('');}
+function _qkSorted(n){return n.split('').sort().join('');}
+function _qkFamily(src,map,pats,maxChg){
+  const opts=src.split('').map(function(c){return map[c]||c;});
+  const out=[];
+  (function rec(i,cur,chg){
+    if(maxChg&&chg>maxChg)return;
+    if(i===5){
+      if(cur===src)return;
+      if(!pats.has(_qkPatKey(cur)))return;
+      out.push(cur);return;
+    }
+    const o=opts[i];
+    for(let k=0;k<o.length;k++)rec(i+1,cur+o[k],chg+(o[k]!==src[i]?1:0));
+  })(0,'',0);
+  return out;
+}
+function _qkMatches(n,src){let m=0;for(let i=0;i<5;i++)if(n[i]===src[i])m++;return m;}
+// better = more digits in the same place; tie -> the one matching further left; then the smaller number
+function _qkBetter(a,b,src){
+  const ma=_qkMatches(a,src),mb=_qkMatches(b,src);if(ma!==mb)return ma>mb;
+  for(let i=0;i<5;i++){const x=a[i]===src[i],y=b[i]===src[i];if(x!==y)return x;}
+  return a<b;
+}
+const _renderQuirksDeb=debounce(function(){_renderQuirks();},250);
+function _renderQuirks(){
+  const dateEl=document.getElementById('qkDate'),out=document.getElementById('qkOut'),drawsEl=document.getElementById('qkDraws');
+  if(!dateEl)return;
+  if(!dateEl.value&&ALL.length){dateEl.value=ALL[0].dk;_qkBuiltDate='';_qkSel=new Set();}
+  const dk=dateEl.value;const rows=_qkDayRows(dk);
+  if(_qkBuiltDate!==dk){
+    if(!_qkSel.size){rows.forEach(function(r){if(r.draw==='midday')_qkSel.add(_qkKey(r));});}
+    _qkBuiltDate=dk;
+  }
+  drawsEl.innerHTML=rows.length?rows.map(function(r){
+    const k=_qkKey(r),on=_qkSel.has(k);
+    return '<label style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border:1.5px solid '+(on?'var(--b5)':'var(--g3)')+';border-radius:8px;background:'+(on?'var(--b0)':'#fff')+';font-size:.78rem;cursor:pointer;"><input type="checkbox" '+(on?'checked ':'')+'onchange="_qkToggle(\''+k+'\')"><span style="font-weight:700;">'+_qkLabel(r)+'</span><span style="font-family:\'DM Mono\',monospace;">'+r.number+'</span></label>';
+  }).join(''):'<span style="font-size:.78rem;color:var(--g5);">No draws on that date.</span>';
+  const pats=new Set([...document.querySelectorAll('.qk-pat input:checked')].map(function(i){return i.value;}));
+  const map=_qkParseClasses();
+  const maxChg=parseInt(document.getElementById('qkMaxChg').value,10)||0;
+  const dedupe=document.getElementById('qkDedupe').checked,excl=document.getElementById('qkExcl').checked;
+  const dayRows=rows;
+  const pastSorted=new Set(dayRows.map(function(r){return _qkSorted(r.number);}));
+  const sources=rows.filter(function(r){return _qkSel.has(_qkKey(r));});
+  if(!sources.length){out.innerHTML='<div class="es">Tick at least one draw above.</div>';return;}
+  // later draws for hit-check: same-day draws not used + next day
+  const nextDk=_paAddDays(dk,1);
+  const later=[];
+  dayRows.forEach(function(r){if(!_qkSel.has(_qkKey(r)))later.push({r:r,when:'same day'});});
+  ALL.forEach(function(r){if(r.dk===nextDk)later.push({r:r,when:'next day'});});
+  const laterMap=new Map();
+  later.forEach(function(x){const s=_qkSorted(x.r.number);if(!laterMap.has(s))laterMap.set(s,[]);laterMap.get(s).push(x.when+' '+_qkLabel(x.r)+' '+x.r.number);});
+  const hasLater=later.length>0;
+  const seen=new Set(),blocks=[],combined=[];
+  let hitCount=0;
+  sources.forEach(function(sr){
+    let list=_qkFamily(sr.number,map,pats,maxChg);
+    const famCount=list.length;
+    if(excl)list=list.filter(function(n){return !pastSorted.has(_qkSorted(n));});
+    if(dedupe){
+      const g={};
+      list.forEach(function(n){const s=_qkSorted(n);const cur=g[s];
+        if(!cur||_qkBetter(n,cur.n,sr.number))g[s]={n:n};});
+      list=Object.keys(g).sort().map(function(s){return g[s].n;});
+    } else {
+      list.sort(function(a,b){const sa=_qkSorted(a),sb=_qkSorted(b);return sa<sb?-1:sa>sb?1:(a<b?-1:1);});
+    }
+    const items=[];
+    list.forEach(function(n){
+      if(seen.has(n))return;seen.add(n);combined.push(n);
+      const h=laterMap.get(_qkSorted(n));if(h)hitCount++;
+      items.push({n:n,h:h});
+    });
+    blocks.push({sr:sr,items:items,fam:famCount});
+  });
+  const CAP=400;
+  let h='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><span style="font-size:.85rem;font-weight:700;color:var(--g9);">'+combined.length+' number'+(combined.length!==1?'s':'')+' from '+sources.length+' draw'+(sources.length!==1?'s':'')+'</span>'+
+    '<button class="tb2" onclick="_copyToClipboard(window._qkAll,this)">📋 Copy all</button>'+
+    (hasLater?'<span style="font-size:.72rem;color:var(--g6);">✅ = same digits came in a later draw ('+hitCount+')</span>':'<span style="font-size:.72rem;color:var(--g5);">No later draws on file to check against.</span>')+'</div>';
+  window._qkAll=combined.join(' ');
+  window._qkBlocks=blocks.map(function(b){return b.items.map(function(i){return i.n;}).join(' ');});
+  blocks.forEach(function(b,bi){
+    h+='<div style="margin-bottom:12px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;"><span style="font-size:.78rem;font-weight:800;color:var(--b8);">'+_qkLabel(b.sr)+'</span><span style="font-family:\'DM Mono\',monospace;font-size:.8rem;">'+b.sr.number+'</span><span style="font-size:.72rem;color:var(--g5);">'+b.items.length+' shown · '+b.fam+' in family after pattern filter</span>'+(b.items.length?'<button class="tb2" style="padding:1px 8px;font-size:.66rem;" onclick="_copyToClipboard(window._qkBlocks['+bi+'],this)">📋 Copy</button>':'')+'</div>';
+    if(!b.items.length)h+='<div style="font-size:.74rem;color:var(--g5);">Nothing fits the pattern boxes for this draw.</div>';
+    else{
+      h+='<div style="display:flex;flex-wrap:wrap;gap:4px;">'+b.items.slice(0,CAP).map(function(i){
+        const hit=i.h;
+        return '<span title="'+(hit?('Came again: '+hit.join(', ').replace(/"/g,'')):'')+'" onclick="showNumModal(\''+_qkSorted(i.n)+'\')" style="cursor:pointer;font-family:\'DM Mono\',monospace;font-size:.78rem;padding:2px 7px;border-radius:6px;border:1.5px solid '+(hit?'#16a34a':'var(--g3)')+';background:'+(hit?'#dcfce7':'var(--g1)')+';">'+i.n+(hit?' ✅':'')+'</span>';
+      }).join('')+(b.items.length>CAP?'<span style="font-size:.72rem;color:var(--g5);">…+'+(b.items.length-CAP)+' more (use Copy)</span>':'')+'</div>';
+    }
+    h+='</div>';
+  });
+  out.innerHTML=h;
 }
 function _paClearNum(id){document.getElementById(id).value='';_renderPairsAlgo();}
 function _paToggleNum(id,v){
