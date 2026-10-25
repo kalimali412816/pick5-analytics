@@ -905,7 +905,7 @@ tr:hover td{background:var(--b0);}
 <!-- FREQUENCY -->
 <div id="panel-frequency" class="panel">
   <!-- Stats row — same style as Results tab statsGrid -->
-  <div class="sg" id="freqStatsBar" style="grid-template-columns:1fr 1fr 1fr;"></div>
+  <div class="sg" id="freqStatsBar" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
   <!-- Main frequency card -->
   <div class="card">
     <div class="ch">
@@ -1586,15 +1586,15 @@ tr:hover td{background:var(--b0);}
         <div id="paChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         <div style="margin-top:12px;">
           <div style="font-size:.7rem;color:var(--g6);margin-bottom:8px;"><span style="display:inline-block;width:12px;height:12px;border:2.5px solid #eab308;border-radius:3px;vertical-align:-2px;"></span> yellow border = also came the day before &nbsp;·&nbsp; <span style="display:inline-block;width:12px;height:12px;border:2.5px solid #dc2626;border-radius:3px;vertical-align:-2px;"></span> red border = also came both of the 2 days before (3 days in a row). Applies to the group, Sums, Times Drawn and Delta tiles.</div>
-          <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Sums in the source draws <span style="font-weight:400;color:var(--g5);">· click to add/remove from Sums</span></div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Sums in the source draws <span style="font-weight:400;color:var(--g5);">· click to add/remove from Sums</span> <button class="tb2" style="margin-left:8px;padding:1px 8px;font-size:.66rem;" onclick="_paClearNum('paSums')">Clear</button></div>
           <div id="paSumChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         </div>
         <div style="margin-top:12px;">
-          <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Times drawn in the source draws <span style="font-weight:400;color:var(--g5);">· tile = times drawn after it hit · clicking picks numbers at that value minus 1 (so they land on it when they hit)</span></div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Times drawn in the source draws <span style="font-weight:400;color:var(--g5);">· tile = times drawn after it hit · clicking picks numbers at that value minus 1 (so they land on it when they hit)</span> <button class="tb2" style="margin-left:8px;padding:1px 8px;font-size:.66rem;" onclick="_paClearNum('paTD')">Clear</button></div>
           <div id="paTDChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         </div>
         <div style="margin-top:12px;">
-          <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Delta (|sum − TD|) in the source draws <span style="font-weight:400;color:var(--g5);">· clicking picks numbers whose Expected Δ equals it (the Δ they land on after their next draw)</span></div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--g9);margin-bottom:4px;">Delta (|sum − TD|) in the source draws <span style="font-weight:400;color:var(--g5);">· clicking picks numbers whose Expected Δ equals it (the Δ they land on after their next draw)</span> <button class="tb2" style="margin-left:8px;padding:1px 8px;font-size:.66rem;" onclick="_paClearNum('paED')">Clear</button></div>
           <div id="paEDChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         </div>
       </div>
@@ -3710,7 +3710,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=614"></script>
+<script src="lottolens-data.js?v=615"></script>
 <script>
 
 // ================================================================
@@ -8751,6 +8751,15 @@ function renderFreqStats(src){
     podiumTiers[podiumTiers.length-1].sums.push(+s);
     if(podiumTiers.length>=3&&podiumTiers.every(t=>t.sums.length>0&&t.cnt!==cnt))break;
   }
+  // ── TOP DELTA SUMS (Δ=|sum−times drawn all-time|, counted over the filtered draws) ──
+  const dltFreq={};
+  src.forEach(r=>{const tc=(_allBySorted.get(r.sorted)||[]).length;const d=Math.abs(r.sum-tc);dltFreq[d]=(dltFreq[d]||0)+1;});
+  const dltTiers=[];let _dl=null;
+  for(const [d,cnt] of Object.entries(dltFreq).sort((a,b)=>b[1]-a[1]||a[0]-b[0])){
+    if(dltTiers.length>=3&&cnt!==_dl)break;
+    if(cnt!==_dl){dltTiers.push({cnt,ds:[]});_dl=cnt;}
+    dltTiers[dltTiers.length-1].ds.push(+d);
+  }
   // Trim to max 3 tiers
   const medals=['🥇','🥈','🥉'];
   // Store src for digit click handler
@@ -8846,6 +8855,20 @@ function renderFreqStats(src){
     });
   });
 
+  let dltTilesHtml='';
+  dltTiers.slice(0,3).forEach((tier,ti)=>{
+    const isgold=ti===0;
+    const bg=isgold?'var(--ac)':ti===1?'#94a3b8':'#cd7f32';
+    tier.ds.slice(0,12).forEach(d=>{
+      dltTilesHtml+=`<div style="background:var(--b0);border:2px solid ${bg};border-radius:9px;padding:${isgold?'7px 12px':'5px 9px'};text-align:center;cursor:pointer;min-width:55px" onclick="navigateToDeltaValue(${d},[],null)" title="Click to see all combos with Δ=${d}">
+        <div style="font-size:.6rem;margin-bottom:1px">${medals[ti]}</div>
+        <div style="font-family:DM Mono,monospace;font-weight:${isgold?800:600};font-size:${isgold?'1rem':'0.82rem'};color:var(--b8)">Δ${d}</div>
+        <div style="font-size:${isgold?'.7rem':'.62rem'};color:var(--g5)">${tier.cnt}x</div>
+      </div>`;
+    });
+  });
+  const _dltCopyText=dltTiers.map(t=>t.ds.map(d=>'Δ'+d).join(' ')).join(' ');
+
   // Build as stat card grid matching Results tab layout
   const statsEl=document.getElementById('freqStatsBar');
 
@@ -8916,6 +8939,10 @@ function renderFreqStats(src){
     <div class="sc" style="border-color:var(--ac);flex:1;min-width:200px;">
       <div class="lbl" style="display:flex;align-items:center;">🔥 Top Sums ${_freqCopyBtn('freqSumsCopy',_sumsCopyText)}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-end">${sumTilesHtml}</div>
+    </div>
+    <div class="sc" style="border-color:var(--ac);flex:1;min-width:200px;">
+      <div class="lbl" style="display:flex;align-items:center;">Δ Top Delta Sums ${_freqCopyBtn('freqDeltaCopy',_dltCopyText)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:flex-end">${dltTilesHtml}</div>
     </div>
     <div class="sc" style="border-color:var(--ac2);flex:1;min-width:200px;">
       <div class="lbl" style="display:flex;align-items:center;">🏆 Top Drawn ${_freqCopyBtn('freqDrawnCopy',_drawnCopyText)}</div>
@@ -24858,6 +24885,7 @@ function _paCompress(set){
   for(let i=0;i<a.length;){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;out.push(j>i?a[i]+'-'+a[j]:''+a[i]);i=j+1;}
   return out.join(', ');
 }
+function _paClearNum(id){document.getElementById(id).value='';_renderPairsAlgo();}
 function _paToggleNum(id,v){
   const el=document.getElementById(id),s=_paExpand(el.value);
   if(s.has(v))s.delete(v);else s.add(v);
