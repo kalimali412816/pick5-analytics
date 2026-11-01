@@ -2293,6 +2293,19 @@ tr:hover td{background:var(--b0);}
       <div id="tripleHotDaysContent"></div>
     </div>
   </div>
+  <!-- TRIPLE DAY GAPS card -->
+  <div class="card" style="margin-top:14px">
+    <div class="ch"><div><h3>🧩 Triple Day Gaps</h3><div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Which companion digits are still missing for each triple on each weekday, plus the most recent ones filled in. Uses all states and both draws.</div></div></div>
+<div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Year</span><select id="tgYear" onchange="_renderTripleGaps()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"></select></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Min hits to qualify</span><input type="number" id="tgMin" value="7" min="1" max="40" onchange="_renderTripleGaps()" style="width:70px;padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Recent fills per day</span><select id="tgRecent" onchange="_renderTripleGaps()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><option>3</option><option selected>5</option><option>10</option></select></div>
+        <button class="tb2" onclick="_copyToClipboard(window._tgCopy||'',this)">📋 Copy missing list</button>
+      </div>
+      <div id="tgOut"></div>
+    </div>
+  </div>
 </div>
 
 <!-- SUMS ALL TAB -->
@@ -3770,7 +3783,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=638"></script>
+<script src="lottolens-data.js?v=640"></script>
 <script>
 
 // ================================================================
@@ -11559,7 +11572,7 @@ function renderCur(){
   else if(curTab==='delta')renderDelta();
   else if(curTab==='trends')renderTrends();
   else if(curTab==='monthly')renderMonthly();
-  else if(curTab==='datesum'){renderDateSum();_renderTripleHotDays();}
+  else if(curTab==='datesum'){renderDateSum();_renderTripleHotDays();_renderTripleGaps();}
   else if(curTab==='sumsall')renderSumsAll();
   else if(curTab==='totaldrawn')renderTotalDrawn();
   else if(curTab==='patternorigin'){renderPatternOrigin();setTimeout(()=>{const el=document.getElementById('consecTrackerBody');if(el)el.innerHTML=_buildConsecStreakWidget(true);},150);}
@@ -25226,6 +25239,68 @@ function _renderCalTrends(){
     h+='<td style="text-align:center;padding:3px 8px;border-bottom:1px solid var(--g2);">'+tot+'</td></tr>';
   });
   h+='</tbody></table></div><div style="font-size:.68rem;color:var(--g5);margin-top:4px;">Each cell shows that day\'s count, then the running total after the slash.</div>';
+  out.innerHTML=h;
+}
+
+// ================================================================
+// TRIPLE DAY GAPS  (triple digit x weekday x companion digit)
+// ================================================================
+function _renderTripleGaps(){
+  const out=document.getElementById('tgOut'),ysel=document.getElementById('tgYear');if(!out)return;
+  if(!ysel.options.length){
+    const ys=[...new Set(ALL.map(function(r){return r.ym.slice(0,4);}))].sort().reverse();
+    ysel.innerHTML=ys.map(function(y){return '<option>'+y+'</option>';}).join('');
+  }
+  const year=ysel.value,minH=Math.max(1,parseInt(document.getElementById('tgMin').value,10)||7),nRec=parseInt(document.getElementById('tgRecent').value,10)||5;
+  const DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const rows=ALL.filter(function(r){return r.ym.slice(0,4)===year;}).slice().sort(function(a,b){
+    return a.dk<b.dk?-1:a.dk>b.dk?1:(a.draw===b.draw?(a.state<b.state?-1:1):(a.draw==='midday'?-1:1));});
+  const cnt={},first={},comp={};
+  rows.forEach(function(r){
+    const c={};for(let i=0;i<5;i++)c[r.number[i]]=(c[r.number[i]]||0)+1;
+    let tg=null;for(const k in c){if(c[k]>=3){tg=k;break;}}
+    if(tg===null)return;
+    const key=tg+'|'+r.dow;cnt[key]=(cnt[key]||0)+1;
+    const seenC=comp[key]=comp[key]||new Set();
+    Object.keys(c).forEach(function(x){
+      if(x===tg)return;seenC.add(x);
+      const fk=key+'|'+x;if(!first[fk])first[fk]={r:r,tg:tg,x:x,dow:r.dow};
+    });
+  });
+  let totalMissing=0,combos=0,copy=[];
+  let h='<div style="font-size:.74rem;color:var(--g5);margin-bottom:10px;">'+year+' · '+rows.length+' draws · a triple qualifies on a weekday once it has come at least '+minH+' times that weekday. "Missing" = no draw with that triple on that weekday has had that digit yet.</div>';
+  const body=[];
+  [0,1,2,3,4,5,6].forEach(function(w){
+    const qual=[];
+    for(let d=0;d<10;d++){const k=d+'|'+w;if((cnt[k]||0)>=minH)qual.push(d);}
+    let s='<div style="border:1.5px solid var(--g3);border-radius:10px;padding:10px 12px;background:#fff;"><div style="font-weight:800;font-size:.9rem;color:var(--b8);margin-bottom:6px;">'+DN[w]+'</div>';
+    if(!qual.length){body.push(s+'<div style="font-size:.76rem;color:var(--g5);">No triple qualifies yet.</div></div>');return;}
+    const missLines=[];
+    s+='<div style="font-size:.66rem;font-weight:700;color:#be123c;text-transform:uppercase;margin-bottom:3px;">Missing</div>';
+    s+='<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px;">';
+    qual.forEach(function(d){
+      combos++;
+      const k=d+'|'+w,miss=[];for(let x=0;x<10;x++){if(x===d)continue;if(!comp[k].has(String(x)))miss.push(x);}
+      totalMissing+=miss.length;
+      if(miss.length)missLines.push(String(d).repeat(3)+' '+miss.join(','));
+      s+='<div style="display:flex;gap:8px;align-items:center;font-size:.8rem;"><span style="font-family:\'DM Mono\',monospace;font-weight:800;min-width:34px;">'+String(d).repeat(3)+'</span><span style="font-size:.66rem;color:var(--g5);min-width:52px;">'+cnt[k]+' hits</span>'+
+        (miss.length?miss.map(function(x){return '<span style="background:#fff1f2;border:1px solid #fda4af;color:#be123c;border-radius:5px;padding:0 6px;font-weight:700;font-size:.76rem;">'+x+'</span>';}).join(''):'<span style="color:#065f46;font-size:.74rem;font-weight:700;">✅ complete</span>')+'</div>';
+    });
+    s+='</div>';
+    if(missLines.length)copy.push(DN[w]+': '+missLines.join(' | '));
+    // recent fills
+    const fills=Object.keys(first).map(function(k){return first[k];}).filter(function(f){return f.dow===w&&(cnt[f.tg+'|'+w]||0)>=minH;}).sort(function(a,b){
+      return a.r.dk<b.r.dk?1:a.r.dk>b.r.dk?-1:(a.r.draw===b.r.draw?0:(a.r.draw==='evening'?-1:1));}).slice(0,nRec);
+    s+='<div style="font-size:.66rem;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:3px;">Most recent fills</div>';
+    if(!fills.length)s+='<div style="font-size:.74rem;color:var(--g5);">None.</div>';
+    fills.forEach(function(f){
+      s+='<div style="font-size:.76rem;padding:2px 0;border-bottom:1px solid var(--g1);"><b>'+String(f.tg).repeat(3)+'</b> now has <b>'+f.x+'</b>: <a href="#" onclick="showNumModal(\''+f.r.sorted+'\');return false;" style="font-family:\'DM Mono\',monospace;font-weight:700;color:var(--b6);text-decoration:underline dotted;">'+f.r.number+'</a> <span style="color:var(--g5);">'+f.r.state+' '+(f.r.draw==='midday'?'mid':'eve')+' · '+f.r.dk+'</span></div>';
+    });
+    body.push(s+'</div>');
+  });
+  h+='<div style="font-size:.82rem;font-weight:700;color:var(--g9);margin-bottom:8px;">'+combos+' qualifying combos · '+totalMissing+' missing digit slots</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;">'+body.join('')+'</div>';
+  window._tgCopy=copy.join('\n');
   out.innerHTML=h;
 }
 function _paClearNum(id){document.getElementById(id).value='';_renderPairsAlgo();}
