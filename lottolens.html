@@ -3783,7 +3783,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=640"></script>
+<script src="lottolens-data.js?v=641"></script>
 <script>
 
 // ================================================================
@@ -25294,7 +25294,9 @@ function _renderTripleGaps(){
     s+='<div style="font-size:.66rem;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:3px;">Most recent fills</div>';
     if(!fills.length)s+='<div style="font-size:.74rem;color:var(--g5);">None.</div>';
     fills.forEach(function(f){
-      s+='<div style="font-size:.76rem;padding:2px 0;border-bottom:1px solid var(--g1);"><b>'+String(f.tg).repeat(3)+'</b> now has <b>'+f.x+'</b>: <a href="#" onclick="showNumModal(\''+f.r.sorted+'\');return false;" style="font-family:\'DM Mono\',monospace;font-weight:700;color:var(--b6);text-decoration:underline dotted;">'+f.r.number+'</a> <span style="color:var(--g5);">'+f.r.state+' '+(f.r.draw==='midday'?'mid':'eve')+' · '+f.r.dk+'</span></div>';
+      const hist=(_allBySorted.get(f.r.sorted)||[]).filter(function(x){return x.dk<f.r.dk&&x.day===f.r.day;});
+      const star=hist.length?'<span title="Same digits came on the '+f.r.day+(['th','st','nd','rd'][(f.r.day%100>=11&&f.r.day%100<=13)?0:(f.r.day%10<4?f.r.day%10:0)])+' before ('+hist.length+'x): '+hist.slice(0,6).map(function(x){return x.number+' '+x.state+' '+x.dk;}).join(', ').replace(/"/g,'')+(hist.length>6?' …':'')+'" style="cursor:help;"> ⭐</span>':'';
+      s+='<div style="font-size:.76rem;padding:2px 0;border-bottom:1px solid var(--g1);"><b>'+String(f.tg).repeat(3)+'</b> now has <b>'+f.x+'</b>: <a href="#" onclick="showNumModal(\''+f.r.sorted+'\');return false;" style="font-family:\'DM Mono\',monospace;font-weight:700;color:var(--b6);text-decoration:underline dotted;">'+f.r.number+'</a>'+star+' <span style="color:var(--g5);">'+f.r.state+' '+(f.r.draw==='midday'?'mid':'eve')+' · '+f.r.dk+'</span></div>';
     });
     body.push(s+'</div>');
   });
