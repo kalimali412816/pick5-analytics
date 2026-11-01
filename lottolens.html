@@ -832,6 +832,7 @@ tr:hover td{background:var(--b0);}
   <div class="tab" onclick="switchTab('nextDayIntel',this)">🔮 Next Day Intel</div>
   <div class="tab" onclick="switchTab('pairsAlgo',this)">🧩 Pairs</div>
   <div class="tab" onclick="switchTab('quirks',this)">🧬 Quirks</div>
+  <div class="tab" onclick="switchTab('calTrends',this)">📆 Calendar Trends</div>
 </div>
 
 <!-- RESULTS -->
@@ -1534,6 +1535,24 @@ tr:hover td{background:var(--b0);}
 </div>
 
 <!-- PAIRS BUILDER -->
+<div id="panel-calTrends" class="panel">
+  <div class="card">
+    <div class="ch"><div><h3>📆 Calendar Trends</h3>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Which specific dates, months and years each pattern is coming from. Follows the global filter.</div></div></div>
+    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Window</span>
+          <select id="ctMode" onchange="_ctModeChanged()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><option value="month">Month</option><option value="year">Year</option><option value="all">All time</option></select></div>
+        <div id="ctValWrap" style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Period</span>
+          <select id="ctVal" onchange="_renderCalTrends()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"></select></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Top</span>
+          <select id="ctTop" onchange="_renderCalTrends()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><option>3</option><option>5</option><option>10</option></select></div>
+      </div>
+      <div id="ctOut"></div>
+    </div>
+  </div>
+</div>
+
 <div id="panel-quirks" class="panel">
   <div class="card">
     <div class="ch">
@@ -3752,7 +3771,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=629"></script>
+<script src="lottolens-data.js?v=630"></script>
 <script>
 
 // ================================================================
@@ -11483,7 +11502,7 @@ function runRandGen(){
 // ================================================================
 // TAB/VIEW SWITCHING
 // ================================================================
-const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat','pairsAlgo','quirks'];
+const TABS=['dashboard','results','frequency','freqAdvanced','hotcold','search','posSearch','posToday','delta','trends','monthly','smartgen','randgen','datesum','sumsall','totaldrawn','watchlist','backtest','patternorigin','digitsession','convergence','famtracker','quadtracker','triplepatterns','dcstreak','palindrome','quadpredictor','straightcal','digitdrought','statefingerprint','crossstate','sameDayRepeat','unseenSingles','tracker','permMatcher','posTrips','digitSearch','sameDayPerm','triplePredictor','nextDayIntel','posFilter','posConverge','posRepeat','pairsAlgo','quirks','calTrends'];
 
 function switchTab(tab,el){
   curTab=tab;
@@ -11532,6 +11551,7 @@ function renderCur(){
   else if(curTab==='posRepeat'){_renderPosRepeat();}
   else if(curTab==='pairsAlgo'){_renderPairsAlgo();}
   else if(curTab==='quirks'){_renderQuirks();}
+  else if(curTab==='calTrends'){_renderCalTrends();}
   else if(curTab==='dashboard'){renderDashboard();}
   else if(curTab==='watchlist'){tabWatchRender();}
   else if(curTab==='tracker'){_renderTracker();}
@@ -25050,6 +25070,100 @@ function _renderQuirks(){
     }
     h+='</div>';
   });
+  out.innerHTML=h;
+}
+
+// ================================================================
+// CALENDAR TRENDS
+// ================================================================
+const _CT_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const _CT_PATS=[
+ {k:'Singles',lbl:'S (Singles)',dates:1,months:0,years:0},
+ {k:'Doubles',lbl:'D (Doubles)',dates:1,months:0,years:0},
+ {k:'DD',lbl:'DD (Double Doubles)',dates:1,months:1,years:0},
+ {k:'Triples',lbl:'T (Triples)',dates:0,months:1,years:0},
+ {k:'TD',lbl:'TD (Triple Doubles)',dates:0,months:1,years:0},
+ {k:'Quads',lbl:'Q (Quads)',dates:0,months:1,years:1},
+ {k:'Qu',lbl:'Qu (Quints)',dates:0,months:1,years:1}
+];
+function _ctDateLbl(dk){const p=dk.split('-');return _CT_MON[+p[1]-1]+' '+(+p[2])+', '+p[0];}
+function _ctMonLbl(ym){const p=ym.split('-');return _CT_MON[+p[1]-1]+' '+p[0];}
+function _ctModeChanged(){_ctFillVal(true);_renderCalTrends();}
+function _ctFillVal(reset){
+  const mode=document.getElementById('ctMode').value,sel=document.getElementById('ctVal');
+  document.getElementById('ctValWrap').style.display=mode==='all'?'none':'flex';
+  const set=new Set();FILT.forEach(function(r){set.add(mode==='year'?r.ym.slice(0,4):r.ym);});
+  const vals=[...set].sort().reverse();
+  const old=sel.value;
+  sel.innerHTML=vals.map(function(v){return '<option value="'+v+'">'+(mode==='year'?v:_ctMonLbl(v))+'</option>';}).join('');
+  if(!reset&&vals.indexOf(old)>=0)sel.value=old;
+}
+function _ctRank(map,n){
+  return Object.keys(map).map(function(k){return [k,map[k]];}).sort(function(a,b){return b[1]-a[1]||(a[0]<b[0]?1:-1);});
+}
+function _ctList(title,arr,n,lblFn,total){
+  if(!arr.length)return '<div style="font-size:.74rem;color:var(--g5);">No draws.</div>';
+  // include ties with the Nth place
+  const cut=arr.length>n?arr[n-1][1]:-1;
+  const shown=arr.filter(function(x,i){return i<n||x[1]===cut;});
+  let h='<div style="font-size:.66rem;font-weight:700;color:var(--g5);text-transform:uppercase;margin:6px 0 3px;">'+title+'</div>';
+  h+=shown.map(function(x,i){
+    const pct=total?Math.round(x[1]/total*100):0;
+    return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:.8rem;padding:2px 0;"><span><b style="color:var(--b8);">'+(i+1)+'.</b> '+lblFn(x[0])+'</span><span style="font-family:\'DM Mono\',monospace;font-weight:700;">'+x[1]+(total?' <span style="color:var(--g5);font-weight:400;">('+pct+'%)</span>':'')+'</span></div>';
+  }).join('');
+  return h;
+}
+function _renderCalTrends(){
+  const out=document.getElementById('ctOut');if(!out)return;
+  const modeEl=document.getElementById('ctMode');
+  if(!document.getElementById('ctVal').options.length)_ctFillVal(true);
+  const mode=modeEl.value,val=document.getElementById('ctVal').value;
+  const N=parseInt(document.getElementById('ctTop').value,10)||3;
+  const rows=FILT.filter(function(r){return mode==='all'||(mode==='year'?r.ym.slice(0,4)===val:r.ym===val);});
+  if(!rows.length){out.innerHTML='<div class="es">No draws in this window.</div>';return;}
+  const stats={};
+  _CT_PATS.forEach(function(p){stats[p.k]={d:{},m:{},y:{},n:0};});
+  const daily={};
+  rows.forEach(function(r){
+    const k=_getRepeatKey(r.number),s=stats[k];if(!s)return;
+    s.n++;s.d[r.dk]=(s.d[r.dk]||0)+1;s.m[r.ym]=(s.m[r.ym]||0)+1;const y=r.ym.slice(0,4);s.y[y]=(s.y[y]||0)+1;
+    (daily[r.dk]=daily[r.dk]||{})[k]=(daily[r.dk][k]||0)+1;
+  });
+  const winLbl=mode==='all'?'All time':mode==='year'?val:_ctMonLbl(val);
+  let h='<div style="font-size:.85rem;font-weight:700;color:var(--g9);margin-bottom:8px;">'+winLbl+' · '+rows.length+' draws</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;">';
+  _CT_PATS.forEach(function(p){
+    const s=stats[p.k];
+    h+='<div style="border:1.5px solid var(--g3);border-radius:10px;padding:10px 12px;background:#fff;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:800;font-size:.85rem;color:var(--b8);">'+p.lbl+'</span><span style="font-size:.72rem;color:var(--g5);">'+s.n+' total</span></div>';
+    if(!s.n){h+='<div style="font-size:.74rem;color:var(--g5);margin-top:6px;">None in this window.</div></div>';return;}
+    if(p.dates)h+=_ctList('Top dates',_ctRank(s.d),N,_ctDateLbl,s.n);
+    if(p.months){
+      if(mode==='month')h+='<div style="font-size:.66rem;color:var(--g5);margin-top:6px;">Top months: switch Window to Year or All time.</div>';
+      else h+=_ctList('Top months',_ctRank(s.m),N,_ctMonLbl,s.n);
+    }
+    if(p.years){
+      if(mode!=='all')h+='<div style="font-size:.66rem;color:var(--g5);margin-top:6px;">Top years: switch Window to All time.</div>';
+      else h+=_ctList('Top years',_ctRank(s.y),N,function(x){return x;},s.n);
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+  // running daily table (month window only; otherwise the latest month in the window)
+  const dm=mode==='month'?val:(function(){let m='';rows.forEach(function(r){if(r.ym>m)m=r.ym;});return m;})();
+  const days=Object.keys(daily).filter(function(d){return d.slice(0,7)===dm;}).sort();
+  h+='<div style="margin-top:16px;font-size:.85rem;font-weight:700;color:var(--g9);">Running daily total · '+_ctMonLbl(dm)+'</div>';
+  const cum={};_CT_PATS.forEach(function(p){cum[p.k]=0;});
+  h+='<div style="overflow-x:auto;margin-top:6px;"><table style="border-collapse:collapse;font-size:.78rem;min-width:520px;width:100%;"><thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:2px solid var(--g3);">Date</th>'+_CT_PATS.map(function(p){return '<th style="padding:4px 8px;border-bottom:2px solid var(--g3);">'+_repBadgeLabels[p.k]+'</th>';}).join('')+'<th style="padding:4px 8px;border-bottom:2px solid var(--g3);">Draws</th></tr></thead><tbody>';
+  days.forEach(function(d){
+    let tot=0;
+    h+='<tr><td style="padding:3px 8px;border-bottom:1px solid var(--g2);white-space:nowrap;">'+_ctDateLbl(d)+'</td>';
+    _CT_PATS.forEach(function(p){
+      const c=(daily[d]||{})[p.k]||0;cum[p.k]+=c;tot+=c;
+      h+='<td style="text-align:center;padding:3px 8px;border-bottom:1px solid var(--g2);'+(c?'font-weight:700;':'color:var(--g4);')+'">'+(c||'·')+' <span style="color:var(--g5);font-size:.68rem;font-weight:400;">/'+cum[p.k]+'</span></td>';
+    });
+    h+='<td style="text-align:center;padding:3px 8px;border-bottom:1px solid var(--g2);">'+tot+'</td></tr>';
+  });
+  h+='</tbody></table></div><div style="font-size:.68rem;color:var(--g5);margin-top:4px;">Each cell shows that day\'s count, then the month-to-date total after the slash.</div>';
   out.innerHTML=h;
 }
 function _paClearNum(id){document.getElementById(id).value='';_renderPairsAlgo();}
