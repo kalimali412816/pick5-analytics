@@ -355,6 +355,7 @@ tr:hover td{background:var(--b0);}
 </header>
 
 <!-- MODAL -->
+<div class="mo" id="CTMO" onclick="if(event.target===this)this.classList.remove('open')"><div class="md"><div class="mh"><h3 id="ctMoT"></h3><button class="mc" onclick="document.getElementById('CTMO').classList.remove('open')">×</button></div><div class="mb" id="ctMoB"></div></div></div>
 <div class="mo" id="MO" onclick="cmo(event)">
   <div class="md">
     <div class="mh"><h3 id="MT">Details</h3><button class="mc" onclick="cmod()">✕</button></div>
@@ -1538,15 +1539,13 @@ tr:hover td{background:var(--b0);}
 <div id="panel-calTrends" class="panel">
   <div class="card">
     <div class="ch"><div><h3>📆 Calendar Trends</h3>
-      <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Which specific dates, months and years each pattern is coming from. Follows the global filter.</div></div></div>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.8);margin-top:4px;">Take the draws in your global filter (say Sept 2026). For each pattern, see which past dates, months and years those same numbers (as anagrams) came from before.</div></div></div>
     <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Window</span>
-          <select id="ctMode" onchange="_ctModeChanged()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><option value="month">Month</option><option value="year">Year</option><option value="all">All time</option></select></div>
-        <div id="ctValWrap" style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Period</span>
-          <select id="ctVal" onchange="_renderCalTrends()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"></select></div>
         <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Top</span>
           <select id="ctTop" onchange="_renderCalTrends()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><option>3</option><option>5</option><option>10</option></select></div>
+        <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:.65rem;color:var(--g5);font-weight:600;text-transform:uppercase;">Count</span>
+          <select id="ctCount" onchange="_renderCalTrends()" style="padding:5px 8px;border:1.5px solid var(--g3);border-radius:7px;font-size:.8rem;"><option value="draw">Every draw</option><option value="anag">Unique anagrams</option></select></div>
       </div>
       <div id="ctOut"></div>
     </div>
@@ -3771,7 +3770,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=630"></script>
+<script src="lottolens-data.js?v=634"></script>
 <script>
 
 // ================================================================
@@ -25074,7 +25073,7 @@ function _renderQuirks(){
 }
 
 // ================================================================
-// CALENDAR TRENDS
+// CALENDAR TRENDS  (global-filter draws -> where did the same anagrams come from historically)
 // ================================================================
 const _CT_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const _CT_PATS=[
@@ -25086,84 +25085,126 @@ const _CT_PATS=[
  {k:'Quads',lbl:'Q (Quads)',dates:0,months:1,years:1},
  {k:'Qu',lbl:'Qu (Quints)',dates:0,months:1,years:1}
 ];
+let _ctPairs={};   // pattern key -> [{s:sourceRow,hs:[earlier rows with same anagram]}]
 function _ctDateLbl(dk){const p=dk.split('-');return _CT_MON[+p[1]-1]+' '+(+p[2])+', '+p[0];}
 function _ctMonLbl(ym){const p=ym.split('-');return _CT_MON[+p[1]-1]+' '+p[0];}
-function _ctModeChanged(){_ctFillVal(true);_renderCalTrends();}
-function _ctFillVal(reset){
-  const mode=document.getElementById('ctMode').value,sel=document.getElementById('ctVal');
-  document.getElementById('ctValWrap').style.display=mode==='all'?'none':'flex';
-  const set=new Set();FILT.forEach(function(r){set.add(mode==='year'?r.ym.slice(0,4):r.ym);});
-  const vals=[...set].sort().reverse();
-  const old=sel.value;
-  sel.innerHTML=vals.map(function(v){return '<option value="'+v+'">'+(mode==='year'?v:_ctMonLbl(v))+'</option>';}).join('');
-  if(!reset&&vals.indexOf(old)>=0)sel.value=old;
+function _ctInB(r,kind,val){return kind==='d'?r.dk===val:kind==='m'?r.ym===val:r.ym.slice(0,4)===val;}
+function _ctSrcKey(r,uniq,i){return uniq?r.sorted:r.state+r.dk+r.draw;}
+// count distinct source keys per bucket
+function _ctTally(pk,kind,uniq){
+  const sets={};
+  (_ctPairs[pk]||[]).forEach(function(p){
+    const sk=_ctSrcKey(p.s,uniq);
+    p.hs.forEach(function(r){const b=kind==='d'?r.dk:kind==='m'?r.ym:r.ym.slice(0,4);(sets[b]=sets[b]||new Set()).add(sk);});
+  });
+  const m={};Object.keys(sets).forEach(function(b){m[b]=sets[b].size;});return m;
 }
-function _ctRank(map,n){
+function _ctRank(map){
   return Object.keys(map).map(function(k){return [k,map[k]];}).sort(function(a,b){return b[1]-a[1]||(a[0]<b[0]?1:-1);});
 }
-function _ctList(title,arr,n,lblFn,total){
-  if(!arr.length)return '<div style="font-size:.74rem;color:var(--g5);">No draws.</div>';
-  // include ties with the Nth place
+function _ctList(pk,kind,arr,n,lblFn,total,title){
+  if(!arr.length)return '';
   const cut=arr.length>n?arr[n-1][1]:-1;
-  const shown=arr.filter(function(x,i){return i<n||x[1]===cut;});
+  const tied=arr.filter(function(x,i){return i<n||x[1]===cut;});
+  const shown=tied.slice(0,Math.max(n,Math.min(tied.length,n*2)));
   let h='<div style="font-size:.66rem;font-weight:700;color:var(--g5);text-transform:uppercase;margin:6px 0 3px;">'+title+'</div>';
   h+=shown.map(function(x,i){
     const pct=total?Math.round(x[1]/total*100):0;
-    return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:.8rem;padding:2px 0;"><span><b style="color:var(--b8);">'+(i+1)+'.</b> '+lblFn(x[0])+'</span><span style="font-family:\'DM Mono\',monospace;font-weight:700;">'+x[1]+(total?' <span style="color:var(--g5);font-weight:400;">('+pct+'%)</span>':'')+'</span></div>';
+    return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:.8rem;padding:2px 0;"><span><b style="color:var(--b8);">'+(i+1)+'.</b> <a href="#" onclick="_ctOpen(\''+pk+'\',\''+kind+'\',\''+x[0]+'\');return false;" style="color:var(--b6);font-weight:600;text-decoration:underline dotted;">'+lblFn(x[0])+'</a></span><span style="font-family:\'DM Mono\',monospace;font-weight:700;">'+x[1]+' <span style="color:var(--g5);font-weight:400;">('+pct+'%)</span></span></div>';
   }).join('');
+  if(tied.length>shown.length)h+='<div style="font-size:.68rem;color:var(--g5);">+'+(tied.length-shown.length)+' more tied at '+cut+'</div>';
   return h;
+}
+function _ctOpen(pk,kind,val){
+  const uniq=document.getElementById('ctCount').value==='anag';
+  const pairs=_ctPairs[pk]||[];
+  const lbl=kind==='d'?_ctDateLbl(val):kind==='m'?_ctMonLbl(val):val;
+  document.getElementById('ctMoT').textContent=lbl+' · '+_repBadgeLabels[pk]+' matches';
+  let h='';
+  if(kind!=='d'){
+    // drill list: sub-buckets (years -> months, months -> dates)
+    const subKind=kind==='y'?'m':'d';
+    const sets={},srcs=new Set();
+    pairs.forEach(function(p){
+      const sk=_ctSrcKey(p.s,uniq);
+      p.hs.forEach(function(r){if(!_ctInB(r,kind,val))return;srcs.add(sk);const b=subKind==='m'?r.ym:r.dk;(sets[b]=sets[b]||new Set()).add(sk);});
+    });
+    const m={};Object.keys(sets).forEach(function(b){m[b]=sets[b].size;});
+    const arr=_ctRank(m);
+    h+='<div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">'+srcs.size+' '+(uniq?'anagram':'draw')+(srcs.size!==1?'s':'')+' from your filter matched here · across '+arr.length+' '+(subKind==='m'?'month':'date')+(arr.length!==1?'s':'')+'</div>';
+    h+=arr.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--g1);font-size:.85rem;"><a href="#" onclick="_ctOpen(\''+pk+'\',\''+subKind+'\',\''+x[0]+'\');return false;" style="color:var(--b6);font-weight:600;text-decoration:underline dotted;">'+(subKind==='m'?_ctMonLbl(x[0]):_ctDateLbl(x[0]))+'</a><span style="font-family:\'DM Mono\',monospace;font-weight:700;">'+x[1]+'</span></div>';}).join('');
+    document.getElementById('ctMoB').innerHTML=h;
+    document.getElementById('CTMO').classList.add('open');
+    return;
+  }
+  // a single historical date: show that day's draws that matched, and which filtered draw they matched
+  const hist=[],srcByHist=new Map();
+  pairs.forEach(function(p){p.hs.forEach(function(r){if(r.dk!==val)return;if(!srcByHist.has(r)){srcByHist.set(r,[]);hist.push(r);}srcByHist.get(r).push(p.s);});});
+  hist.sort(function(a,b){return a.sorted<b.sorted?-1:a.sorted>b.sorted?1:(a.state<b.state?-1:1);});
+  const nums=[...new Set(hist.map(function(r){return r.number;}))];
+  const ana=[...new Set(hist.map(function(r){return r.sorted;}))];
+  const srcNums=[...new Set([].concat.apply([],[...srcByHist.values()]).map(function(r){return r.number;}))];
+  window._ctCopyNums=nums.join(' ');window._ctCopyAna=ana.join(' ');window._ctCopySrc=srcNums.join(' ');
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.82rem;font-weight:700;">'+hist.length+' draw'+(hist.length!==1?'s':'')+' that day · '+ana.length+' anagram'+(ana.length!==1?'s':'')+'</span>'+
+   '<button class="tb2" onclick="_copyToClipboard(window._ctCopyNums,this)">📋 Copy numbers</button><button class="tb2" onclick="_copyToClipboard(window._ctCopyAna,this)">📋 Copy anagrams</button><button class="tb2" onclick="_copyToClipboard(window._ctCopySrc,this)">📋 Copy your filtered matches</button></div>';
+  hist.forEach(function(r){
+    const ss=srcByHist.get(r);
+    h+='<div style="padding:6px 0;border-bottom:1px solid var(--g1);"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span onclick="showNumModal(\''+r.sorted+'\')" style="cursor:pointer;font-family:\'DM Mono\',monospace;font-weight:800;font-size:.9rem;color:var(--b8);" title="Anagram group">'+r.number+'</span>'+_repBadge(r.number)+'<span style="font-size:.74rem;color:var(--g5);">'+r.state+' '+(r.draw==='midday'?'mid':'eve')+' · sum '+r.sum+'</span></div><div style="font-size:.72rem;color:var(--g6);margin-top:2px;">came again in your filter: '+ss.map(function(s){return s.number+' <span style="color:var(--g5);">'+s.state+' '+s.dk.slice(2)+' '+(s.draw==='midday'?'mid':'eve')+'</span>';}).join(' · ')+'</div></div>';
+  });
+  document.getElementById('ctMoB').innerHTML=h;
+  document.getElementById('CTMO').classList.add('open');
 }
 function _renderCalTrends(){
   const out=document.getElementById('ctOut');if(!out)return;
-  const modeEl=document.getElementById('ctMode');
-  if(!document.getElementById('ctVal').options.length)_ctFillVal(true);
-  const mode=modeEl.value,val=document.getElementById('ctVal').value;
   const N=parseInt(document.getElementById('ctTop').value,10)||3;
-  const rows=FILT.filter(function(r){return mode==='all'||(mode==='year'?r.ym.slice(0,4)===val:r.ym===val);});
-  if(!rows.length){out.innerHTML='<div class="es">No draws in this window.</div>';return;}
-  const stats={};
-  _CT_PATS.forEach(function(p){stats[p.k]={d:{},m:{},y:{},n:0};});
-  const daily={};
-  rows.forEach(function(r){
-    const k=_getRepeatKey(r.number),s=stats[k];if(!s)return;
-    s.n++;s.d[r.dk]=(s.d[r.dk]||0)+1;s.m[r.ym]=(s.m[r.ym]||0)+1;const y=r.ym.slice(0,4);s.y[y]=(s.y[y]||0)+1;
-    (daily[r.dk]=daily[r.dk]||{})[k]=(daily[r.dk][k]||0)+1;
+  const uniq=document.getElementById('ctCount').value==='anag';
+  const src=FILT;
+  if(!src.length){out.innerHTML='<div class="es">No draws match the global filter.</div>';return;}
+  _ctPairs={};_CT_PATS.forEach(function(p){_ctPairs[p.k]=[];});
+  src.forEach(function(r){
+    const k=_getRepeatKey(r.number);if(!_ctPairs[k])return;
+    const hs=(_allBySorted.get(r.sorted)||[]).filter(function(x){return x.dk<r.dk;});
+    _ctPairs[k].push({s:r,hs:hs});
   });
-  const winLbl=mode==='all'?'All time':mode==='year'?val:_ctMonLbl(val);
-  let h='<div style="font-size:.85rem;font-weight:700;color:var(--g9);margin-bottom:8px;">'+winLbl+' · '+rows.length+' draws</div>';
+  // describe the filtered range
+  let lo='9999',hi='0000';src.forEach(function(r){if(r.dk<lo)lo=r.dk;if(r.dk>hi)hi=r.dk;});
+  let h='<div style="font-size:.85rem;font-weight:700;color:var(--g9);margin-bottom:2px;">'+src.length+' draws in your filter · '+_ctDateLbl(lo)+' to '+_ctDateLbl(hi)+'</div>';
+  h+='<div style="font-size:.72rem;color:var(--g5);margin-bottom:8px;">For each pattern: how many of those '+(uniq?'anagrams':'draws')+' had come before, grouped by when. Each source '+(uniq?'anagram':'draw')+' counts once per date/month/year even if it hit that period several times. Click a date, month or year to drill in.</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;">';
   _CT_PATS.forEach(function(p){
-    const s=stats[p.k];
-    h+='<div style="border:1.5px solid var(--g3);border-radius:10px;padding:10px 12px;background:#fff;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:800;font-size:.85rem;color:var(--b8);">'+p.lbl+'</span><span style="font-size:.72rem;color:var(--g5);">'+s.n+' total</span></div>';
-    if(!s.n){h+='<div style="font-size:.74rem;color:var(--g5);margin-top:6px;">None in this window.</div></div>';return;}
-    if(p.dates)h+=_ctList('Top dates',_ctRank(s.d),N,_ctDateLbl,s.n);
-    if(p.months){
-      if(mode==='month')h+='<div style="font-size:.66rem;color:var(--g5);margin-top:6px;">Top months: switch Window to Year or All time.</div>';
-      else h+=_ctList('Top months',_ctRank(s.m),N,_ctMonLbl,s.n);
-    }
-    if(p.years){
-      if(mode!=='all')h+='<div style="font-size:.66rem;color:var(--g5);margin-top:6px;">Top years: switch Window to All time.</div>';
-      else h+=_ctList('Top years',_ctRank(s.y),N,function(x){return x;},s.n);
-    }
+    const pairs=_ctPairs[p.k];
+    const srcSet=new Set(pairs.map(function(x){return _ctSrcKey(x.s,uniq);}));
+    const withHist=new Set(pairs.filter(function(x){return x.hs.length;}).map(function(x){return _ctSrcKey(x.s,uniq);}));
+    h+='<div style="border:1.5px solid var(--g3);border-radius:10px;padding:10px 12px;background:#fff;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:800;font-size:.85rem;color:var(--b8);">'+p.lbl+'</span><span style="font-size:.72rem;color:var(--g5);">'+srcSet.size+(uniq?(srcSet.size===1?' anagram':' anagrams'):(srcSet.size===1?' draw':' draws'))+'</span></div>';
+    if(!srcSet.size){h+='<div style="font-size:.74rem;color:var(--g5);margin-top:6px;">None in your filter.</div></div>';return;}
+    h+='<div style="font-size:.7rem;color:var(--g5);">'+withHist.size+' had come before</div>';
+    const T=withHist.size;
+    if(!T){h+='</div>';return;}
+    if(p.dates)h+=_ctList(p.k,'d',_ctRank(_ctTally(p.k,'d',uniq)),N,_ctDateLbl,T,'Top past dates');
+    if(p.months)h+=_ctList(p.k,'m',_ctRank(_ctTally(p.k,'m',uniq)),N,_ctMonLbl,T,'Top past months');
+    if(p.years)h+=_ctList(p.k,'y',_ctRank(_ctTally(p.k,'y',uniq)),N,function(x){return x;},T,'Top past years');
     h+='</div>';
   });
   h+='</div>';
-  // running daily table (month window only; otherwise the latest month in the window)
-  const dm=mode==='month'?val:(function(){let m='';rows.forEach(function(r){if(r.ym>m)m=r.ym;});return m;})();
-  const days=Object.keys(daily).filter(function(d){return d.slice(0,7)===dm;}).sort();
-  h+='<div style="margin-top:16px;font-size:.85rem;font-weight:700;color:var(--g9);">Running daily total · '+_ctMonLbl(dm)+'</div>';
+  // running daily total of the filtered draws
+  const daily={};
+  src.forEach(function(r){const k=_getRepeatKey(r.number);(daily[r.dk]=daily[r.dk]||{})[k]=((daily[r.dk]||{})[k]||0)+1;});
+  const days=Object.keys(daily).sort();
+  const show=days.slice(-62);
+  h+='<div style="margin-top:16px;font-size:.85rem;font-weight:700;color:var(--g9);">Running daily total of your filtered draws'+(days.length>62?' (latest 62 dates)':'')+'</div>';
   const cum={};_CT_PATS.forEach(function(p){cum[p.k]=0;});
-  h+='<div style="overflow-x:auto;margin-top:6px;"><table style="border-collapse:collapse;font-size:.78rem;min-width:520px;width:100%;"><thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:2px solid var(--g3);">Date</th>'+_CT_PATS.map(function(p){return '<th style="padding:4px 8px;border-bottom:2px solid var(--g3);">'+_repBadgeLabels[p.k]+'</th>';}).join('')+'<th style="padding:4px 8px;border-bottom:2px solid var(--g3);">Draws</th></tr></thead><tbody>';
-  days.forEach(function(d){
+  days.slice(0,days.length-show.length).forEach(function(d){_CT_PATS.forEach(function(p){cum[p.k]+=(daily[d][p.k]||0);});});
+  h+='<div style="overflow-x:auto;margin-top:6px;"><table style="border-collapse:collapse;font-size:.78rem;min-width:520px;width:100%;"><thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:2px solid var(--g3);">Date</th>'+_CT_PATS.map(function(p){return '<th style="padding:4px 8px;border-bottom:2px solid var(--g3);">'+_repBadgeLabels[p.k]+'</th>';}).join('')+'<th style="padding:4px 8px;border-bottom:2px solid var(--g3);">Total</th></tr></thead><tbody>';
+  show.forEach(function(d){
     let tot=0;
     h+='<tr><td style="padding:3px 8px;border-bottom:1px solid var(--g2);white-space:nowrap;">'+_ctDateLbl(d)+'</td>';
     _CT_PATS.forEach(function(p){
-      const c=(daily[d]||{})[p.k]||0;cum[p.k]+=c;tot+=c;
+      const c=daily[d][p.k]||0;cum[p.k]+=c;tot+=c;
       h+='<td style="text-align:center;padding:3px 8px;border-bottom:1px solid var(--g2);'+(c?'font-weight:700;':'color:var(--g4);')+'">'+(c||'·')+' <span style="color:var(--g5);font-size:.68rem;font-weight:400;">/'+cum[p.k]+'</span></td>';
     });
     h+='<td style="text-align:center;padding:3px 8px;border-bottom:1px solid var(--g2);">'+tot+'</td></tr>';
   });
-  h+='</tbody></table></div><div style="font-size:.68rem;color:var(--g5);margin-top:4px;">Each cell shows that day\'s count, then the month-to-date total after the slash.</div>';
+  h+='</tbody></table></div><div style="font-size:.68rem;color:var(--g5);margin-top:4px;">Each cell shows that day\'s count, then the running total after the slash.</div>';
   out.innerHTML=h;
 }
 function _paClearNum(id){document.getElementById(id).value='';_renderPairsAlgo();}
