@@ -3770,7 +3770,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=634"></script>
+<script src="lottolens-data.js?v=635"></script>
 <script>
 
 // ================================================================
@@ -25115,14 +25115,20 @@ function _ctList(pk,kind,arr,n,lblFn,total,title){
   if(tied.length>shown.length)h+='<div style="font-size:.68rem;color:var(--g5);">+'+(tied.length-shown.length)+' more tied at '+cut+'</div>';
   return h;
 }
+let _ctStack=[];
 function _ctOpen(pk,kind,val){
+  if(!document.getElementById('CTMO').classList.contains('open'))_ctStack=[];
+  _ctStack.push([pk,kind,val]);_ctShow();
+}
+function _ctBack(){if(_ctStack.length>1){_ctStack.pop();_ctShow();}}
+function _ctShow(){
+  const v=_ctStack[_ctStack.length-1],pk=v[0],kind=v[1],val=v[2];
   const uniq=document.getElementById('ctCount').value==='anag';
   const pairs=_ctPairs[pk]||[];
   const lbl=kind==='d'?_ctDateLbl(val):kind==='m'?_ctMonLbl(val):val;
-  document.getElementById('ctMoT').textContent=lbl+' · '+_repBadgeLabels[pk]+' matches';
+  document.getElementById('ctMoT').innerHTML=(_ctStack.length>1?'<button class="tb2" onclick="_ctBack()" style="margin-right:10px;">← Back</button>':'')+lbl+' · '+_repBadgeLabels[pk]+' matches';
   let h='';
   if(kind!=='d'){
-    // drill list: sub-buckets (years -> months, months -> dates)
     const subKind=kind==='y'?'m':'d';
     const sets={},srcs=new Set();
     pairs.forEach(function(p){
@@ -25133,24 +25139,19 @@ function _ctOpen(pk,kind,val){
     const arr=_ctRank(m);
     h+='<div style="font-size:.82rem;font-weight:700;margin-bottom:8px;">'+srcs.size+' '+(uniq?'anagram':'draw')+(srcs.size!==1?'s':'')+' from your filter matched here · across '+arr.length+' '+(subKind==='m'?'month':'date')+(arr.length!==1?'s':'')+'</div>';
     h+=arr.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--g1);font-size:.85rem;"><a href="#" onclick="_ctOpen(\''+pk+'\',\''+subKind+'\',\''+x[0]+'\');return false;" style="color:var(--b6);font-weight:600;text-decoration:underline dotted;">'+(subKind==='m'?_ctMonLbl(x[0]):_ctDateLbl(x[0]))+'</a><span style="font-family:\'DM Mono\',monospace;font-weight:700;">'+x[1]+'</span></div>';}).join('');
-    document.getElementById('ctMoB').innerHTML=h;
-    document.getElementById('CTMO').classList.add('open');
-    return;
+  } else {
+    // every draw on that date; the ones that match your filter are highlighted
+    const srcByHist=new Map();
+    pairs.forEach(function(p){p.hs.forEach(function(r){if(r.dk!==val)return;if(!srcByHist.has(r))srcByHist.set(r,[]);srcByHist.get(r).push(p.s);});});
+    const day=ALL.filter(function(r){return r.dk===val;}).sort(function(a,b){return a.state<b.state?-1:a.state>b.state?1:(a.draw<b.draw?-1:1);});
+    window._ctCopyNums=day.map(function(r){return r.number;}).join(' ');
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.82rem;font-weight:700;">'+day.length+' draws that day · '+srcByHist.size+' highlighted</span><button class="tb2" onclick="_copyToClipboard(window._ctCopyNums,this)">📋 Copy</button></div>';
+    day.forEach(function(r){
+      const ss=srcByHist.get(r);
+      h+='<div style="padding:5px 8px;border-bottom:1px solid var(--g1);border-radius:6px;'+(ss?'background:#fef3c7;border:1.5px solid var(--ac);margin:2px 0;':'')+'"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span onclick="showNumModal(\''+r.sorted+'\')" style="cursor:pointer;font-family:\'DM Mono\',monospace;font-weight:800;font-size:.9rem;color:var(--b8);">'+r.number+'</span>'+_repBadge(r.number)+'<span style="font-size:.74rem;color:var(--g5);">'+r.state+' '+(r.draw==='midday'?'mid':'eve')+' · sum '+r.sum+'</span></div>'+
+       (ss?'<div style="font-size:.72rem;color:var(--g7);margin-top:2px;">came again in your filter: '+ss.map(function(s){return s.number+' <span style="color:var(--g5);">'+s.state+' '+s.dk.slice(2)+' '+(s.draw==='midday'?'mid':'eve')+'</span>';}).join(' · ')+'</div>':'')+'</div>';
+    });
   }
-  // a single historical date: show that day's draws that matched, and which filtered draw they matched
-  const hist=[],srcByHist=new Map();
-  pairs.forEach(function(p){p.hs.forEach(function(r){if(r.dk!==val)return;if(!srcByHist.has(r)){srcByHist.set(r,[]);hist.push(r);}srcByHist.get(r).push(p.s);});});
-  hist.sort(function(a,b){return a.sorted<b.sorted?-1:a.sorted>b.sorted?1:(a.state<b.state?-1:1);});
-  const nums=[...new Set(hist.map(function(r){return r.number;}))];
-  const ana=[...new Set(hist.map(function(r){return r.sorted;}))];
-  const srcNums=[...new Set([].concat.apply([],[...srcByHist.values()]).map(function(r){return r.number;}))];
-  window._ctCopyNums=nums.join(' ');window._ctCopyAna=ana.join(' ');window._ctCopySrc=srcNums.join(' ');
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.82rem;font-weight:700;">'+hist.length+' draw'+(hist.length!==1?'s':'')+' that day · '+ana.length+' anagram'+(ana.length!==1?'s':'')+'</span>'+
-   '<button class="tb2" onclick="_copyToClipboard(window._ctCopyNums,this)">📋 Copy numbers</button><button class="tb2" onclick="_copyToClipboard(window._ctCopyAna,this)">📋 Copy anagrams</button><button class="tb2" onclick="_copyToClipboard(window._ctCopySrc,this)">📋 Copy your filtered matches</button></div>';
-  hist.forEach(function(r){
-    const ss=srcByHist.get(r);
-    h+='<div style="padding:6px 0;border-bottom:1px solid var(--g1);"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span onclick="showNumModal(\''+r.sorted+'\')" style="cursor:pointer;font-family:\'DM Mono\',monospace;font-weight:800;font-size:.9rem;color:var(--b8);" title="Anagram group">'+r.number+'</span>'+_repBadge(r.number)+'<span style="font-size:.74rem;color:var(--g5);">'+r.state+' '+(r.draw==='midday'?'mid':'eve')+' · sum '+r.sum+'</span></div><div style="font-size:.72rem;color:var(--g6);margin-top:2px;">came again in your filter: '+ss.map(function(s){return s.number+' <span style="color:var(--g5);">'+s.state+' '+s.dk.slice(2)+' '+(s.draw==='midday'?'mid':'eve')+'</span>';}).join(' · ')+'</div></div>';
-  });
   document.getElementById('ctMoB').innerHTML=h;
   document.getElementById('CTMO').classList.add('open');
 }
