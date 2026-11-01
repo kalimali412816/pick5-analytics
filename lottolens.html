@@ -3770,7 +3770,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=637"></script>
+<script src="lottolens-data.js?v=638"></script>
 <script>
 
 // ================================================================
@@ -16035,89 +16035,93 @@ function _buildColdBirthdaySumsWidget(){
 }
 // ── End Cold Birthday Sums Widget ─────────────────────────────────
 
+function _devaSetPair(p){window._devaPair=p;const el=document.getElementById('devaBox');if(el)el.outerHTML=_buildDEVACrossAlert();}
 function _buildDEVACrossAlert(){
-  // For each state, build sorted-value -> first draw date map
-  const ftDE={}, ftVA={};
-  const seenDE=new Set(), seenVA=new Set();
-  ALL.filter(r=>r.state==='DE'||r.state==='VA').sort((a,b)=>a.dk<b.dk?-1:a.dk>b.dk?1:0).forEach(r=>{
-    if(r.state==='DE'&&!seenDE.has(r.sorted)){seenDE.add(r.sorted);ftDE[r.sorted]={dk:r.dk,number:r.number};}
-    if(r.state==='VA'&&!seenVA.has(r.sorted)){seenVA.add(r.sorted);ftVA[r.sorted]={dk:r.dk,number:r.number};}
+  const STS=['DE','VA','MI'];
+  const COL={DE:'#2563eb',VA:'#b45309',MI:'#15803d'};
+  // first-ever draw per state for each sorted value
+  const ft={DE:{},VA:{},MI:{}};
+  ALL.filter(r=>ft[r.state]).sort((a,b)=>a.dk<b.dk?-1:a.dk>b.dk?1:0).forEach(r=>{
+    if(!ft[r.state][r.sorted])ft[r.state][r.sorted]={dk:r.dk,number:r.number};
   });
-
-  // Find combos where both states hit first time within 30 days
+  const dayMs=1000*60*60*24;
+  const gapD=(a,b)=>Math.abs((new Date(a)-new Date(b))/dayMs);
+  const PAIRS=[['DE','VA'],['DE','MI'],['VA','MI']];
+  const all=new Set();STS.forEach(st=>Object.keys(ft[st]).forEach(k=>all.add(k)));
+  // confirmed matches: any pair of tracked states first-hit within 30 days
   const matches=[];
-  Object.keys(ftDE).forEach(srt=>{
-    if(!ftVA[srt]) return;
-    const de=ftDE[srt], va=ftVA[srt];
-    const gap=Math.abs((new Date(de.dk)-new Date(va.dk))/(1000*60*60*24));
-    if(gap<=30){
-      const deFirst=de.dk<=va.dk;
-      matches.push({srt,gap:Math.round(gap),
-        first:{st:deFirst?'DE':'VA',dk:deFirst?de.dk:va.dk,num:deFirst?de.number:va.number},
-        second:{st:deFirst?'VA':'DE',dk:deFirst?va.dk:de.dk,num:deFirst?va.number:de.number}});
-    }
+  all.forEach(srt=>{
+    const has=STS.filter(st=>ft[st][srt]);
+    if(has.length<2)return;
+    const pairs=[];
+    PAIRS.forEach(p=>{if(ft[p[0]][srt]&&ft[p[1]][srt]&&gapD(ft[p[0]][srt].dk,ft[p[1]][srt].dk)<=30)pairs.push(p.join('-'));});
+    if(!pairs.length)return;
+    const inv=new Set();pairs.forEach(p=>p.split('-').forEach(x=>inv.add(x)));
+    const seq=[...inv].map(st=>({st,dk:ft[st][srt].dk,num:ft[st][srt].number})).sort((a,b)=>a.dk<b.dk?-1:a.dk>b.dk?1:0);
+    matches.push({srt,pairs,seq,gap:Math.round(gapD(seq[0].dk,seq[seq.length-1].dk)),last:seq[seq.length-1].dk});
   });
+  matches.sort((a,b)=>b.last.localeCompare(a.last));
+  const pairCount={};PAIRS.forEach(p=>{pairCount[p.join('-')]=matches.filter(m=>m.pairs.includes(p.join('-'))).length;});
+  const triple=matches.filter(m=>m.seq.length===3).length;
+  const sel=window._devaPair||'ALL';
+  const shown=sel==='ALL'?matches:matches.filter(m=>m.pairs.includes(sel));
 
-  matches.sort((a,b)=>b.second.dk.localeCompare(a.second.dk));
-
-  // Alert: combos where DE hit for first time recently — has VA hit yet?
+  // pending: a tracked state is first of the three to ever hit it, within 30 days; others haven't yet
   const todayDk=ALL.map(r=>r.dk).sort().pop();
   const today=new Date(todayDk);
   const pending=[];
-  Object.keys(ftDE).forEach(srt=>{
-    if(ftVA[srt]) return; // VA already hit it
-    const deDate=new Date(ftDE[srt].dk);
-    const daysSince=Math.round((today-deDate)/(1000*60*60*24));
-    if(daysSince<=30) pending.push({srt,dk:ftDE[srt].dk,num:ftDE[srt].number,days:daysSince,leader:'DE',follower:'VA'});
-  });
-  Object.keys(ftVA).forEach(srt=>{
-    if(ftDE[srt]) return;
-    const vaDate=new Date(ftVA[srt].dk);
-    const daysSince=Math.round((today-vaDate)/(1000*60*60*24));
-    if(daysSince<=30) pending.push({srt,dk:ftVA[srt].dk,num:ftVA[srt].number,days:daysSince,leader:'VA',follower:'DE'});
+  all.forEach(srt=>{
+    const has=STS.filter(st=>ft[st][srt]).sort((a,b)=>ft[a][srt].dk<ft[b][srt].dk?-1:1);
+    const missing=STS.filter(st=>!ft[st][srt]);
+    if(!missing.length)return;
+    const lead=has[0];
+    const days=Math.round((today-new Date(ft[lead][srt].dk))/dayMs);
+    if(days>30)return;
+    // ignore if a later state hit it long after (not the case here since lead is earliest and days<=30)
+    pending.push({srt,dk:ft[lead][srt].dk,num:ft[lead][srt].number,days,leader:lead,got:has.slice(1),wait:missing});
   });
   pending.sort((a,b)=>a.days-b.days);
 
   const pat=srt=>_getRepeatKey(srt).replace('Singles','S').replace('Doubles','D').replace('Triples','T').replace('Quads','Q');
+  let h=`<div id="devaBox" style="background:#fff;border:1.5px solid var(--g3);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);">`;
+  h+=`<div style="font-weight:700;font-size:.88rem;color:var(--g9);margin-bottom:4px;">🔗 DE ↔ VA ↔ MI First-Timer Tracker</div>`;
+  h+=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:8px;">Sorted combos two or more of these states hit for the first time within 30 days of each other · ${matches.length} total matches (${triple} hit by all three)</div>`;
+  // pair comparison chips
+  h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">`;
+  const chip=(key,label,n)=>`<button onclick="_devaSetPair('${key}')" style="border:1.5px solid ${sel===key?'var(--b5)':'var(--g3)'};background:${sel===key?'var(--b0)':'#fff'};border-radius:7px;padding:3px 10px;font-size:.7rem;cursor:pointer;font-weight:600;">${label} <span style="color:var(--g5);font-weight:400;">${n}</span></button>`;
+  h+=chip('ALL','All',matches.length);
+  PAIRS.forEach(p=>{h+=chip(p.join('-'),p.join(' ↔ '),pairCount[p.join('-')]);});
+  h+=`</div>`;
 
-  let h=`<div style="background:#fff;border:1.5px solid var(--g3);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);">`;
-  h+=`<div style="font-weight:700;font-size:.88rem;color:var(--g9);margin-bottom:4px;">🔗 DE ↔ VA First-Timer Tracker</div>`;
-  h+=`<div style="font-size:.7rem;color:var(--g5);margin-bottom:12px;">Sorted combos both states hit for the first time within 30 days · ${matches.length} total matches</div>`;
-
-  // Pending alert — combos one state hit that the other hasn't yet
   if(pending.length){
-    const waitDE=pending.filter(p=>p.follower==='DE').map(p=>p.srt);
-    const waitVA=pending.filter(p=>p.follower==='VA').map(p=>p.srt);
-    window._devaWaitDE=waitDE.join(' ');
-    window._devaWaitVA=waitVA.join(' ');
+    window._devaWait={};STS.forEach(st=>{window._devaWait[st]=pending.filter(p=>p.wait.includes(st)).map(p=>p.srt);});
     h+=`<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:12px;">`;
     h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">`;
-    h+=`<span style="font-size:.68rem;font-weight:700;color:#92400e;">⏳ Watching — ${pending.length} combo${pending.length>1?'s':''} waiting for follower state</span>`;
-    if(waitDE.length) h+=`<button onclick="_copyToClipboard(window._devaWaitDE,this)" style="background:#2563eb;color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:.62rem;cursor:pointer;font-weight:600;">📋 Copy DE watch (${waitDE.length})</button>`;
-    if(waitVA.length) h+=`<button onclick="_copyToClipboard(window._devaWaitVA,this)" style="background:#b45309;color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:.62rem;cursor:pointer;font-weight:600;">📋 Copy VA watch (${waitVA.length})</button>`;
-    h+=`</div>`;
-    h+=`<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+    h+=`<span style="font-size:.68rem;font-weight:700;color:#92400e;">⏳ Watching — ${pending.length} combo${pending.length>1?'s':''} waiting for another state</span>`;
+    STS.forEach(st=>{const n=window._devaWait[st].length;if(n)h+=`<button onclick="_copyToClipboard(window._devaWait['${st}'].join(' '),this)" style="background:${COL[st]};color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:.62rem;cursor:pointer;font-weight:600;">📋 Copy ${st} watch (${n})</button>`;});
+    h+=`</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
     pending.forEach(p=>{
       h+=`<div style="background:#fff;border:1.5px solid #fcd34d;border-radius:7px;padding:4px 9px;cursor:pointer;" onclick="cmod();showNumModal('${p.srt}')">`;
       h+=`<span style="font-family:DM Mono,monospace;font-weight:700;font-size:.75rem;">${p.srt}</span>`;
       h+=`<span style="font-size:.6rem;color:var(--g5);margin-left:4px;">${pat(p.srt)}</span>`;
-      h+=`<div style="font-size:.58rem;color:#92400e;">${p.leader} hit ${p.days}d ago · waiting on ${p.follower}</div>`;
+      h+=`<div style="font-size:.58rem;color:#92400e;">${p.leader} hit ${p.days}d ago${p.got.length?' · '+p.got.join('/')+' too':''} · waiting on ${p.wait.join('/')}</div>`;
       h+=`</div>`;
     });
     h+=`</div></div>`;
   }
 
-  // Recent confirmed matches
-  h+=`<div style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;margin-bottom:6px;">Recent Confirmed Matches</div>`;
+  h+=`<div style="font-size:.68rem;font-weight:700;color:var(--g6);text-transform:uppercase;margin-bottom:6px;">Recent Confirmed Matches${sel==='ALL'?'':' · '+sel.replace('-',' ↔ ')}</div>`;
   h+=`<div style="display:flex;flex-direction:column;gap:5px;">`;
-  matches.slice(0,8).forEach(m=>{
-    h+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--g0);border-radius:7px;cursor:pointer;" onclick="cmod();showNumModal('${m.srt}')">`;
+  if(!shown.length)h+=`<div style="font-size:.74rem;color:var(--g5);">No matches.</div>`;
+  shown.slice(0,8).forEach(m=>{
+    h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 8px;background:var(--g0);border-radius:7px;cursor:pointer;" onclick="cmod();showNumModal('${m.srt}')">`;
     h+=`<span style="font-family:DM Mono,monospace;font-weight:700;font-size:.78rem;">${m.srt}</span>`;
     h+=`<span style="font-size:.62rem;background:var(--g2);border-radius:4px;padding:1px 5px;">${pat(m.srt)}</span>`;
-    h+=`<span style="font-size:.65rem;color:var(--g6);">${m.first.st} <span style="color:var(--g4);">${m.first.dk}</span> (${m.first.num})</span>`;
-    h+=`<span style="font-size:.65rem;color:var(--g4);">→</span>`;
-    h+=`<span style="font-size:.65rem;color:var(--g6);">${m.second.st} <span style="color:var(--g4);">${m.second.dk}</span> (${m.second.num})</span>`;
-    h+=`<span style="margin-left:auto;font-size:.62rem;color:var(--g5);">${m.gap}d</span>`;
+    m.seq.forEach((x,i)=>{
+      if(i)h+=`<span style="font-size:.65rem;color:var(--g4);">→</span>`;
+      h+=`<span style="font-size:.65rem;color:var(--g6);"><b style="color:${COL[x.st]};">${x.st}</b> <span style="color:var(--g4);">${x.dk}</span> (${x.num})</span>`;
+    });
+    h+=`<span style="margin-left:auto;font-size:.62rem;color:var(--g5);">${m.gap}d${m.seq.length===3?' · all 3':''}</span>`;
     h+=`</div>`;
   });
   h+=`</div></div>`;
