@@ -3770,7 +3770,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=636"></script>
+<script src="lottolens-data.js?v=637"></script>
 <script>
 
 // ================================================================
@@ -25128,6 +25128,22 @@ function _ctShow(){
   const lbl=kind==='d'?_ctDateLbl(val):kind==='m'?_ctMonLbl(val):val;
   document.getElementById('ctMoT').innerHTML=(_ctStack.length>1?'<button class="tb2" onclick="_ctBack()" style="margin-right:10px;">← Back</button>':'')+lbl+' · '+_repBadgeLabels[pk]+' matches';
   let h='';
+  if(kind==='y'&&(pk==='Quads'||pk==='Qu')){
+    // all Q draws that came in that year; ones matching your filter are highlighted
+    const srcByHist=new Map();
+    pairs.forEach(function(p){p.hs.forEach(function(r){if(r.ym.slice(0,4)!==val)return;if(!srcByHist.has(r))srcByHist.set(r,[]);srcByHist.get(r).push(p.s);});});
+    const yr=ALL.filter(function(r){return r.ym.slice(0,4)===val&&_getRepeatKey(r.number)===pk;}).sort(function(a,b){return a.dk<b.dk?1:a.dk>b.dk?-1:(a.state<b.state?-1:1);});
+    window._ctCopyNums=yr.map(function(r){return r.number;}).join(' ');
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.82rem;font-weight:700;">'+yr.length+' '+_repBadgeLabels[pk]+' draw'+(yr.length!==1?'s':'')+' in '+val+' · '+srcByHist.size+' highlighted</span><button class="tb2" onclick="_copyToClipboard(window._ctCopyNums,this)">📋 Copy</button></div>';
+    yr.forEach(function(r){
+      const ss=srcByHist.get(r);
+      h+='<div style="padding:5px 8px;border-bottom:1px solid var(--g1);border-radius:6px;'+(ss?'background:#fef3c7;border:1.5px solid var(--ac);margin:2px 0;':'')+'"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><a href="#" onclick="_ctOpen(\''+pk+'\',\'d\',\''+r.dk+'\');return false;" style="font-family:\'DM Mono\',monospace;font-weight:800;font-size:.9rem;color:var(--b8);text-decoration:underline dotted;">'+r.number+'</a>'+_repBadge(r.number)+'<span style="font-size:.74rem;color:var(--g5);">'+_ctDateLbl(r.dk)+' · '+r.state+' '+(r.draw==='midday'?'mid':'eve')+' · sum '+r.sum+'</span></div>'+
+        (ss?'<div style="font-size:.72rem;color:var(--g7);margin-top:2px;">came again in your filter: '+ss.map(function(s){return s.number+' <span style="color:var(--g5);">'+s.state+' '+s.dk.slice(2)+' '+(s.draw==='midday'?'mid':'eve')+'</span>';}).join(' · ')+'</div>':'')+'</div>';
+    });
+    document.getElementById('ctMoB').innerHTML=h;
+    document.getElementById('CTMO').classList.add('open');
+    return;
+  }
   if(kind!=='d'){
     const subKind=kind==='y'?'m':'d';
     const sets={},srcs=new Set();
