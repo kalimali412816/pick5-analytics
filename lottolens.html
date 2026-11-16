@@ -3788,7 +3788,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=665"></script>
+<script src="lottolens-data.js?v=667"></script>
 <script>
 
 // ================================================================
@@ -20628,7 +20628,7 @@ function _showQuadPredDay(day){
   let h=`<button onclick="_copyToClipboard(window._quadPredNums,this)" style="background:#065f46;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:.76rem;cursor:pointer;font-weight:600;margin-bottom:14px;">📋 Copy All (${hits.length})</button>`;
   if(qHits.length){
     h+=`<div style="font-size:.68rem;font-weight:700;color:#991b1b;margin-bottom:6px;">⚪ QUADS (${qHits.length}x)</div>`;
-    qHits.slice(0,15).forEach(r=>{
+    qHits.forEach(r=>{
       h+=`<div style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:7px;padding:7px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="showNumModal('${r.sorted}')">`;
       h+=`<span style="font-family:DM Mono,monospace;font-weight:700;">${r.number}</span><span class="st" style="font-size:.63rem;">${r.state}</span><span style="font-size:.72rem;color:var(--g6);">${r.dateStr}</span>`;
       h+=`</div>`;
@@ -20636,7 +20636,7 @@ function _showQuadPredDay(day){
   }
   if(tdHits.length){
     h+=`<div style="font-size:.68rem;font-weight:700;color:#5b21b6;margin-bottom:6px;margin-top:10px;">🟣 TRIPLE-DOUBLES (${tdHits.length}x)</div>`;
-    tdHits.slice(0,15).forEach(r=>{
+    tdHits.forEach(r=>{
       h+=`<div style="background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:7px;padding:7px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="showNumModal('${r.sorted}')">`;
       h+=`<span style="font-family:DM Mono,monospace;font-weight:700;">${r.number}</span><span class="st" style="font-size:.63rem;">${r.state}</span><span style="font-size:.72rem;color:var(--g6);">${r.dateStr}</span>`;
       h+=`</div>`;
