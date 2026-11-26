@@ -1347,6 +1347,7 @@ tr:hover td{background:var(--b0);}
         <input id="psDigits" type="text" maxlength="5" placeholder="Digits e.g. 44"
           oninput="this.value=this.value.replace(/[^0-9]/g,'');_renderPosSearchDeb();"
           style="width:90px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
+        <button id="psPopBtn" data-on="0" onclick="var on=this.dataset.on==='1';this.dataset.on=on?'0':'1';this.style.background=on?'rgba(255,255,255,.15)':'#f59e0b';this.textContent=on?'🔥 Most Popular':'🔥 Most Popular ON';_renderPosSearch();" title="With digits typed in the Digits box, ranks every left-to-right placement of those digits by hits" style="padding:3px 10px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;white-space:nowrap;">🔥 Most Popular</button>
         <input id="psAbcPat" type="text" maxlength="5" placeholder="Pat e.g. abcde"
           oninput="this.value=this.value.replace(/[^a-e]/g,'').toLowerCase();_renderPosSearchDeb();"
           style="width:100px;padding:3px 8px;border:1px solid rgba(255,255,255,.3);border-radius:5px;font-size:.75rem;background:rgba(255,255,255,.15);color:#fff;font-family:DM Mono,monospace;" />
@@ -3788,7 +3789,7 @@ tr:hover td{background:var(--b0);}
 </main>
 
 <!-- Data file: bump ?v=N every time you update lottolens-data.js to force browsers to fetch the new version -->
-<script src="lottolens-data.js?v=677"></script>
+<script src="lottolens-data.js?v=679"></script>
 <script>
 
 // ================================================================
@@ -24487,7 +24488,56 @@ function _renderPosSearch(){
     return s.replace('%%CNT%%',matched.toLocaleString()+' combo'+(matched!==1?'s':''));
   }
 
-  let topH='';
+  // ===== MOST POPULAR PLACEMENTS — ranks every ordered placement of the typed Digits =====
+  let popH='';
+  if(document.getElementById('psPopBtn')?.dataset.on==='1'){
+    if(!psDigitsF.length){
+      popH=`<div style="margin-bottom:14px;border:1.5px dashed #f59e0b;border-radius:10px;padding:10px 14px;background:#fffbeb;font-size:.74rem;color:#92400e;">🔥 <b>Most Popular is ON</b> — type digits in the Digits box (e.g. 322) and every placement of them will be ranked here.</div>`;
+    } else {
+      const _pd=psDigitsF.split('');
+      // all distinct orderings of the typed digits (so 322 -> 322, 232, 223)
+      const _perms=new Set();
+      (function perm(rest,cur){
+        if(!rest.length){_perms.add(cur.join(''));return;}
+        for(let i=0;i<rest.length;i++){perm(rest.slice(0,i).concat(rest.slice(i+1)),cur.concat(rest[i]));}
+      })(_pd,[]);
+      const _pp=combos(POS,_pd.length);
+      const _pl=[];
+      _pp.forEach(function(p){
+        _perms.forEach(function(dg){
+          let hits=0,last=null;
+          scopeRows.forEach(function(r){
+            for(let i=0;i<p.length;i++){ if(r.number[p[i]]!==dg[i]) return; }
+            hits++; if(!last||r.dk>last) last=r.dk;
+          });
+          _pl.push({key:p.join('')+'|'+dg,hits:hits,last:last});
+        });
+      });
+      _pl.sort(function(a,b){return b.hits-a.hits;});
+      const _anyDraws=scopeRows.filter(function(r){return _hasDigitsCounted(r.number,psDigitsF);}).length;
+      let rk=0;
+      popH+=`<div style="margin-bottom:18px;border:1.5px solid #f59e0b;border-radius:10px;padding:12px 14px;background:linear-gradient(180deg,#fffbeb,#fff);">`;
+      popH+=`<div style="font-size:.78rem;font-weight:700;color:var(--g9);margin-bottom:4px;">🔥 Most Popular Placements of <span style="font-family:DM Mono,monospace;color:#b45309;">${psDigitsF}</span>${stF!=='ALL'?` · ${stF}`:''}${yrF!=='ALL'?` · ${yrF}`:' · All Years'}</div>`;
+      popH+=`<div style="font-size:.66rem;color:var(--g5);margin-bottom:10px;">Any order — every way to place these digits · ${_pl.length} placements · ${_anyDraws.toLocaleString()} draws contain ${psDigitsF} somewhere · click one to load it</div>`;
+      popH+=`<div style="display:flex;flex-direction:column;gap:4px;">`;
+      _pl.slice(0,150).forEach(function(x,i){
+        if(i===0||x.hits!==_pl[i-1].hits) rk=i+1;
+        const rkc=['#fbbf24','#cbd5e1','#d97706'][Math.min(rk-1,2)];
+        popH+=`<div onclick="_psApplyPattern('${x.key}')" style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;border-radius:7px;border:1px solid var(--g2);background:#fff;${x.hits===0?'opacity:.55;':''}">`;
+        popH+=`<div style="font-size:.78rem;font-weight:800;color:${rkc};min-width:22px;">#${rk}</div>`;
+        popH+=`<div style="display:flex;align-items:center;">${renderPattern(x.key)}</div>`;
+        popH+=`<div style="flex:1;"></div>`;
+        if(x.last) popH+=`<div style="font-size:.62rem;color:var(--g5);">last ${x.last}</div>`;
+        popH+=`<div style="font-family:DM Mono,monospace;font-weight:700;color:var(--g7);font-size:.78rem;min-width:30px;text-align:right;">${x.hits}</div>`;
+        popH+=`<div style="font-size:.62rem;color:var(--g5);">hits</div>`;
+        popH+=`</div>`;
+      });
+      if(_pl.length>150) popH+=`<div style="font-size:.66rem;color:var(--g5);padding:6px 4px;">+${_pl.length-150} more placements not shown</div>`;
+      popH+=`</div></div>`;
+    }
+  }
+
+  let topH=popH;
   topH+=`<div style="margin-bottom:18px;border:1.5px solid var(--g2);border-radius:10px;padding:12px 14px;background:linear-gradient(180deg,#faf5ff,#fff);">`;
   topH+=`<div style="font-size:.78rem;font-weight:700;color:var(--g9);margin-bottom:6px;">🏆 Top Position Combos${stF!=='ALL'?` · ${stF}`:''}${yrF!=='ALL'?` · ${yrF}`:' · All Years'}</div>`;
   topH+=`<div style="font-size:.66rem;color:var(--g5);margin-bottom:10px;">Most-drawn digit-position combinations in your current scope · click any to load it</div>`;
